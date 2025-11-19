@@ -16,7 +16,7 @@ def retrieve(
     client: QdrantClient,
     collection: str,
     query_vec: np.ndarray,
-    top_k: int = 40,
+    top_k: int = 30,
     cutoff: float = 0.22,
     filters: Optional[dict[str, Any]] = None,
 ) -> list[dict[str, Any]]:

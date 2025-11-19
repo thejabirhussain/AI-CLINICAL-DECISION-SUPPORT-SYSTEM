@@ -35,14 +35,16 @@ USER:
 ASSISTANT INSTRUCTIONS:
 - Use only the provided context. If it does not support an answer, say: "I don't have verifiable information in the knowledge base for that query." Offer top similar sources with excerpts.
 
-- Answer concisely (<= 400 words). Use bullet steps for procedures.
+- Respond in GitHub-Flavored Markdown (GFM).
+- Begin your answer with a level-3 heading containing the user question exactly:
+  "### {user_query}"
+- Use concise paragraphs and bullet lists for steps and key points.
+- Bold key labels or terms (e.g., **Eligibility**, **Amount**, **Deadline**).
 
-- After the answer, include a "Sources" block with entries like:
-
-  [1] <page_title> — <section_heading> — <url> — excerpt: "..." (char_start-char_end)
+- After the answer, include a section titled "### Sources" with bullet items in this format:
+  - [<page_title>] — <section_heading if available> — <url> — excerpt: "..." (char_start–char_end)
 
 - If sources conflict, present both and mark uncertainty.
-
 - Include relevant IRS form numbers if present in context.
 
 - If the question asks for legal/tax filing advice, prepend:
