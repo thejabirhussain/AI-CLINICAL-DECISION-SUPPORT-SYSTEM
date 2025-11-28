@@ -12,6 +12,7 @@ from app.core.prompts import build_no_results_prompt, build_rag_prompt
 from app.core.security import should_add_disclaimer
 from app.core.utils import estimate_tokens
 from app.generation.llm import get_llm_provider
+from app.generation.response_sizer import classify_query, select_response_policy
 from app.vector.embeddings import get_embedding_provider
 from app.vector.qdrant_client import get_client
 from app.vector.reranker import get_reranker
@@ -40,12 +41,17 @@ class RAGPipeline:
     ) -> dict[str, Any]:
         """Answer a query using RAG pipeline."""
         try:
+            cls = classify_query(query)
+            policy = cls["policy"]
+            # Terminal logging of classification
+            logger.info("[QUERY CLASSIFICATION] → %s", cls.get("type"))
+            logger.info('[QUERY CONTENT] → "%s"', query)
+            logger.info("[RESPONSE MODE] → %s", cls.get("response_mode"))
             # Step 1: Embed query
             query_embedding = self.embedding_provider.get_embedding(query)
-
             # Step 2: Retrieve chunks
             top_k = top_k or settings.top_k
-            top_n = top_n or settings.top_n
+            top_n = top_n or policy.top_n
             cutoff = cutoff or settings.similarity_cutoff
 
             chunks = retrieve_with_cutoff(
@@ -64,6 +70,10 @@ class RAGPipeline:
                     "sources": [],
                     "confidence": "low",
                     "query_embedding_similarity": [],
+                    "response_level": policy.level,
+                    "response_policy": {"max_tokens": policy.max_tokens, "top_n": policy.top_n},
+                    "classification_type": cls.get("type"),
+                    "response_mode": cls.get("response_mode"),
                 }
 
             # Step 3: Optional reranking
@@ -76,12 +86,15 @@ class RAGPipeline:
             prompt = build_rag_prompt(chunks, query)
 
             # Step 5: Generate answer
-            system_prompt = "You are a factual assistant that answers only from the provided IRS.gov knowledge snippets."
+            system_prompt = (
+                "You are a factual assistant that answers only from the provided IRS.gov knowledge snippets. "
+                f"Follow this response style: {policy.style_instruction}"
+            )
             answer_text = self.llm_provider.generate(
                 prompt=prompt,
                 system_prompt=system_prompt,
                 temperature=0.0,
-                max_tokens=500,
+                max_tokens=policy.max_tokens,
             )
 
             # Step 6: Add disclaimer if needed
@@ -119,6 +132,10 @@ class RAGPipeline:
                 "sources": sources,
                 "confidence": confidence,
                 "query_embedding_similarity": similarities,
+                "response_level": policy.level,
+                "response_policy": {"max_tokens": policy.max_tokens, "top_n": policy.top_n},
+                "classification_type": cls.get("type"),
+                "response_mode": cls.get("response_mode"),
             }
 
         except Exception as e:
@@ -128,6 +145,8 @@ class RAGPipeline:
                 "sources": [],
                 "confidence": "low",
                 "query_embedding_similarity": [],
+                "response_level": "simple",
+                "response_policy": {"max_tokens": 250, "top_n": 2},
             }
 
 

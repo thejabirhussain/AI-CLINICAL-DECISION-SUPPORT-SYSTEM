@@ -2,56 +2,42 @@
 
 ```mermaid
 flowchart LR
-  %% ============================
   %% Frontend
-  %% ============================
   subgraph FE[Frontend]
-    UI["Vite + React UI<br/>http://localhost:5173"]
+    UI[ React UI]
   end
-  %% ============================
   %% Backend API
-  %% ============================
-  subgraph BE["Backend API (FastAPI)"]
-    API["FastAPI Service<br/>uvicorn app.api.main:app<br/>http://localhost:8000"]
-    AUTH["API Key Auth"]
-    RATELIMIT["Rate Limiting<br/>(slowapi)"]
-    RETRIEVER["Retriever + Reranker"]
-    RAG["RAG Orchestrator"]
+  subgraph BE[Backend API FastAPI]
+    API[FastAPI Service]
+    AUTH[API Key Auth]
+    RATELIMIT[Rate Limiting]
+    RETRIEVER[Retriever + Reranker]
+    RAG[RAG Orchestrator]
   end
-  %% ============================
   %% Vector DB
-  %% ============================
   subgraph VDB[Vector DB]
-    QDRANT["Qdrant (HNSW)<br/>:6333 HTTP / :6334 gRPC<br/>Persisted in ai/infra/qdrant"]
+    QDRANT[Qdrant HNSW]
   end
-  %% ============================
   %% External Providers
-  %% ============================
-  subgraph EXT["External / Optional Providers"]
-    OPENAI[("OpenAI<br/>LLM + Embeddings")]
-    OLLAMA[("Ollama<br/>Local LLM")]
+  subgraph EXT[External Providers]
+    OPENAI[(Ollama 8B)]
+    OLLAMA[(Ollama 3B)]
   end
-  %% ============================
   %% Ingestion Pipeline
-  %% ============================
   subgraph ING[Ingestion Pipeline]
-    CRAWL["Crawler<br/>(robots-aware)"]
-    PARSE["Parsers<br/>(HTML + PDF)"]
-    CHUNK["Chunker<br/>(section-aware + overlap)"]
-    EMBED["Embedder<br/>(OpenAI or Local ST Models)"]
-    UPSERT["Upserter<br/>(Qdrant)"]
+    CRAWL[Crawler]
+    PARSE[Parsers]
+    CHUNK[Chunker]
+    EMBED[Embedder]
+    UPSERT[Upserter]
   end
-  %% ============================
   %% Config
-  %% ============================
   subgraph CFG[Configuration]
-    ENV[".env / pydantic-settings"]
+    ENV[Environment Config]
   end
-  %% ============================
   %% Main Flows
-  %% ============================
-  USER(("End User")) -->|"HTTP(S)"| UI
-  UI -->|"API Proxy /v1/*"| API
+  USER(("End User")) -->|HTTPS| UI
+  UI -->|API Proxy| API
   API --> AUTH
   API --> RATELIMIT
   API --> RAG
@@ -59,7 +45,7 @@ flowchart LR
   RETRIEVER -->|Vector Search| QDRANT
   RETRIEVER -->|Optional Rerank| RAG
   RAG -->|LLM Calls| OPENAI
-  RAG -.->|Optional Local LLM| OLLAMA
+  RAG -.->|Optional| OLLAMA
   CRAWL --> PARSE --> CHUNK --> EMBED --> UPSERT --> QDRANT
   ENV -.-> API
   ENV -.-> ING
@@ -72,10 +58,10 @@ flowchart LR
     QDRANT
   end
   %% Classes
-  classDef svc fill:#eef7ff,stroke:#7aa7e9,color:#0a2a66
-  classDef ext fill:#fff7e6,stroke:#e7a441,color:#7a4b00
-  class API,RAG,RETRIEVER,RATELIMIT,AUTH svc
-  class OPENAI,OLLAMA ext
+  classDef svc fill:#eef7ff,stroke:#7aa7e9,color:#0a2a66;
+  classDef ext fill:#fff7e6,stroke:#e7a441,color:#7a4b00;
+  class API,RAG,RETRIEVER,RATELIMIT,AUTH svc;
+  class OPENAI,OLLAMA ext;
 ```
 
 ## Notes
