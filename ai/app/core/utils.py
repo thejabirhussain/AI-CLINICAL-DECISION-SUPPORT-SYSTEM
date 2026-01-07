@@ -28,15 +28,6 @@ def normalize_url(url: str, base_url: Optional[str] = None) -> str:
     return normalized.lower()
 
 
-def is_irs_domain(url: str) -> bool:
-    """Check if URL belongs to IRS.gov domain."""
-    try:
-        extracted = tldextract.extract(url)
-        return extracted.domain == "irs" and extracted.suffix == "gov"
-    except Exception:
-        return False
-
-
 def compute_content_hash(content: str | bytes) -> str:
     """Compute SHA256 hash of content."""
     if isinstance(content, str):
@@ -47,14 +38,6 @@ def compute_content_hash(content: str | bytes) -> str:
 def estimate_tokens(text: str) -> int:
     """Estimate token count (rough approximation: ~4 chars per token)."""
     return len(text) // 4
-
-
-def extract_irs_form_numbers(text: str) -> list[str]:
-    """Extract IRS form numbers from text."""
-    # Pattern: Form 1040, Form W-9, etc.
-    pattern = r"Form\s+([A-Z0-9\-]+)"
-    matches = re.findall(pattern, text, re.IGNORECASE)
-    return list(set(matches))
 
 
 def format_iso8601(dt: Optional[datetime]) -> Optional[str]:

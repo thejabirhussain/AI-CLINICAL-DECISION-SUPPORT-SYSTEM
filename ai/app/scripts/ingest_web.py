@@ -1,4 +1,4 @@
-"""Ingestion CLI script."""
+"""Medical Web Ingestion Script."""
 
 import asyncio
 import logging
@@ -69,19 +69,6 @@ def _read_url_file(url_file: Optional[str]) -> list[str]:
     return out
 
 
-def _forms_to_urls(forms_csv: Optional[str]) -> list[str]:
-    if not forms_csv:
-        return []
-    urls: list[str] = []
-    forms = [f.strip().upper() for f in forms_csv.split(",") if f.strip()]
-    for fnum in forms:
-        # form
-        urls.append(f"https://www.irs.gov/pub/irs-pdf/f{fnum}.pdf")
-        # instructions
-        urls.append(f"https://www.irs.gov/pub/irs-pdf/i{fnum}.pdf")
-    return urls
-
-
 def _discover_links_from_seed(seed_url: str, allow_prefixes: list[str] | None, limit: int) -> list[str]:
     """Fetch the seed page and collect same-domain links, optionally filtered by path prefixes."""
     out: list[str] = []
@@ -143,6 +130,7 @@ def upsert_chunks_to_qdrant(chunks: list, embeddings: list, collection_name: str
                 "embedding_model": settings.openai_embed_model if settings.embeddings_provider == "openai" else "local",
                 "tokens": len(chunk.chunk_text) // 4,
                 "hash": compute_content_hash(chunk.chunk_text),
+                "source_type": "web_crawl"
             },
         )
         points.append(point)
@@ -200,21 +188,20 @@ def process_page(url: str, crawler, storage: StorageManager, collection_name: st
 
 @app.command()
 def main(
-    seed: str = typer.Option(settings.crawl_base, help="Seed URL to start crawling"),
-    max_pages: int = typer.Option(1500, help="Maximum number of pages to crawl"),
+    seed: str = typer.Option("https://www.ncbi.nlm.nih.gov/books/", help="Seed URL to start crawling (e.g., NCBI Bookshelf)"),
+    max_pages: int = typer.Option(500, help="Maximum number of pages to crawl"),
     concurrency: int = typer.Option(4, help="Number of concurrent workers"),
     allow_pdf: bool = typer.Option(True, help="Allow PDF crawling"),
     collection_name: str = typer.Option(settings.collection_name, help="Qdrant collection name"),
     url_file: Optional[str] = typer.Option(None, help="Path to a file containing URLs to ingest (one per line)"),
-    forms: Optional[str] = typer.Option(None, help="Comma-separated list of IRS form numbers to ingest (e.g., '1120,4562,4626')"),
-    allow_prefix: Optional[str] = typer.Option(None, help="Comma-separated list of path prefixes to ALLOW (e.g., '/pub/irs-pdf,/forms-instructions')"),
-    block_prefix: Optional[str] = typer.Option(None, help="Comma-separated list of path prefixes to BLOCK (e.g., '/newsroom/archived')"),
+    allow_prefix: Optional[str] = typer.Option(None, help="Comma-separated list of path prefixes to ALLOW"),
+    block_prefix: Optional[str] = typer.Option(None, help="Comma-separated list of path prefixes to BLOCK"),
     only_pdf: bool = typer.Option(False, help="If true, only process PDF URLs"),
     only_html: bool = typer.Option(False, help="If true, only process HTML URLs"),
     include_seed: bool = typer.Option(True, help="Include the seed URL itself in targets before filtering"),
-    follow_links: bool = typer.Option(False, help="Shallowly collect links from the seed page itself"),
+    follow_links: bool = typer.Option(True, help="Shallowly collect links from the seed page"),
 ):
-    """Ingest IRS.gov content: crawl, parse, chunk, embed, and upsert to Qdrant."""
+    """Ingest medical content from web: crawl, parse, chunk, embed, and upsert to Qdrant."""
     logger.info(f"Starting ingestion: seed={seed}, max_pages={max_pages}, concurrency={concurrency}")
 
     # Setup
@@ -235,30 +222,23 @@ def main(
         logger.info(f"Loaded {len(file_urls)} URLs from file")
         target_urls.extend(file_urls)
 
-    # 2) Form PDFs (fXXXX/iXXXX)
-    form_urls = _forms_to_urls(forms)
-    if form_urls:
-        logger.info(f"Generated {len(form_urls)} form URLs from forms list")
-        target_urls.extend(form_urls)
-
-    # 3) Optionally include the seed URL itself (some sections aren't in sitemaps)
+    # 2) Optionally include the seed URL itself
     if include_seed:
         target_urls.append(seed)
 
-    # 4) Shallow link discovery from the seed page (before sitemaps) if requested
+    # 3) Link discovery / Sitemap
     allow_list = [s.strip() for s in (allow_prefix.split(",") if allow_prefix else []) if s.strip()]
     block_list = [s.strip() for s in (block_prefix.split(",") if block_prefix else []) if s.strip()]
+    
     if follow_links:
+        logger.info(f"Discovering links from seed: {seed}")
         discovered = _discover_links_from_seed(seed, allow_list or None, limit=max_pages)
         if discovered:
             logger.info(f"Discovered {len(discovered)} links from seed page")
             target_urls.extend(discovered)
-
-    # 5) Sitemap discovery from seed (acts like shallow recursion)
-    logger.info("Discovering seed URLs from sitemaps...")
-    seed_urls = get_seed_urls(seed, max_urls=max_pages)
-    logger.info(f"Found {len(seed_urls)} seed URLs")
-    target_urls.extend(seed_urls)
+    elif "ncbi" in seed:
+         # Fallback sitemap logic if suitable, but shallow crawl is safer for general medical sites
+         pass
 
     # Deduplicate while preserving order
     seen: set[str] = set()
@@ -312,5 +292,3 @@ def main(
 
 if __name__ == "__main__":
     app()
-
-

@@ -11,6 +11,7 @@ from slowapi.util import get_remote_address
 
 from app.api.routes_admin import router as admin_router
 from app.api.routes_chat import router as chat_router
+from app.api.routes_patient import router as patient_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 
@@ -25,16 +26,16 @@ limiter = Limiter(key_func=get_remote_address)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup/shutdown."""
-    logger.info("Starting IRS RAG API")
+    logger.info("Starting Clinical Decision Support API")
     yield
-    logger.info("Shutting down IRS RAG API")
+    logger.info("Shutting down API")
 
 
 # Create FastAPI app
 app = FastAPI(
-    title="IRS RAG Chat API",
-    description="Retrieval-Augmented Generation chat service for IRS.gov content",
-    version="0.1.0",
+    title="Clinical Decision Support API",
+    description="AI-powered Clinical Decision Support System with Medical Knowledge RAG",
+    version="1.0.0",
     lifespan=lifespan,
 )
 
@@ -53,22 +54,22 @@ app.add_middleware(
 
 # Include routers
 app.include_router(chat_router, prefix="/v1", tags=["chat"])
+app.include_router(patient_router, prefix="/patient", tags=["patient"])
 app.include_router(admin_router, prefix="/admin", tags=["admin"])
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "version": "0.1.0"}
+    return {"status": "healthy", "version": "1.0.0"}
 
 
 @app.get("/")
 async def root():
     """Root endpoint."""
     return {
-        "name": "IRS RAG Chat API",
-        "version": "0.1.0",
+        "name": "Clinical Decision Support API",
+        "version": "1.0.0",
         "docs": "/docs",
         "health": "/health",
     }
-

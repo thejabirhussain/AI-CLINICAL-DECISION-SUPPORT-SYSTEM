@@ -8,3 +8,8 @@ qdrant_client = get_client()
 rag_pipeline = RAGPipeline()
 
 
+def get_rag_pipeline() -> RAGPipeline:
+    """Dependency for RAG pipeline."""
+    return rag_pipeline
+
+

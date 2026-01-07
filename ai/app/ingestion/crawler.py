@@ -10,7 +10,7 @@ import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from app.core.config import settings
-from app.core.utils import is_irs_domain, normalize_url
+from app.core.utils import normalize_url
 from app.ingestion.models import ContentType, CrawledPage
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class RespectfulCrawler:
         self,
         base_url: str,
         rate_limit_rps: float = 0.5,
-        user_agent: str = "IRS-RAG-Bot/1.0",
+        user_agent: str = "AI-CDSS-Bot/1.0",
     ):
         self.base_url = base_url
         self.rate_limit_rps = rate_limit_rps
@@ -79,11 +79,6 @@ class RespectfulCrawler:
         # Check robots.txt
         if not self._can_fetch(url):
             logger.info(f"Skipping URL (robots.txt): {url}")
-            return None
-
-        # Check domain
-        if not is_irs_domain(url):
-            logger.warning(f"Skipping non-IRS domain: {url}")
             return None
 
         # Rate limit

@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     gcc \
     g++ \
+    tesseract-ocr \
+    libtesseract-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files

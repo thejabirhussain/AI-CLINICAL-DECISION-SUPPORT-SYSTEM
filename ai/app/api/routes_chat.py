@@ -31,6 +31,7 @@ async def chat(
             query=request.query,
             filters=request.filters,
             history=[{"role": m.role, "content": m.content} for m in (request.history or [])],
+            context=request.context,
         )
 
         # Format sources

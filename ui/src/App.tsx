@@ -1,465 +1,361 @@
-import { useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Send, User, Bot, FileText, Upload, X, ShieldAlert,
+  Activity, Database, AlertCircle, FileImage, Stethoscope,
+  Paperclip
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+// Types
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  sources?: Source[];
+  timestamp: Date;
+}
 
 interface Source {
-  url: string
-  title: string
-  section: string | null
-  snippet: string
-  char_start: number
-  char_end: number
-  score: number
+  title: string;
+  url: string;
+  section?: string;
+  snippet?: string;
+  score?: number;
 }
 
-interface ChatResponse {
-  answer_text: string
-  sources: Source[]
-  confidence: 'low' | 'medium' | 'high'
-  query_embedding_similarity: number[]
-  follow_up_questions?: string[]
+interface UploadedFile {
+  name: string;
+  type: string;
+  size: number;
 }
 
-interface Message {
-  id: number
-  role: 'user' | 'assistant'
-  content: string
-  sources?: Source[]
-  follow_up_questions?: string[]
-}
-
-const SUGGESTION_CHIPS = [
-  {
-    text: 'Find IRS Forms (1040, W‑2, 1099)',
-    // rgb(67,166,246)
-    color: 'from-[#43A6F6] to-[#2E8FE3]',
-    bgColor: 'bg-[#43A6F6]',
-    hoverColor: 'hover:from-[#2E8FE3] hover:to-[#257ACB]',
-  },
-  {
-    text: 'Deduction & credit guidance',
-    // rgb(177,102,142)
-    color: 'from-[#B1668E] to-[#9B4F77]',
-    bgColor: 'bg-[#B1668E]',
-    hoverColor: 'hover:from-[#9B4F77] hover:to-[#844263]',
-  },
-  {
-    text: 'Corporate filing help',
-    // rgb(240,162,78)
-    color: 'from-[#F0A24E] to-[#DC8E3B]',
-    bgColor: 'bg-[#F0A24E]',
-    hoverColor: 'hover:from-[#DC8E3B] hover:to-[#C97F33]',
-  },
-  {
-    text: 'Estimate quarterly tax payments',
-    // rgb(111,168,116)
-    color: 'from-[#6FA874] to-[#5B9362]',
-    bgColor: 'bg-[#6FA874]',
-    hoverColor: 'hover:from-[#5B9362] hover:to-[#4E8255]',
-  },
-  {
-    text: ' What is the Child Tax Credit?',
-    // rgb(124,115,184)
-    color: 'from-[#7C73B8] to-[#675EA4]',
-    bgColor: 'bg-[#7C73B8]',
-    hoverColor: 'hover:from-[#675EA4] hover:to-[#5B5497]',
-  },
-  {
-    text: '1099 vs W‑2 rules',
-    // rgb(102,166,152)
-    color: 'from-[#66A698] to-[#4F907F]',
-    bgColor: 'bg-[#66A698]',
-    hoverColor: 'hover:from-[#4F907F] hover:to-[#3E7E6E]',
-  },
-]
-
-export function App() {
-  const [query, setQuery] = useState('')
-  const [hasSubmitted, setHasSubmitted] = useState(false)
-  const [userQuery, setUserQuery] = useState('')
-  const [response, setResponse] = useState<ChatResponse | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [expandedSources, setExpandedSources] = useState<Set<string>>(new Set())
-  const [messages, setMessages] = useState<Message[]>([])
-
-  function safeHost(u: string) {
-    try {
-      return new URL(u).hostname
-    } catch {
-      return u
+function App() {
+  const [query, setQuery] = useState('');
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'assistant',
+      content: "Hello. I am your Clinical Decision Support Assistant. I can analyze patient data against medical guidelines. Please upload a patient report or ask a clinical question.",
+      timestamp: new Date()
     }
-  }
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [patientContext, setPatientContext] = useState<string>("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Helpers to cleanly format source labels and canonical URLs
-  function canonicalizeUrl(u: string): string {
-    try {
-      const url = new URL(u)
-      return `${url.origin}${url.pathname}`
-    } catch {
-      return u
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Optimistic UI
+      const newFile = { name: file.name, type: file.type, size: file.size };
+      setFiles(prev => [...prev, newFile]);
+
+      // System message
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Processing file: **${file.name}**...`,
+        timestamp: new Date()
+      }]);
+
+      try {
+        const res = await fetch('http://localhost:8000/patient/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error("Upload failed");
+
+        const data = await res.json();
+        setPatientContext(prev => prev + "\n" + data.extracted_text);
+
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          newMsgs[newMsgs.length - 1].content = `✅ File **${file.name}** successfully processed and added to clinical context.`;
+          return newMsgs;
+        });
+
+      } catch (err) {
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          newMsgs[newMsgs.length - 1].content = `❌ Error processing file: ${file.name}`;
+          return newMsgs;
+        });
+        setFiles(prev => prev.filter(f => f.name !== file.name)); // Revert
+      }
     }
-  }
+  };
 
-  function slugToTitleCase(slug: string): string {
-    return slug
-      .replace(/[-_]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .replace(/\b\w/g, (c) => c.toUpperCase())
-  }
+  const handleSend = async () => {
+    if (!query.trim()) return;
 
-  function extractPublicationFromUrl(u: string): string | null {
-    try {
-      const path = new URL(u).pathname.toLowerCase()
-      const m1 = path.match(/\/publications\/p(\d+)/i)
-      if (m1) return `Publication ${m1[1]}`
-      const m2 = path.match(/\/pub\/(?:irs-pdf\/)?p(\d+)/i)
-      if (m2) return `Publication ${m2[1]}`
-      return null
-    } catch {
-      return null
-    }
-  }
-
-  function deriveTitleFromUrl(u: string): string {
-    try {
-      const url = new URL(u)
-      const seg = url.pathname.split('/').filter(Boolean).pop() || ''
-      const pub = extractPublicationFromUrl(u)
-      if (pub) return pub
-      if (!seg) return url.hostname
-      return slugToTitleCase(decodeURIComponent(seg))
-    } catch {
-      return u
-    }
-  }
-
-  function cleanSourceLabel(source: Source): string {
-    // Hard overrides for known publications regardless of incoming title
-    const path = (() => {
-      try { return new URL(source.url).pathname.toLowerCase() } catch { return '' }
-    })()
-    if (/\/p505(\b|\/|#|\?|$)/.test(path) || /\/publications\/p505/.test(path)) {
-      return 'Publication 505 — Tax Withholding and Estimated Tax'
-    }
-    if (/\/p575(\b|\/|#|\?|$)/.test(path) || /\/publications\/p575/.test(path)) {
-      return 'Publication 575 — Pension and Annuity Income'
-    }
-    if (/\/p926(\b|\/|#|\?|$)/.test(path) || /\/publications\/p926/.test(path)) {
-      return 'Publication 926 — Household Employer’s Tax Guide'
-    }
-    const pub = extractPublicationFromUrl(source.url)
-    let t = (source.title || '').replace(/\s+/g, ' ').trim()
-    // Remove noisy trailing excerpt markers or quotes artifacts
-    t = t.replace(/\s+—\s*excerpt:.*$/i, '').replace(/\s+-\s*excerpt:.*$/i, '')
-    // If metadata has a clean title, prefer it
-    if (t) return t
-    // Otherwise build from URL
-    if (pub) return pub
-    return deriveTitleFromUrl(source.url)
-  }
-
-  async function handleSubmit(submittedQuery: string) {
-    if (!submittedQuery.trim()) return
-
-    setHasSubmitted(true)
-    setUserQuery(submittedQuery)
-    setQuery('')
-    setResponse(null)
-    setError(null)
-    setLoading(true)
-    setExpandedSources(new Set())
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now(), role: 'user', content: submittedQuery },
-    ])
+    const userMsg: Message = { role: 'user', content: query, timestamp: new Date() };
+    setMessages(prev => [...prev, userMsg]);
+    setQuery('');
+    setIsLoading(true);
 
     try {
-      const historyPayload = [...messages, { role: 'user', content: submittedQuery }].map((m) => ({
-        role: m.role,
-        content: m.content,
-      }))
-      const res = await fetch('/v1/chat', {
+      // Use map to create a clean history array
+      const history = messages.map(m => ({ role: m.role, content: m.content }));
+
+      const res = await fetch('http://localhost:8000/v1/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: submittedQuery, json: true, history: historyPayload }),
-      })
+        body: JSON.stringify({
+          query: userMsg.content,
+          history: history,
+          context: patientContext,
+          json: true
+        }),
+      });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json();
 
-      const raw = await res.json()
-      const normalized: ChatResponse = {
-        answer_text:
-          (raw?.answer_text ?? raw?.answer ?? raw?.output ?? raw?.text ?? '').toString(),
-        sources: Array.isArray(raw?.sources) ? raw.sources : [],
-        confidence: (raw?.confidence === 'low' || raw?.confidence === 'high') ? raw.confidence : 'medium',
-        query_embedding_similarity: Array.isArray(raw?.query_embedding_similarity)
-          ? raw.query_embedding_similarity
-          : [],
-        follow_up_questions: Array.isArray(raw?.follow_up_questions) ? raw.follow_up_questions : [],
-      }
+      const aiContent = data.answer_text || data.answer || "No response generated.";
+      const sources = data.sources || [];
 
-      if (!normalized.answer_text) {
-        normalized.answer_text = 'No answer text returned.'
-      }
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: aiContent,
+        sources: sources,
+        timestamp: new Date()
+      }]);
 
-      setResponse(normalized)
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          role: 'assistant',
-          content: normalized.answer_text,
-          sources: normalized.sources,
-          follow_up_questions: normalized.follow_up_questions || [],
-        },
-      ])
-    } catch (e: any) {
-      setError(e.message || 'An error occurred')
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 2,
-          role: 'assistant',
-          content: `Error: ${e.message || 'An error occurred'}`,
-        },
-      ])
+    } catch (error) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "Detailed clinical analysis unavailable at this moment. Please check system connection.",
+        timestamp: new Date()
+      }]);
     } finally {
-      setLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  function handleChipClick(chipText: string) {
-    setQuery(chipText)
-    handleSubmit(chipText)
-  }
-
-
-  function toggleSource(key: string) {
-    const next = new Set(expandedSources)
-    if (next.has(key)) next.delete(key)
-    else next.add(key)
-    setExpandedSources(next)
-  }
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {!hasSubmitted ? (
-        // Homepage - Before Query
-        <div className="flex-1 flex flex-col items-center justify-center px-4 py-16 md:py-20 lg:py-24">
-          {/* Main Title */}
-          <h1 className="text-3xl md:text-4xl font-medium text-gray-900 mb-10 md:mb-12 text-center tracking-tight">
-            What can I help with?
-          </h1>
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
 
-          {/* Input Bar */}
-          <div className="w-full max-w-3xl mb-12 md:mb-16">
-            <div className="relative bg-white rounded-full shadow-md hover:shadow-lg focus-within:shadow-lg focus-within:ring-2 focus-within:ring-blue-500/10 transition-all duration-300 border border-gray-100">
-              <div className="flex items-center px-6 md:px-7 py-3.5 md:py-4">
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      handleSubmit(query)
-                    }
-                  }}
-                  placeholder="Ask anything about IRS tax information"
-                  className="flex-1 outline-none text-gray-900 placeholder-gray-400 text-base md:text-lg bg-transparent font-normal"
-                />
-                <button
-                  onClick={() => handleSubmit(query)}
-                  disabled={!query.trim()}
-                  className="ml-3 text-white bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-2 rounded-full font-semibold shadow-md hover:from-gray-900 hover:to-black disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-                  aria-label="Send"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M5 12h12M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
+      {/* Sidebar */}
+      <div className={`${isSidebarOpen ? 'w-80' : 'w-0'} bg-white border-r border-slate-200 transition-all duration-300 flex flex-col`}>
+        <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+          <div className="bg-sky-100 p-2 rounded-lg">
+            <Stethoscope className="w-6 h-6 text-sky-600" />
+          </div>
+          <div>
+            <h1 className="font-bold text-lg text-slate-800">AI-CDSS</h1>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span className="text-xs text-slate-500 font-medium">System Online</span>
             </div>
           </div>
+        </div>
 
-          {/* Suggestion Chips */}
-          <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 md:gap-4">
-            {SUGGESTION_CHIPS.map((chip, index) => (
-              <button
-                key={index}
-                onClick={() => handleChipClick(chip.text)}
-                className={`group relative overflow-hidden bg-gradient-to-r ${chip.color} ${chip.hoverColor} text-white px-5 md:px-6 py-3 md:py-3.5 rounded-full font-medium text-sm md:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-300 border border-white/20`}
-              >
-                <svg
-                  className="w-4 h-4 md:w-4 md:h-4 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                <span className="text-center">{chip.text}</span>
-              </button>
-            ))}
+        <div className="p-6 flex-1 overflow-y-auto">
+          <div className="mb-8">
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Patient Data</h2>
+
+            <label className="file-drop-zone block group relative">
+              <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,image/*" />
+              <div className="flex flex-col items-center gap-2">
+                <div className="p-3 bg-sky-50 rounded-full group-hover:bg-sky-100 transition-colors">
+                  <Upload className="w-5 h-5 text-sky-600" />
+                </div>
+                <div className="text-sm font-medium text-slate-600">Upload Report</div>
+                <div className="text-xs text-slate-400">PDF, JPG, PNG</div>
+              </div>
+            </label>
+          </div>
+
+          {files.length > 0 && (
+            <div>
+              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Active Files</h2>
+              <div className="space-y-2">
+                {files.map((file, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100 shadow-sm">
+                    {file.type.includes('image') ? (
+                      <FileImage className="w-8 h-8 text-purple-500" />
+                    ) : (
+                      <FileText className="w-8 h-8 text-red-500" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate text-slate-700">{file.name}</div>
+                      <div className="text-xs text-slate-400">{(file.size / 1024).toFixed(1)} KB</div>
+                    </div>
+                    <button className="text-slate-400 hover:text-red-500 transition-colors">
+                      <X className="w-4 h-4" onClick={() => setFiles(prev => prev.filter(f => f.name !== file.name))} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+          <div className="flex items-center gap-3 p-2 rounded hover:bg-white transition-colors cursor-pointer">
+            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs">
+              JD
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium">Dr. Smith</div>
+              <div className="text-xs text-slate-500">Cardiology</div>
+            </div>
           </div>
         </div>
-      ) : (
-        // Chat Interface - After Query
-        <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto px-4 md:px-6 py-8 md:py-10 bg-white">
-          <div className="space-y-6 pb-24 md:pb-28">
-            {messages.map((m, idx) => (
-              m.role === 'user' ? (
-                <div className="flex justify-end" key={m.id}>
-                  <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-6 py-4 md:px-7 md:py-4.5 rounded-3xl rounded-tr-md max-w-[85%] md:max-w-[75%] shadow-lg border border-gray-700/50">
-                    <p className="text-sm md:text-base leading-relaxed font-normal">{m.content}</p>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col relative w-full">
+        {/* Header */}
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-10 w-full">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-2 hover:bg-slate-100 rounded-lg text-slate-500"
+            >
+              <Database className="w-5 h-5" />
+            </button>
+            <h2 className="font-semibold text-slate-700">Clinical Consultation</h2>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full text-xs font-medium">
+            <AlertCircle className="w-3 h-3" />
+            <span>Research Preview Mode - Verify all outputs</span>
+          </div>
+        </header>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-slate-50 w-full">
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start max-w-4xl'}`}>
+
+              {msg.role === 'assistant' && (
+                <div className="w-8 h-8 rounded-full bg-sky-600 flex items-center justify-center text-white flex-shrink-0 mt-1 shadow-sm">
+                  <Bot className="w-5 h-5" />
+                </div>
+              )}
+
+              <div className={`flex flex-col gap-2 ${msg.role === 'user' ? 'max-w-[85%]' : 'max-w-[85%]'}`}>
+                <div
+                  className={`p-5 rounded-2xl shadow-sm leading-relaxed text-[15px] ${msg.role === 'user'
+                    ? 'bg-white text-slate-800 border-t border-l border-slate-100 rounded-tr-sm'
+                    : 'bg-white text-slate-800 border border-slate-100 rounded-tl-sm'
+                    }`}
+                >
+                  <div className="prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-0.5 prose-strong:text-slate-900 prose-headings:text-slate-800 prose-headings:font-bold prose-headings:mt-4 prose-a:text-sky-600">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.content}
+                    </ReactMarkdown>
                   </div>
                 </div>
-              ) : (
-                <div className="flex justify-start" key={m.id}>
-                  <div className="bg-white border border-gray-200/80 px-6 py-5 md:px-7 md:py-6 rounded-3xl rounded-tl-md max-w-[85%] md:max-w-[75%] shadow-lg w-full">
-                    <div className="space-y-5">
-                      <div className="md-content max-w-none text-gray-800">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {m.content}
-                        </ReactMarkdown>
-                      </div>
-                      {m.sources && m.sources.length > 0 && (
-                        <div className="space-y-3">
-                          <h4 className="text-sm font-semibold text-gray-800">Sources</h4>
-                          <ul className="space-y-3">
-                            {(() => {
-                              const byUrl = new Map<string, Source>()
-                              for (const s of m.sources) {
-                                const link = canonicalizeUrl(s.url)
-                                if (!byUrl.has(link)) byUrl.set(link, { ...s, url: link })
-                              }
-                              const unique = Array.from(byUrl.values())
-                              return unique.map((source, index) => {
-                                const label = cleanSourceLabel(source)
-                                const link = source.url
-                                return (
-                                  <li key={`${m.id}-${index}`} className="text-sm">
-                                    <div className="leading-snug">
-                                      <a
-                                        href={link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="font-semibold text-blue-700 hover:text-blue-800 underline-offset-2 hover:underline"
-                                        title={label}
-                                      >
-                                        {label}
-                                      </a>
-                                    </div>
-                                    <div className="text-xs text-gray-600 mt-0.5 break-all">{link}</div>
-                                  </li>
-                                )
-                              })
-                            })()}
-                          </ul>
-                        </div>
-                      )}
-                      {m.follow_up_questions && m.follow_up_questions.length > 0 && (
-                        <div className="pt-1">
-                          <h4 className="text-sm font-semibold text-gray-800 mb-2">Related questions</h4>
-                          <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-3 md:p-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                              {m.follow_up_questions.map((q, i) => (
-                                <button
-                                  key={i}
-                                  onClick={() => handleSubmit(q)}
-                                  title={q}
-                                  className="group w-full px-3.5 py-2 text-sm rounded-xl border border-gray-200/80 bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 shadow-sm hover:shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-gray-300 flex items-start gap-2 text-left"
-                                >
-                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-50 text-gray-600 border border-gray-200 flex-shrink-0 mt-0.5">
-                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                      <circle cx="11" cy="11" r="7" strokeWidth="2" />
-                                      <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" />
-                                    </svg>
-                                  </span>
-                                  <span className="flex-1 whitespace-normal break-words leading-snug">
-                                    {q}
-                                  </span>
-                                  <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                  </svg>
-                                </button>
-                              ))}
-                            </div>
+
+                {msg.sources && msg.sources.length > 0 && (
+                  <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm animate-fade-in">
+                    <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <Activity className="w-3 h-3 text-sky-500" />
+                      Clinical Evidence
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {msg.sources.map((src, i) => (
+                        <a
+                          key={i}
+                          href={src.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex flex-col p-2.5 rounded border border-slate-100 bg-slate-50/50 hover:bg-sky-50 hover:border-sky-100 transition-all group no-underline"
+                        >
+                          <div className="text-xs font-medium text-sky-700 truncate group-hover:text-sky-800">
+                            {src.title || "Medical Document"}
                           </div>
-                        </div>
-                      )}
+                          <div className="text-[10px] text-slate-400 mt-0.5 flex justify-between">
+                            <span>{src.section || "General"}</span>
+                            {src.score && <span>{(src.score * 100).toFixed(0)}% Match</span>}
+                          </div>
+                        </a>
+                      ))}
                     </div>
                   </div>
-                </div>
-              )
-            ))}
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-white border border-gray-200/80 px-6 py-5 md:px-7 md:py-6 rounded-3xl rounded-tl-md max-w-[85%] md:max-w-[75%] shadow-lg">
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <div className="flex gap-1.5">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                    </div>
-                    <span className="text-sm font-medium">IRS Assistant is thinking…</span>
-                  </div>
-                </div>
+                )}
               </div>
-            )}
-            {error && (
-              <div className="flex justify-start">
-                <div className="text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="font-semibold mb-1.5">Error</p>
-                  <p className="text-sm">{error}</p>
-                </div>
-              </div>
-            )}
-          </div>
 
-          {/* Composer (fixed bottom) */}
-          <div className="fixed left-0 right-0 bottom-4 z-40 px-4 md:px-6">
-            <div className="relative bg-white rounded-2xl shadow-lg border border-gray-200 max-w-3xl mx-auto">
-              <div className="flex items-center px-4 md:px-5 py-3.5">
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      if (query.trim()) handleSubmit(query.trim())
-                    }
-                  }}
-                  placeholder="Ask another IRS question…"
-                  className="flex-1 outline-none text-gray-900 placeholder-gray-400 bg-transparent text-base"
-                />
-                <button
-                  onClick={() => query.trim() && handleSubmit(query.trim())}
-                  disabled={!query.trim() || loading}
-                  className="ml-3 text-white bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-2 rounded-xl font-semibold shadow-lg hover:from-gray-900 hover:to-black disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-                  aria-label="Send"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M5 12h12M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
+              {msg.role === 'user' && (
+                <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white flex-shrink-0 mt-1 shadow-md">
+                  <User className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+          ))}
+
+          {isLoading && (
+            <div className="flex gap-4 max-w-3xl animate-pulse">
+              <div className="w-8 h-8 rounded-full bg-sky-600 flex items-center justify-center text-white flex-shrink-0">
+                <Bot className="w-5 h-5" />
               </div>
+              <div className="space-y-2 w-full">
+                <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                <div className="h-10 bg-slate-200 rounded w-3/4"></div>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Footer / Input */}
+        <div className="p-4 bg-white border-t border-slate-200 w-full">
+          <div className="max-w-4xl mx-auto w-full">
+            <div className="relative flex items-center shadow-lg rounded-2xl bg-white border border-slate-200 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-50 transition-all">
+              <button className="p-3 text-slate-400 hover:text-slate-600 transition-colors ml-1" onClick={() => document.querySelector<HTMLInputElement>('input[type=file]')?.click()}>
+                <Paperclip className="w-5 h-5" />
+              </button>
+              <textarea
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask a clinical question or describe a case..."
+                className="w-full py-4 px-2 max-h-32 bg-transparent border-none focus:ring-0 resize-none text-slate-700 placeholder:text-slate-400 font-medium"
+                rows={1}
+                style={{ minHeight: '56px' }}
+              />
+              <button
+                onClick={handleSend}
+                disabled={isLoading || !query.trim()}
+                className="p-2 mr-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-md disabled:opacity-50 disabled:shadow-none transition-all duration-300"
+              >
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+            <div className="flex items-center justify-center gap-2 mt-3 text-[10px] text-slate-400">
+              <ShieldAlert className="w-3 h-3" />
+              <p>AI can make mistakes. Verify important clinical findings. Not a substitute for professional judgment.</p>
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
-  )
+  );
 }
+
+export default App;

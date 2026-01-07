@@ -47,17 +47,24 @@ class RAGPipeline:
         top_n: Optional[int] = None,
         cutoff: Optional[float] = None,
         history: Optional[list[dict[str, str]]] = None,
+        context: Optional[str] = None,
     ) -> dict[str, Any]:
         """Answer a query using RAG pipeline."""
         try:
+            # Inject patient context into query if present
+            original_query = query
+            if context:
+                query = f"Patient Context:\n{context}\n\nUser Question: {original_query}"
+
             cls = classify_query(query)
             policy = cls["policy"]
             # Terminal logging of classification
             logger.info("[QUERY CLASSIFICATION] → %s", cls.get("type"))
-            logger.info('[QUERY CONTENT] → "%s"', query)
+            logger.info('[QUERY CONTENT] → "%s"', original_query)
             logger.info("[RESPONSE MODE] → %s", cls.get("response_mode"))
             # Step 1: Embed query
-            query_embedding = self.embedding_provider.get_embedding(query)
+            query_embedding = self.embedding_provider.get_embedding(original_query) # Use original query for retrieval to find relevant medical knowledge, not specific patient details
+            
             # Step 2: Retrieve chunks
             top_k = top_k or settings.top_k
             top_n = top_n or policy.top_n
@@ -73,7 +80,7 @@ class RAGPipeline:
             )
 
             if not chunks:
-                logger.warning(f"No chunks found for query: {query}")
+                logger.warning(f"No chunks found for query: {original_query}")
                 return {
                     "answer_text": NO_KB_MSG,
                     "sources": [],
@@ -87,7 +94,7 @@ class RAGPipeline:
 
             # Step 3: Optional reranking
             if self.reranker and len(chunks) > top_n:
-                chunks = self.reranker.rerank(query, chunks, top_n=top_n)
+                chunks = self.reranker.rerank(original_query, chunks, top_n=top_n)
             else:
                 chunks = chunks[:top_n]
 
@@ -96,7 +103,7 @@ class RAGPipeline:
             if history and len(history) > 6:
                 try:
                     summary_prompt = (
-                        "Summarize the following chat turns into 3-6 compact bullet points capturing the main topic, entities, forms, and any key parameters. "
+                        "Summarize the following chat turns into 3-6 compact bullet points capturing the main topic, entities, and clinical context. "
                         "Keep under 1200 characters. Use plain text bullets only.\n\n" +
                         "\n".join([f"{t.get('role', 'user')}: {t.get('content','')}" for t in history[-12:]])
                     )
@@ -111,12 +118,12 @@ class RAGPipeline:
                 except Exception:
                     summary_text = None
 
-            # Step 5: Build prompt
+            # Step 5: Build prompt (Use the modified query with context here so the LLM sees it)
             prompt = build_rag_prompt(chunks, query, history=history, summary=summary_text)
 
             # Step 6: Generate answer
             system_prompt = (
-                "You are a factual assistant that answers only from the provided IRS.gov knowledge snippets. "
+                "You are a Clinical Decision Support Assistant. Provide accurate, evidence-based answers. "
                 f"Follow this response style: {policy.style_instruction}"
             )
             answer_text = self.llm_provider.generate(

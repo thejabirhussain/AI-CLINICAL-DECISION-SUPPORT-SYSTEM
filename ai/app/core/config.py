@@ -44,10 +44,10 @@ class Settings(BaseSettings):
     # Qdrant
     qdrant_url: str = "http://qdrant:6333"
     qdrant_api_key: str = ""
-    collection_name: str = "irs_rag_v1"
+    collection_name: str = "clinical_knowledge_v1"
 
     # Crawling
-    crawl_base: str = "https://www.irs.gov"
+    crawl_base: str = "https://www.ncbi.nlm.nih.gov/books/NBK/"  # Example: NCBI Bookshelf / Guidelines
     rate_limit_rps: float = 0.5
 
     # Retrieval
@@ -57,7 +57,8 @@ class Settings(BaseSettings):
 
     # Legal
     legal_disclaimer: str = (
-        "I am not a lawyer; for legal or tax-filing advice consult a qualified tax professional or the IRS."
+        "WARNING: This system provides clinical decision support using AI and is NOT a diagnostic tool. "
+        "Outputs must be verified by a qualified healthcare professional. Do not rely solely on this system for patient care."
     )
 
     # Logging

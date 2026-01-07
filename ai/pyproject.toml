@@ -3,14 +3,14 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "irs-rag"
+name = "ai-cdss"
 version = "0.1.0"
-description = "Production-ready RAG chat service for IRS.gov content"
+description = "Production-ready Clinical Decision Support System"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "IRS RAG Team"}
+    {name = "AI CDSS Team"}
 ]
 dependencies = [
     "fastapi>=0.104.0",
@@ -38,6 +38,8 @@ dependencies = [
     "python-multipart>=0.0.6",
     "aiofiles>=23.2.0",
     "tqdm>=4.66.0",
+    "pytesseract>=0.3.10",
+    "Pillow>=10.0.0",
 ]
 
 [project.optional-dependencies]

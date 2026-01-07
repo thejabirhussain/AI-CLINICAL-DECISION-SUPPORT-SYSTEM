@@ -21,6 +21,9 @@ class ChatRequest(BaseModel):
         None, description="Optional filters for retrieval"
     )
     json: bool = Field(False, description="Return JSON response format")
+    context: Optional[str] = Field(
+        None, description="Optional patient/external context to inject into the query"
+    )
     history: Optional[list["ChatMessage"]] = Field(
         default=None,
         description="Optional prior conversation turns for context-awareness",

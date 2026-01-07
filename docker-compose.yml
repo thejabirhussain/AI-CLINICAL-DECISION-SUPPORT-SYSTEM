@@ -3,7 +3,7 @@ version: '3.8'
 services:
   qdrant:
     image: qdrant/qdrant:v1.7.0
-    container_name: irs-rag-qdrant
+    container_name: ai-cdss-qdrant
     ports:
       - "6333:6333"
       - "6334:6334"
@@ -18,13 +18,13 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - irs-rag-network
+      - ai-cdss-network
 
   api:
     build:
       context: ./ai
       dockerfile: Dockerfile.api
-    container_name: irs-rag-api
+    container_name: ai-cdss-api
     ports:
       - "8000:8000"
     volumes:
@@ -43,11 +43,11 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - irs-rag-network
+      - ai-cdss-network
     command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
 
 networks:
-  irs-rag-network:
+  ai-cdss-network:
     driver: bridge
 
 

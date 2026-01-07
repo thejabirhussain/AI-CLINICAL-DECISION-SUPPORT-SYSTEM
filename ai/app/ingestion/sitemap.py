@@ -8,7 +8,7 @@ from xml.etree import ElementTree as ET
 import httpx
 
 from app.core.config import settings
-from app.core.utils import is_irs_domain, normalize_url
+from app.core.utils import normalize_url
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +38,8 @@ def fetch_sitemap_urls(sitemap_url: str, max_urls: Optional[int] = None) -> Iter
                 loc = url_elem.find("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")
                 if loc is not None and loc.text:
                     url = normalize_url(loc.text)
-                    if is_irs_domain(url):
-                        yield url
-                        count += 1
+                    yield url
+                    count += 1
 
     except Exception as e:
         logger.error(f"Error fetching sitemap {sitemap_url}: {e}")
@@ -78,8 +77,7 @@ def discover_robots_txt(base_url: str) -> Optional[str]:
                 line = line.strip()
                 if line.lower().startswith("sitemap:"):
                     sitemap_url = line.split(":", 1)[1].strip()
-                    if is_irs_domain(sitemap_url):
-                        sitemaps.append(sitemap_url)
+                    sitemaps.append(sitemap_url)
             return "\n".join(sitemaps) if sitemaps else None
     except Exception as e:
         logger.warning(f"Could not fetch robots.txt: {e}")
