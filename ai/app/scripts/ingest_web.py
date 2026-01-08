@@ -200,12 +200,13 @@ def main(
     only_html: bool = typer.Option(False, help="If true, only process HTML URLs"),
     include_seed: bool = typer.Option(True, help="Include the seed URL itself in targets before filtering"),
     follow_links: bool = typer.Option(True, help="Shallowly collect links from the seed page"),
+    ignore_robots: bool = typer.Option(False, help="Ignore robots.txt restrictions (use with caution)"),
 ):
     """Ingest medical content from web: crawl, parse, chunk, embed, and upsert to Qdrant."""
     logger.info(f"Starting ingestion: seed={seed}, max_pages={max_pages}, concurrency={concurrency}")
 
     # Setup
-    crawler = create_crawler(seed)
+    crawler = create_crawler(seed, ignore_robots=ignore_robots)
     storage = StorageManager()
     client = get_qdrant_client()
 

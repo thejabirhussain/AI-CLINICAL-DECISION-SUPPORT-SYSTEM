@@ -10,33 +10,35 @@ class ResponsePolicy:
     style_instruction: str
 
 
+
+# Enhanced Medical Cues
 _SIMPLE_CUES = {
     "what is", "define", "definition", "date", "deadline", "where", "when", "who",
     "url", "link", "phone", "number", "amount", "fee", "cost", "due", "rate",
+    "dose", "dosage", "frequency", "side effect", "symptom", "indication",
 }
 
 _ANALYTICAL_CUES = {
     "how", "why", "explain", "steps", "calculate", "eligibility", "example",
     "examples", "impact", "benefit", "pros", "cons", "difference", "compare",
+    "mechanism", "pathophysiology", "risk factors", "contraindication",
 }
 
 _COMPLEX_CUES = {
     "comprehensive", "detailed", "end-to-end", "guide", "strategy", "multiple parts",
     "multi part", "multi-part", "in-depth", "tradeoffs", "limitations", "edge cases",
+    "diagnostic criteria", "treatment plan", "management", "guidelines", "protocol",
 }
 
 # Domain-specific cues
-_FORM_CUES = {
-    "form ", "schedule ", "pub ", "publication ", "instructions", "line ", "box ",
-}
-
-_GUIDANCE_CUES = {
-    "should i", "must i", "do i need", "can i", "compliance", "penalty", "penalties",
-    "file", "filing", "report", "claim", "deduct", "deduction", "credit", "eligibility",
+_CLINICAL_GUIDANCE_CUES = {
+    "approach to", "manage", "treat", "diagnose", "workup", "evaluation",
+    "recommendation", "first line", "second line", "therapy",
 }
 
 _SCENARIO_CUES = {
     "scenario", "case", "suppose", "assume", "if i", "if we", "what happens if",
+    "patient with", "h/o", "history of", "presents with",
 }
 
 
@@ -45,10 +47,7 @@ def _count_cues(q: str, cues: set[str]) -> int:
 
 
 def classify_query(query: str) -> dict:
-    """Classify a query into a rich type and return an associated response policy.
-
-    Returns a dict: {"type": <slug>, "response_mode": <short|medium|detailed>, "policy": ResponsePolicy}
-    """
+    """Classify a query into a rich type and return an associated response policy."""
     q = query.strip().lower()
 
     length = len(q)
@@ -58,103 +57,65 @@ def classify_query(query: str) -> dict:
     simple_hits = _count_cues(q, _SIMPLE_CUES)
     analytical_hits = _count_cues(q, _ANALYTICAL_CUES)
     complex_hits = _count_cues(q, _COMPLEX_CUES)
-    form_hits = _count_cues(q, _FORM_CUES)
-    guidance_hits = _count_cues(q, _GUIDANCE_CUES)
+    clinical_hits = _count_cues(q, _CLINICAL_GUIDANCE_CUES)
     scenario_hits = _count_cues(q, _SCENARIO_CUES)
 
-    list_like = bool(re.search(r"\b(?:list|enumerate|top|bullet|checklist)\b", q))
-    step_like = bool(re.search(r"\b(?:step-by-step|step by step|steps)\b", q))
-    multi_part = bool(re.search(r"\b(?:and|or)\b", q)) and num_questions >= 1
-
-    # Scenario-based multi-step reasoning
-    if scenario_hits >= 1 or (" vs " in q) or ("compare" in q and ("and" in q or " vs " in q)):
+    # 1. Complex Clinical Scenario / Case Study
+    if scenario_hits >= 1 or (clinical_hits >= 1 and complex_hits >= 1):
         policy = ResponsePolicy(
             level="complex",
-            max_tokens=1400,
-            top_n=5,
+            max_tokens=1500,
+            top_n=6,
             style_instruction=(
-                "Provide a structured scenario analysis with assumptions, steps, and outcomes. "
-                "Use sections: Assumptions, Reasoning, Outcome, Caveats. Cite 3-5 sources."
+                "Provide a comprehensive clinical response. "
+                "Structure: **Clinical Assessment**, **Differential Diagnosis** (if applicable), "
+                "**Management/Treatment approach**, and **Key Guidelines**. "
+                "Cite guidelines extensively."
             ),
         )
-        return {"type": "scenario_analysis", "response_mode": "detailed", "policy": policy}
+        return {"type": "clinical_scenario", "response_mode": "detailed", "policy": policy}
 
-    # Tax guidance / deep analysis
-    if guidance_hits >= 2 or (guidance_hits >= 1 and analytical_hits >= 1) or "guidance" in q:
+    # 2. Detailed Treatment/Diagnostic Guidance
+    if clinical_hits >= 1 or analytical_hits >= 2:
         policy = ResponsePolicy(
             level="complex",
             max_tokens=1200,
             top_n=5,
             style_instruction=(
-                "Provide compliance-oriented guidance with steps, eligibility, timing, and penalties. "
-                "Use short sections and bullets. Cite 3-5 sources."
+                "Provide structured clinical guidance. "
+                "Use sections: **Overview**, **Recommendations**, **Evidence**, and **Considerations**. "
+                "Use bullet points for clarity."
             ),
         )
-        return {"type": "tax_guidance", "response_mode": "detailed", "policy": policy}
+        return {"type": "clinical_guidance", "response_mode": "detailed", "policy": policy}
 
-    # Form-specific breakdown
-    if form_hits >= 1 and ("form" in q or "schedule" in q or "publication" in q or "instructions" in q):
-        policy = ResponsePolicy(
-            level="analytical",
-            max_tokens=800,
-            top_n=4,
-            style_instruction=(
-                "Provide a form-specific breakdown: purpose, who should file, key lines, common mistakes. "
-                "Use bullets and cite 2-4 sources."
-            ),
-        )
-        return {"type": "form_breakdown", "response_mode": "medium", "policy": policy}
-
-    # Step-by-step reasoning
-    if step_like and (analytical_hits >= 1 or guidance_hits >= 1):
-        policy = ResponsePolicy(
-            level="complex",
-            max_tokens=1000,
-            top_n=4,
-            style_instruction=(
-                "Provide a numbered step-by-step procedure with brief rationales per step. Cite 2-4 sources."
-            ),
-        )
-        return {"type": "step_by_step", "response_mode": "detailed", "policy": policy}
-
-    # Simple / Direct fact
-    if (length < 80 and num_questions <= 1 and analytical_hits == 0 and complex_hits == 0) or simple_hits >= 1:
+    # 3. Simple Fact / Lookup
+    # Short query looking for specific item (dose, definition)
+    if (length < 100 and num_questions <= 1 and clinical_hits == 0 and complex_hits == 0) or simple_hits >= 1:
         policy = ResponsePolicy(
             level="simple",
-            max_tokens=250,
-            top_n=2,
+            max_tokens=300,
+            top_n=3,
             style_instruction=(
-                "Answer briefly in 2-4 concise sentences or 3-5 bullets. "
-                "Include only the essential fact(s) and one source section."
+                "Provide a concise, direct answer. "
+                "State the key fact, dose, or definition clearly in 2-4 sentences. "
+                "Avoid unnecessary headers or long explanations."
             ),
         )
         return {"type": "short_answer", "response_mode": "short", "policy": policy}
 
-    # Medium explanation
-    if (length < 240 and (analytical_hits >= 1 or num_sentences >= 2 or list_like)) and complex_hits == 0 and not multi_part:
-        policy = ResponsePolicy(
-            level="analytical",
-            max_tokens=600,
-            top_n=3,
-            style_instruction=(
-                "Provide a medium-length explanation in clear paragraphs and bullets. "
-                "Aim for 5-8 sentences total. Include key caveats and cite 2-3 sources."
-            ),
-        )
-        return {"type": "medium_explanation", "response_mode": "medium", "policy": policy}
-
-    # Long / detailed
+    # 4. Medium Explanation (Default fall-through for moderate queries)
     policy = ResponsePolicy(
-        level="complex",
-        max_tokens=1200,
-        top_n=5,
+        level="analytical",
+        max_tokens=800,
+        top_n=4,
         style_instruction=(
-            "Provide a thorough, structured answer with short sections and bullets. "
-            "Cover sub-questions, edge cases, and steps. Aim for 10-16 sentences. "
-            "Cite 3-5 sources."
+            "Provide a balanced explanation. "
+            "Use clear paragraphs and one level of bullet points if needed. "
+            "Highlight key clinical relevance."
         ),
     )
-    return {"type": "long_detailed", "response_mode": "detailed", "policy": policy}
+    return {"type": "medium_explanation", "response_mode": "medium", "policy": policy}
 
 
 def select_response_policy(query: str) -> ResponsePolicy:

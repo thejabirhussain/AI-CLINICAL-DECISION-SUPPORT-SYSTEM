@@ -15,7 +15,7 @@ python -m app.scripts.ingest_web --seed "https://www.nice.org.uk/guidance/publis
 
 ### 2. WHO Clinical Guidelines
 ```bash
-python -m app.scripts.ingest_web --seed "https://www.who.int/publications/i/item/" --max-pages 300 --include-seed --allow-pdf
+python -m app.scripts.ingest_web --seed "https://www.who.int/publications/i/item/" --max-pages 300 --include-seed --allow-pdf --ignore-robots
 ```
 
 ### 3. CDC Diseases & Conditions
@@ -25,7 +25,7 @@ python -m app.scripts.ingest_web --seed "https://www.cdc.gov/diseasesconditions/
 
 ### 4. Cochrane Library Summaries
 ```bash
-python -m app.scripts.ingest_web --seed "https://www.cochranelibrary.com/cdsr/reviews" --max-pages 200
+python -m app.scripts.ingest_web --seed "https://www.cochranelibrary.com/cdsr/reviews" --max-pages 200 --ignore-robots
 ```
 
 ### 5. AAFP (American Academy of Family Physicians)

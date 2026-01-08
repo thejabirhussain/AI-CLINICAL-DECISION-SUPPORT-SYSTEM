@@ -1,6 +1,6 @@
 """Prompt templates for RAG generation."""
 
-import orjson
+import json
 from typing import Any, Optional
 
 from app.core.schemas import VectorChunk
@@ -11,8 +11,9 @@ def build_rag_prompt(
     user_query: str,
     history: Optional[list[dict[str, str]]] = None,
     summary: Optional[str] = None,
+    patient_context: Optional[str] = None,
 ) -> str:
-    """Build RAG prompt with context chunks and optional conversation history."""
+    """Build RAG prompt with context chunks, patient data, and optional conversation history."""
     # Format chunks as JSONL
     ctx_lines = []
     for chunk in chunks:
@@ -24,7 +25,7 @@ def build_rag_prompt(
             "char_end": chunk.get("char_end", 0),
             "excerpt": chunk.get("text", "")[:500],
         }
-        ctx_lines.append(orjson.dumps(ctx_obj).decode("utf-8"))
+        ctx_lines.append(json.dumps(ctx_obj))
 
     ctx_block = "\n".join(ctx_lines)
 
@@ -41,10 +42,13 @@ def build_rag_prompt(
     summary_block = summary or ""
 
     prompt = f"""SYSTEM:
-You are a Clinical Decision Support Assistant designed to help healthcare professionals by providing accurate, evidence-based medical information from the provided knowledge base.
-You must cited sources (Guidelines, Journals) and never invent medical facts.
+You are a Clinical Decision Support Assistant.
+You must cite sources (Guidelines, Journals) and never invent medical facts.
 
-CONTEXT:
+PATIENT DATA / CONTEXT:
+{patient_context if patient_context else "No specific patient data provided."}
+
+KNOWLEDGE BASE CONTEXT:
 {ctx_block}
 
 HISTORY (most recent first at bottom):
@@ -53,33 +57,16 @@ HISTORY (most recent first at bottom):
 CONVERSATION SUMMARY (if provided):
 {summary_block}
 
-USER:
+USER QUESTION:
 {user_query}
 
 ASSISTANT INSTRUCTIONS:
-- Use only the provided context. If it does not support an answer, say: "I don't have verifiable information in the clinical knowledge base for that query."
-- DO NOT hallucinate diagnoses or treatments.
+- Use the provided KNOWLEDGE BASE CONTEXT to answer the question.
+- If the question refers to the PATIENT DATA, prioritize that information for the specific case details, but use KNOWLEDGE BASE for medical reasoning/guidelines.
+- If the KNOWLEDGE BASE does not allow for a verifiable answer, say: "I don't have verifiable information in the clinical knowledge base for that query."
+- DO NOT hallucinate.
 - Respond in GitHub-Flavored Markdown (GFM).
-- Begin your answer with a level-3 heading containing the user question:
-  "### {user_query}"
-
-- Structure your response for clinical clarity:
-  - **Clinical Summary**: Brief overview based on evidence.
-  - **Evidence/Guidelines**: Key points from the retrieved documents.
-  - **Recommendations/Next Steps**: If applicable and supported by context.
-  - **Risk Factors/Red Flags**: If mentioned in the context.
-
-- Bold important medical terms, drug names, and doses (e.g., **Aspirin 81mg**, **Hypertension**).
-
-- Citations:
-  - Refer to the specific guideline or source title in the text (e.g., "According to the **ACC/AHA Guidelines**...").
-  - Do NOT include a separate "Sources" section (handled by UI).
-
-- Pronouns and References: Use HISTORY and SUMMARY to resolve context.
-
-- MANDATORY DISCLAIMER:
-  If the question implies a specific patient diagnosis or treatment plan, always prepend or append:
-  > "This is a decision support output based on available guidelines. It is not a substitute for professional clinical judgment."
+- **MANDATORY DISCLAIMER**: "This is a decision support output based on available guidelines. It is not a substitute for professional clinical judgment."
 """
 
     return prompt

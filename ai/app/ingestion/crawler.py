@@ -23,11 +23,13 @@ class RespectfulCrawler:
         self,
         base_url: str,
         rate_limit_rps: float = 0.5,
-        user_agent: str = "AI-CDSS-Bot/1.0",
+        user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        ignore_robots: bool = False,
     ):
         self.base_url = base_url
         self.rate_limit_rps = rate_limit_rps
         self.user_agent = user_agent
+        self.ignore_robots = ignore_robots
         self.last_request_time = 0.0
         self.robots_parser = None
         self.seen_urls = set()
@@ -39,6 +41,8 @@ class RespectfulCrawler:
 
     def _check_robots_txt(self) -> None:
         """Check and parse robots.txt."""
+        if self.ignore_robots:
+            return
         try:
             robots_url = f"{self.base_url}/robots.txt"
             self.robots_parser = RobotFileParser()
@@ -51,6 +55,8 @@ class RespectfulCrawler:
 
     def _can_fetch(self, url: str) -> bool:
         """Check if URL can be fetched according to robots.txt."""
+        if self.ignore_robots:
+            return True
         if self.robots_parser is None:
             return True
         try:
@@ -77,7 +83,7 @@ class RespectfulCrawler:
             return None
 
         # Check robots.txt
-        if not self._can_fetch(url):
+        if not self.ignore_robots and not self._can_fetch(url):
             logger.info(f"Skipping URL (robots.txt): {url}")
             return None
 
@@ -137,13 +143,18 @@ class RespectfulCrawler:
         self.client.close()
 
 
-def create_crawler(base_url: str, rate_limit_rps: float = None) -> RespectfulCrawler:
+def create_crawler(base_url: str, rate_limit_rps: float = None, ignore_robots: bool = False) -> RespectfulCrawler:
     """Create a configured crawler."""
     if rate_limit_rps is None:
         rate_limit_rps = settings.rate_limit_rps
 
-    crawler = RespectfulCrawler(base_url=base_url, rate_limit_rps=rate_limit_rps)
-    crawler._check_robots_txt()
+    crawler = RespectfulCrawler(
+        base_url=base_url, 
+        rate_limit_rps=rate_limit_rps,
+        ignore_robots=ignore_robots
+    )
+    if not ignore_robots:
+        crawler._check_robots_txt()
     return crawler
 
 

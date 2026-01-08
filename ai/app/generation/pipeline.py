@@ -13,6 +13,7 @@ from app.core.prompts import build_no_results_prompt, build_rag_prompt
 from app.core.security import should_add_disclaimer
 from app.core.utils import estimate_tokens
 from app.generation.llm import get_llm_provider
+from app.generation.query_rewriter import rewrite_query
 from app.generation.response_sizer import classify_query, select_response_policy
 from app.vector.embeddings import get_embedding_provider
 from app.vector.qdrant_client import get_client
@@ -52,18 +53,23 @@ class RAGPipeline:
         """Answer a query using RAG pipeline."""
         try:
             # Inject patient context into query if present
-            original_query = query
-            if context:
-                query = f"Patient Context:\n{context}\n\nUser Question: {original_query}"
-
-            cls = classify_query(query)
+            # Inject patient context into query if present
+            # original_query = query
+            # We no longer prepend context to query to avoid confusing the classifier/embedder
+            
+            # Step 0: Rewrite Query for Conversational Chaining
+            rewritten_query = rewrite_query(query, history)
+            # Use rewritten query for classification and retrieval
+            query_for_retrieval = rewritten_query
+            
+            cls = classify_query(query_for_retrieval)
             policy = cls["policy"]
             # Terminal logging of classification
             logger.info("[QUERY CLASSIFICATION] → %s", cls.get("type"))
-            logger.info('[QUERY CONTENT] → "%s"', original_query)
+            logger.info('[QUERY CONTENT] → "%s"', query_for_retrieval)
             logger.info("[RESPONSE MODE] → %s", cls.get("response_mode"))
             # Step 1: Embed query
-            query_embedding = self.embedding_provider.get_embedding(original_query) # Use original query for retrieval to find relevant medical knowledge, not specific patient details
+            query_embedding = self.embedding_provider.get_embedding(query_for_retrieval) # Use rewritten query for retrieval
             
             # Step 2: Retrieve chunks
             top_k = top_k or settings.top_k
@@ -80,7 +86,7 @@ class RAGPipeline:
             )
 
             if not chunks:
-                logger.warning(f"No chunks found for query: {original_query}")
+                logger.warning(f"No chunks found for query: {query_for_retrieval}")
                 return {
                     "answer_text": NO_KB_MSG,
                     "sources": [],
@@ -94,7 +100,7 @@ class RAGPipeline:
 
             # Step 3: Optional reranking
             if self.reranker and len(chunks) > top_n:
-                chunks = self.reranker.rerank(original_query, chunks, top_n=top_n)
+                chunks = self.reranker.rerank(query_for_retrieval, chunks, top_n=top_n)
             else:
                 chunks = chunks[:top_n]
 
@@ -119,7 +125,7 @@ class RAGPipeline:
                     summary_text = None
 
             # Step 5: Build prompt (Use the modified query with context here so the LLM sees it)
-            prompt = build_rag_prompt(chunks, query, history=history, summary=summary_text)
+            prompt = build_rag_prompt(chunks, query_for_retrieval, history=history, summary=summary_text, patient_context=context)
 
             # Step 6: Generate answer
             system_prompt = (
