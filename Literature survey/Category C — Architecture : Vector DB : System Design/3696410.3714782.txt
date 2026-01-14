@@ -1,0 +1,2136 @@
+.
+
+.
+
+.
+
+PDF Download
+3696410.3714782.pdf
+05 January 2026
+Total Citations: 29
+Total Downloads: 5889
+.
+
+.
+
+Latest updates: hps://dl.acm.org/doi/10.1145/3696410.3714782
+
+.
+
+.
+
+.
+
+Published: 28 April 2025
+.
+
+RESEARCH-ARTICLE
+
+.
+.
+
+WWW '25: The ACM Web Conference
+2025
+April 28 - May 2, 2025
+Sydney NSW, Australia
+.
+
+.
+
+XUEJIAO ZHAO, Nanyang Technological University, Singapore City, Singapore
+
+Citation in BibTeX format
+
+.
+
+MedRAG: Enhancing Retrieval-augmented Generation with Knowledge
+Graph-Elicited Reasoning for Healthcare Copilot
+SIYAN LIU, Nanyang Technological University, Singapore City, Singapore
+.
+
+Conference Sponsors:
+SIGWEB
+
+.
+
+SUYIN YANG, Tan Tock Seng Hospital, Singapore City, Singapore
+
+.
+
+.
+
+.
+
+CHUNYAN MIAO, Nanyang Technological University, Singapore City, Singapore
+
+.
+
+Open Access Support provided by:
+.
+
+Nanyang Technological University
+.
+
+Tan Tock Seng Hospital
+
+WWW '25: Proceedings of the ACM on Web Conference 2025 (April 2025)
+hps://doi.org/10.1145/3696410.3714782
+ISBN: 9798400712746
+
+MedRAG: Enhancing Retrieval-augmented Generation with
+Knowledge Graph-Elicited Reasoning for Healthcare Copilot
+Xuejiao Zhao∗
+
+Siyan Liu∗
+
+LILY Research Centre
+Nanyang Technological Uniersity
+Singapore
+xjzhao@ntu.edu.sg
+
+LILY Research Centre
+Nanyang Technological Uniersity
+Singapore
+siyan.liu@ntu.edu.sg
+
+Su-Yin Yang
+
+Chunyan Miao†
+
+Tan Tock Seng Hospital
+Woodlands Health
+Singapore
+su_yin_yang@wh.com.sg
+
+LILY Research Centre
+Nanyang Technological Uniersity
+Singapore
+ascymiao@ntu.edu.sg
+
+Abstract
+
+Keywords
+
+Retrieval-augmented generation (RAG) is a well-suited technique
+for retrieving privacy-sensitive Electronic Health Records (EHR). It
+can serve as a key module of the healthcare copilot, helping reduce
+misdiagnosis for healthcare practitioners and patients. However, the
+diagnostic accuracy and specificity of existing heuristic-based RAG
+models used in the medical domain are inadequate, particularly for
+diseases with similar manifestations. This paper proposes MedRAG,
+a RAG model enhanced by knowledge graph (KG)-elicited reasoning for the medical domain that retrieves diagnosis and treatment
+recommendations based on manifestations. MedRAG systematically
+constructs a comprehensive four-tier hierarchical diagnostic KG encompassing critical diagnostic differences of various diseases. These
+differences are dynamically integrated with similar EHRs retrieved
+from an EHR database, and reasoned within a large language model.
+This process enables more accurate and specific decision support,
+while also proactively providing follow-up questions to enhance
+personalized medical decision-making. MedRAG is evaluated on
+both a public dataset DDXPlus and a private chronic pain diagnostic dataset (CPDD) collected from Tan Tock Seng Hospital, and its
+performance is compared against various existing RAG methods.
+Experimental results show that, leveraging the information integration and relational abilities of the KG, our MedRAG provides
+more specific diagnostic insights and outperforms state-of-the-art
+models in reducing misdiagnosis rates. Our code will be available
+at https:// github.com/ SNOWTEAM2023/ MedRAG
+
+Healthcare Copilot, Retrieval-augmented Generation, Knowledge
+Graph, Large Language Models, Decision Support
+ACM Reference Format:
+Xuejiao Zhao, Siyan Liu, Su-Yin Yang, and Chunyan Miao. 2025. MedRAG:
+Enhancing Retrieval-augmented Generation with Knowledge Graph-Elicited
+Reasoning for Healthcare Copilot. In Proceedings of the ACM Web Conference
+2025 (WWW ’25), April 28-May 2, 2025, Sydney, NSW, Australia. ACM, New
+York, NY, USA, 16 pages. https://doi.org/10.1145/3696410.3714782
+
+1
+
+Introduction
+
+Diagnostic errors cause significant harm to healthcare systems
+worldwide. In the United States, approximately 795,000 individuals
+each year suffer permanent disability or death due to misdiagnosis
+of dangerous diseases. These errors are predominantly attributed to
+cognitive biases and judgmental mistakes [10, 38, 60]. “Healthcare
+Copilot” is a medical AI assistant designed to provide diagnostic
+decision support, mitigating biases and increasing efficiency for
+healthcare practitioners, while also empowering patients and improving overall decision-making [1, 2, 29, 46, 47]. We conducted
+interviews to gather requirements and suggestions from users of
+the healthcare copilot. The results showed that one of the most important and challenging tasks for a healthcare copilot is to provide
+an accurate diagnosis based on patient manifestations 1 , followed by
+offering appropriate treatment plans and medication recommendations based on the diagnosis. In addition, when patient information
+is insufficient or the diagnosis is ambiguous, the healthcare copilot
+should proactively offer precise follow-up questions to enhance the
+decision-making process [3, 26, 40, 47, 68].
+Retrieval-augmented generation (RAG) offers an advanced approach by utilizing domain-specific, private datasets to address
+user queries without the need for additional model training [13,
+18, 30]. This approach is well-suited for retrieving information
+from privacy-sensitive Electronic Health Records (EHRs), and helps
+healthcare professionals to reduce the risk of misdiagnosis as a
+healthcare copilot [23, 62]. The existing medical RAG and LLMs
+
+CCS Concepts
+• Applied computing → Health care information systems; •
+Information systems → Language models.
+∗ Both authors contributed equally to the paper
+† Corresponding author
+
+This work is licensed under a Creative Commons Attribution-NonCommercialNoDerivatives 4.0 International License.
+WWW ’25, Sydney, NSW, Australia
+© 2025 Copyright held by the owner/author(s).
+ACM ISBN 979-8-4007-1274-6/25/04
+https://doi.org/10.1145/3696410.3714782
+
+1“Manifestations” typically include all observable signs and symptoms of a patient’s
+
+condition, such as physical indicators (e.g., rash, fever), patient-reported symptoms
+(e.g., pain, dizziness), and measurable clinical data (e.g., blood pressure, lab results).
+
+4442
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+Xuejiao Zhao, Siyan Liu, Su-Yin Yang, & Chunyan Miao
+
+Query: Please provide diagnosis suggestions for the following patient:
+• Age: 74 • Functional status: able to walk short distances unaided, need help for longer distances. • Description: Pain in the right
+lower back radiating down the right lower limb, with numbness in both feet [...].
+
+Answer 1: According to the symptoms you
+described, the diagnosis is sciatica: [...].
+
+Inaccuracy
+
+Searching
+Diagnostic KG
+
+Answer 2: The symptoms you describe are often
+
+Vagueness
+
+Answer 3: Depending on the symptoms you
+
+Heuristics
+
+caused by: low back pain: [...]; back pain: [...];
+lumbar-related pain: [...].
+
+describe, there are two potential diagnoses :
+sciatica: [...]; lumbar canal stenosis: [...].
+
+Elicited Reasoning
+
+Diagnostic Differences KG
+
+MedRAG
+
+Answer: According to the symptoms, there are two potential
+diagnoses: sciatica: [...]; lumbar canal stenosis: [...].
+You can further ask: whether standing increases pain
+compared to cycling.
+Accuracy
+
+Specificity
+
+Questions
+
+(b)
+
+(a)
+
+Figure 1: (a) The existing RAG and LLMs rely on heuristic-based approaches, leading to incorrect or vague outputs, particularly
+when diseases share similar manifestations (high lighted by green colour). (b) MedRAG is a RAG framework with KG-elicited
+reasoning ability that can make accurate diagnostic decisions and generate highly specific diagnoses, along with proactively
+providing follow-up questions when necessary.
+fine-tuned on medical datasets often rely on heuristic-based approaches, leading to incorrect or vague outputs, particularly when
+diseases share similar manifestations, making differentiation difficult [19, 25, 32, 61, 65, 69] as shown in Figure 1(a). To address this,
+we introduce MedRAG, a framework that combines RAG with a comprehensive diagnostic knowledge graph, enabling more accurate
+reasoning and tailored treatment recommendations by grounding
+predictions in structured, inferable medical data [22, 27, 36, 56].
+This approach significantly enhances the reasoning ability of RAG,
+enabling it not only to identify subtle diagnostic differences but also
+to proactively infer relevant follow-up questions, further clarifying
+ambiguous patient information, as shown in Figure 1(b).
+Specifically, a diagnostic knowledge graph (KG) with a fourtier hierarchical structure is constructed systematically through
+advanced techniques, including disease clustering, hierarchical aggregation and large language model augmentation. While medical
+ontologies like UMLS could be considered, their ambiguous class
+definitions and low granularity make them less suitable for direct
+use. To address these limitations, we construct this KG tailored
+to each database to eliminate redundancies and enhance manifestations for improved granularity. The diagnostic differences KG
+searching module then identifies all critical diagnostic differences
+KG related to the input patient by performing multi-level manifestations matching within the diagnostic KG. Finally, a KG-augmented
+RAG module synthesizes the retrieved EHRs and the critical diagnostic differences KG to elicit the reasoning within a large language
+model. This integration enhances the system’s ability to make precise and highly specific diagnostic decisions, while also providing
+personalized treatment recommendations, medication guidance,
+and, when necessary, proactive follow-up questions.
+We evaluate the general applicability of MedRAG by a public
+dataset DDXPlus [15] and real-world clinical applicability by a private chronic pain diagnostic dataset (CPDD). Performance is quantitatively compared against several popular state-of-the-art (SOTA)
+
+RAG models, including FL-RAG [45] and DRAGIN [52]. We further
+validate the generalization of MedRAG on widely-used open-source
+LLMs, including Mixtral-8x7B [21] and Llama-3.1-Instruct [12], as
+well as on some closed-source LLMs such as GPT-3.5-turbo [41],
+GPT-4o [42]. Experimental results demonstrate that our model outperforms existing RAG approaches in terms of diagnostic accuracy
+and specificity. Additionally, MedRAG demonstrates robust generalization across various LLMs, and proves highly effective in
+generating reasoning-based follow-up diagnostic questions. These
+capabilities are particularly valuable for distinguishing between diseases with similar manifestations. Based on extensive experiments,
+our key contributions can be summarized as follows:
+• We deliver two diagnostic knowledge graphs: one focused on
+chronic pain and the other based on DDXPlus [15], a largescale synthesized dataset. These knowledge graphs contain
+a rich hierarchical structure of diseases, along with their
+key diagnostic differences. This comprehensive organization
+allows for enhanced precision in disease differentiation and
+diagnosis, enabling better decision-making support across
+various medical systems.
+• We proposed a novel RAG approach enhanced by KG-elicited
+reasoning, which significantly improves RAG’s ability to
+make accurate and highly specific diagnostic decisions. In
+addition to supporting personalized treatment recommendations and medication guidance, it proactively generates
+follow-up questions when necessary. These enhancements
+greatly optimize the decision-making process in complex
+medical scenarios.
+• Comprehensive experiments conducted on two datasets demonstrate the superiority of our model over existing RAG and
+LLM approaches. Additionally, the results highlight its applicability across various backbone LLMs and its effectiveness
+in proactively generating reasoning-based diagnostic questions for medical consultation.
+
+4443
+
+MedRAG: Enhancing Retrieval-augmented Generation with
+Knowledge Graph-Elicited Reasoning for Healthcare Copilot
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+2 Related Works
+2.1 LLMs and RAG in Healthcare
+
+is constructed based on patterns extracted from Electronic Health
+Record (EHR) databases and augmented by LLMs, making it highly
+scalable and adaptable to various medical specialties. It supports
+customization with local databases, ensuring relevance to specific
+clinical settings. We employ LLMs to enrich the knowledge graph
+by providing detailed descriptions of the manifestations of each disease at the leaf nodes, including symptoms, affected areas, activity
+limitations, and other pertinent features.
+
+Large Language Models (LLMs) have been increasingly applied to
+healthcare tasks such as EHR analysis, clinical note generation,
+virtual medical assistant, and clinical decision support [19, 23, 58,
+65, 71]. Although LLMs fine-tuned on medical datasets can handle large amounts of unstructured clinical information, most of
+these models are heuristic-based, with limitations such as generating incorrect or vague information and struggling to handle
+complex patient cases [25, 65]. To address this, integrating external
+information sources becomes essential to improve their contextual
+accuracy. We adopt a Retrieval-Augmented Generation (RAG) approach [30]. RAG enhances LLMs by incorporating retrieved text
+passages from external sources such as electronic health records,
+medical papers, textbooks, and databases into their input, resulting
+in significant improvements in knowledge-intensive tasks [4]. In
+the field of healthcare, integrating retrieved information grounds
+the predictions in current, verifiable medical data, resulting in more
+accurate, specificity and context-aware outputs such as diagnostic
+assessments and treatment recommendations. RAG typically employs a retrieve-and-read approach to retrieve information based
+on the initial user query and an answer is generated using that
+content [14, 17, 28, 49, 51, 73]. However, this simplicity restricts
+their ability to adapt to complex and evolving medical cases. Enhanced RAG models aim to improve retrieval and generation quality
+by integrating more sophisticated components such as retrievers,
+re-rankers, filters, and readers [8, 24, 30, 37, 48, 66]. Despite these advancements, delivering accurate clinical decision support remains
+challenging. The models often struggle to provide precise diagnoses,
+particularly when diseases share similar manifestations, making
+differentiation difficult. Our proposed MedRAG addresses these
+challenges by systematically constructing a four-tier hierarchical
+diagnostic knowledge graph to elicit reasoning for the generation
+module of RAG. This approach enables the model to make accurate
+diagnostic decisions and generate highly specific diagnoses along
+with personalized treatment recommendations.
+
+2.2
+
+3
+
+Preliminaries
+
+Definition 3.1 (Diagnostic Knowledge Graph). Given an EHR
+database 𝐷 and an LLM M𝑎 , our target is to construct a four-tier
+hierarchical diagnostic knowledge graph G. A multi-hop path, from
+𝑟𝑠
+the top level to the bottom level of G is represented as (𝐸𝐿1 ←−−
+𝑟𝑠
+𝑟𝑚
+𝐸𝐿2 ←−− 𝐸𝐿3 −−→ 𝐸𝐿4 ). 𝐸𝐿3 is the set of all diseases (i.e. potential
+diagnoses) names extracted from 𝐷, 𝐸𝐿2 represents the set of subcategories of 𝐸𝐿3 , and 𝐸𝐿1 is the set of broader categories of 𝐸𝐿2 .
+Each 𝑒𝐿𝑖 𝑗 is a disease name or a category name and 𝑒𝐿𝑖 𝑗 ∈ 𝐸𝐿𝑖 .
+𝐸𝐿1 and 𝐸𝐿2 are generated by hierarchical aggregation in Section
+4.1.1, they indicate the diseases with similar manifestations. 𝑟𝑠 is an
+“is_a” relation, indicating a hierarchical or subordinate relationship. 𝑟𝑚 is a “has_manifestation_of” relation between diseases
+and their manifestations. 𝐸𝐿4 contains two subtypes: 𝐸𝐿4𝑎 , representing disease-specific features augmented by the LLM M𝑎, and
+𝐸𝐿4𝑑, representing features decomposed from the manifestations
+extracted from the EHR database 𝐷.
+Definition 3.2 (Diagnostic Differences KG Searching). Given
+a G and the input patient’s manifestations 𝑞, let 𝑒𝐿2𝑠 ∈ 𝐸𝐿2 denote
+a certain subcategory identified through the method described
+in Section 4.2.3 determined from 𝑞. The target is to extract the
+diagnostic differences KG 𝐾, related to 𝑒𝐿2𝑠 , from G.
+Definition 3.3 (RAG). We define a typical retrieval-augmented
+generation approach for generating diagnostic reports in two phases:
+algorithm R for the retrieval phase and LLM M𝑔 for the generative
+phase. A prompt 𝑝𝑛𝑎𝑖𝑣𝑒 is used to guide M𝑔 to generate the final
+report. Given a 𝑞, 𝐷 and embedding model E, R retrieves top-𝑘
+relevant documents 𝑑𝑟 , and then M𝑔 generates answer 𝐴 with 𝑞,
+𝑑𝑟 and prompt 𝑝𝑛𝑎𝑖𝑣𝑒 as shown in Equation 1 and 2:
+
+Knowledge Graph-enhanced LLMs and RAG
+
+Recent studies have focused on creating strategies that integrate
+knowledge graphs to enhance LLMs and RAG, enabling them to generate accurate and reliable medical responses. Compared to knowledge contained in document repositories [20], knowledge graphs
+offer structured and inferable information, making them more suitable for augmenting LLMs and RAG [22, 27, 31, 36, 56, 67, 77].
+Several works [22, 35, 55, 63, 70, 78] propose training sequence-tosequence models from scratch, focusing on dialogue generation
+by conditioning the output on entities extracted from knowledge
+graphs. However, existing medical knowledge graphs [6, 16, 56, 75]
+often fall short because they lack the detailed and structured information necessary for accurate diagnostic assistance, especially
+when distinguishing between diseases with similar manifestations.
+To overcome this limitation, we introduce MedRAG, a framework
+that combines RAG with a comprehensive diagnostic knowledge
+graph to enhance the reasoning ability of RAG in identifying subtle differences in diagnoses. MedRAG allows physicians to input
+patients’ medical records or manifestations. Our knowledge graph
+
+4
+
+𝑑𝑟 = R (𝑞, 𝐷, E),
+
+(1)
+
+𝐴 = M𝑔 (𝑞, 𝑑𝑟 , 𝑝𝑛𝑎𝑖𝑣𝑒 ).
+
+(2)
+
+Methods
+
+In this section, we elaborate on the details of our proposed MedRAG,
+and the overall framework is illustrated in Figure 2. MedRAG includes five modules:
+• Input: The input to MedRAG is the description of patient
+manifestations, which can be either structured EHR or unstructured text descriptions.
+• Output: The output of MedRAG includes the diagnoses,
+treatment recommendations, medication guidance and followup questions when necessary.
+• Diagnostic Knowledge Graph Construction: This module constructs a four-tier hierarchical diagnostic knowledge
+
+4444
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+KG-elicited Reasoning RAG
+EHR Indexing
+
+Prompt1
+
+Patient info
+
+EHR DB
+
+Text
+Description
+
+Top-k relevant
+EHR
+FAISS
+Index
+Search
+
+Diagnostic Differences KG Searching
+Clinical Features
+Decomposition
+Symptoms
+
+EHR DB
+
+Upward Traversal
+
+Diagnostic
+Differences KG
+
+SE
+LE
+
+Medication
+
+Follow-up
+Questions
+
+GE
+
+Diagnostic KG Construction
+Disease Clustering
+
+Treatment
+
+...
+
+...
+Geographic
+
+Clinical Features
+Matching
+
+Embeddings
+
+Locations
+Preprocessing
+
+Diagnose
+
+KG
+
+Patient manifestations
+
+EHR
+Patient
+Embedding
+
+Output
+
+Backbone LLM
+
+Patient
+Embeddings
+
+Reasoning
+
+Input
+
+Xuejiao Zhao, Siyan Liu, Su-Yin Yang, & Chunyan Miao
+
+Hierarchical
+Aggregation
+
+Disease
+Knowledge Graph
+
+Diagnostic
+Knowledge Graph
+LLM
+
+Augment
+
+Prompt2
+Expert/LLM
+
+Figure 2: The overall framework of MedRAG. MedRAG first extracts patient (red node) manifestations from structured or
+unstructured input, and decomposes different clinical features. These features are embedded and matched with a diagnostic
+KG to identify critical diagnostic differences KG. MedRAG’s KG-elicited reasoning RAG module retrieves relevant EHRs and
+integrates them with these diagnostic differences KG to trigger reasoning in an LLM. This reasoning generates precise diagnoses,
+treatment recommendations, and follow-up questions.
+G tailored to the medical domain of a specific EHR database. The
+construction of the diagnostic knowledge graph draws inspiration
+from the hierarchical structure of the World Health Organization’s
+International Classification of Diseases, 11th Edition (ICD-11) [43] 2 .
+
+graph systematically. First, potential diagnoses and corresponding manifestations are extracted from an EHR database
+to form a four-tier disease KG through clustering and hierarchical aggregation. Then, an LLM is used to augment the
+graph with critical diagnostic differences, transforming it
+into a diagnostic KG.
+• Diagnostic Differences KG Searching: This module identifies key diagnostic differences by decomposing patient
+manifestations into clinical features, such as symptoms and
+locations, through medical chunking. Then, the extracted
+features are embedded and matched with relevant diagnostic
+differences via multi-level matching and upward traversal
+within the diagnostic KG.
+• KG-elicited Reasoning RAG: This module comprises a
+document retriever and a KG-elicited reasoning LLM engine.
+The retriever selects relevant top-k EHRs based on patient
+embeddings and integrates them with critical diagnostic
+differences KG to trigger reasoning in the LLM, generating
+final diagnoses, treatment and medical recommendations
+and follow-up questions for medical consultation.
+
+4.1
+
+4.1.1 Disease Knowledge Graph Construction. The forms and representations of the diseases in an EHR database are diverse, we
+first unify the set of original disease descriptions 𝐸𝐿3𝑟𝑎𝑤 by disease
+clustering to 𝐸𝐿3 . The most common disease name within each
+cluster is regarded as the final disease name and is assigns to all
+other diseases in the cluster, as shown in Equation 3:
+𝐸𝐿3 = C(𝐸𝐿3𝑟𝑎𝑤 , E),
+
+(3)
+
+where C represents the clustering model applied to 𝐸𝐿3 , E is an
+embedding model.
+Then we use the unified 𝐸𝐿3 to construct a four-tier hierarchical
+disease knowledge graph through hierarchical aggregation. This
+graph integrates the relationships between diseases and their potential categories, with each disease aggregated into a subcategory
+and category [74, 76]. We define the disease knowledge graph as
+2 The specific classification principles of our diagnostic KG and ICD-11 are different.
+
+Diagnostic Knowledge Graph Construction
+
+Our approach classifies and organizes diseases based on the similarity of their manifestations, rather than the traditional classification of ICD-11 based on diagnostic
+categories. As a result, while the hierarchical concept is similar, the ICD-11 structure
+cannot be directly applied to our model.
+
+To enhance the reasoning capabilities and fill the knowledge gaps
+of the RAG, we propose constructing a diagnostic knowledge graph
+
+4445
+
+MedRAG: Enhancing Retrieval-augmented Generation with
+Knowledge Graph-Elicited Reasoning for Healthcare Copilot
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+G𝐷 where G𝐷 ⊂ G aggregated by Θ and LLM Mℎ , as shown in
+Equation 4:
+G𝐷 = Θ(𝐸𝐿𝑖 , Mℎ , E), 𝑖 = 3, 2.
+(4)
+In the first phase, we apply LLM-based topic aggregation using
+Mℎ , which extracts the most relevant topics from 𝐸𝐿3 to aggregate
+subcategories. These subcategory topics are then further aggregated
+into higher-level categories, forming the hierarchical structure from
+subcategories to broader categories. Next, hierarchical clustering
+is applied to assign diseases in 𝐸𝐿3 into aggregated subcategory
+topics and then subtopics to topics.
+This approach leverages LLM’s powerful semantic understanding and topic extraction capability, allowing for a more nuanced
+categorization of diseases in topic aggregation. By applying hierarchical clustering to the LLM-based topics, diseases in 𝐸𝐿3 are
+aggregated into a hierarchical structure. Hierarchical aggregation
+introduces multiple layers of granularity to 𝐸𝐿3 , ensuring that diseases with different manifestations are properly categorized.
+To effectively utilize historical diagnoses from 𝐷 as accurate representations of disease manifestations, we decompose their manifestations of the diseases in 𝐸𝐿3 , parsing them into discrete features
+𝐸𝐿4𝑑 . Every single feature like symptom, location, or activity limitation from each 𝑒𝐿3𝑖 is created as a node 𝑒𝐿4𝑑𝑖 ∈ 𝐸𝐿4 . This final
+decomposition results in the comprehensive disease knowledge
+graph G𝐷 , capturing both disease category information derived
+from hierarchical aggregation and their associated features.
+
+trunking on 𝑞 to decompose the manifestation into more detailed
+features, denoted as 𝑓1, 𝑓2, . . . , 𝑓𝑛 ∈ 𝑞. We define a mapping function
+to describe the process, shown in Equation 8:
+𝜙
+
+𝑞−
+→ {𝑓1, 𝑓2, . . . , 𝑓𝑛 }.
+
+4.2.2 Clinical Features Matching. Given a 𝑞, we compute the semantic similarity score 𝑠𝑖𝑚 between 𝑓𝑖 and 𝑒𝐿4𝑑𝑖 , shown in Equation 9:
+𝑠𝑖𝑚𝑖 𝑗 = S(𝑓𝑖 , 𝑒𝐿4𝑑 𝑗 , E),
+
+𝑇 =
+
+𝐸𝐿4 = 𝐸𝐿4𝑑 ∪ 𝐸𝐿4𝑎 ,
+
+(6)
+
+𝑗 ′∈ {1,...,|𝐸𝐿4𝑑 | }
+
+𝛿 (𝑠𝑖𝑚𝑖 𝑗 , 𝑡𝑚𝑎𝑡𝑐ℎ𝑖𝑛𝑔 )
+
+(11)
+
+4.2.3 Upward Traversal. To precisely match the patient’s most relevant 𝑒𝐿2𝑠 , we employ upward traversal which determines the closest
+disease subcategory by aggregating votes based on the shortest path
+distances between 𝑡𝑖 ∈ 𝑇 and 𝑒𝐿2 𝑗 in the graph.
+For 𝑡𝑖 , we calculate the shortest path to each disease subcategory
+𝑒𝐿2 𝑗 by upward traversing through the graph. Denote the shortest
+path distance between 𝑡𝑖 to 𝑒𝐿2 𝑗 as 𝑃 (𝑡𝑖 , 𝑒𝐿2 𝑗 ). If 𝑒𝐿2𝑖𝑘 represents
+the closest disease subcategory node for the current 𝑡𝑖 , the vote
+count for 𝑒𝐿2𝑖𝑘 is incremented by one. We then accumulate the
+votes for each 𝑒𝐿2𝑖𝑘 during the reversal and identify the node with
+the highest vote count as the 𝑒𝐿2𝑠 . This voting process is formalized
+through the indicator function 𝜒, defined as follows:
+(
+1 if 𝑒𝐿2𝑖𝑘 = arg min𝑒𝐿2 𝑗 𝑃 (𝑡𝑖 , 𝑒𝐿2 𝑗 ),
+𝜒 (𝑡𝑖 , 𝑒𝐿2𝑖𝑘 ) =
+(12)
+0 otherwise
+
+G = G𝐷 ∪𝐸𝐿3 {𝐸𝐿3 ∪ 𝐸𝐿4 }𝑛𝑖=1,
+
+(7)
+where M𝑎 and 𝑝𝑎 represent the large language model for disease
+manifestation augmentation and its prompt respectively.
+The finalized four-tier hierarchical diagnostic knowledge graph
+G is formed by integrating the disease knowledge graph G𝐷 with
+𝐸𝐿4 combined with 𝐸𝐿4𝑎 and 𝐸𝐿4𝑑 , as shown in Equation 6 and 7.
+
+4.2
+
+
+
+𝑚
+
+max
+
+where 𝑇 represents the set of nodes 𝑒𝐿4𝑑 𝑗 that satisfy the condition
+𝑠𝑖𝑚𝑖 𝑗 > 𝑡𝑚𝑎𝑡𝑐ℎ𝑖𝑛𝑔 . The indicator function 𝛿 ensures that only 𝑒𝐿4𝑑 𝑗
+with a similarity score above the threshold are selected into 𝑇 .
+Through clinical features matching, we successfully matched 𝑞 to
+the most relevant clinical feature nodes in G.
+
+𝑟𝑚
+
+(5)
+
+𝑛 
+Ø
+𝑒𝐿4𝑑 𝑗 | 𝑗 ∈ arg
+𝑖=1
+
+a chain 𝐸𝐿3 −−→ 𝐸𝐿4𝑎 . For example, we generate a manifestation
+and relation to disease node 𝑙𝑢𝑚𝑏𝑎𝑟𝑠𝑝𝑜𝑛𝑑𝑦𝑙𝑜𝑠𝑖𝑠 and form a chain: <
+𝑙𝑢𝑚𝑏𝑎𝑟 _𝑠𝑝𝑜𝑛𝑑𝑦𝑙𝑜𝑠𝑖𝑠, ℎ𝑎𝑠_𝑠𝑦𝑚𝑝𝑡𝑜𝑚, 𝑠𝑡𝑖 𝑓 𝑓 𝑛𝑒𝑠𝑠_𝑜𝑟 _𝑝𝑎𝑖𝑛_𝑖𝑛_𝑡ℎ𝑒_𝑙−
+𝑜𝑤𝑒𝑟 _𝑏𝑎𝑐𝑘 >.
+M𝑎 (𝑝𝑎 ,𝑒𝐿3𝑖 )
+
+(9)
+
+where S is similarity model and E is embedding model applied to
+𝑓𝑖 and 𝑒𝐿4𝑑 𝑗 before similarity calculation.
+For each patient feature 𝑓𝑖 , we retrieve the top-𝑚 most similar
+𝑒𝐿4𝑑 𝑗 , where 𝑚 denotes the number of closest matches selected.
+Totally, the system retrieves 𝑛 × 𝑚 matching nodes in the G. To
+address the scenario where a 𝑓𝑖 has no closely matching counterpart
+in 𝐸𝐿4𝑑 , we introduce an indicator function 𝛿 (𝑠𝑖𝑚𝑖 𝑗 , 𝑡𝑚𝑎𝑡𝑐ℎ𝑖𝑛𝑔 ) to
+filter irrelevant matches:
+(
+𝑠𝑖𝑚𝑖 𝑗 if 𝑠𝑖𝑚𝑖 𝑗 > 𝑡𝑚𝑎𝑡𝑐ℎ𝑖𝑛𝑔
+𝛿 (𝑠𝑖𝑚𝑖 𝑗 , 𝑡𝑚𝑎𝑡𝑐ℎ𝑖𝑛𝑔 ) =
+(10)
+0
+otherwise,
+
+4.1.2 Knowledge Graph Manifestation Augmentation. The knowledge in G𝐷 only contains information from 𝐷, which is insufficient to accurately diagnose all diseases, particularly when distinguishing between diseases with similar clinical manifestations.
+Therefore, the integration of external knowledge is essential. To
+complement the diagnostic knowledge graph with essential knowledge that is not present in 𝐷, we augment external knowledge
+𝐸𝐿4 to G𝐷 that aids in distinguishing diseases with similar manifestations. We traverse all disease 𝑒𝐿3𝑖 and employ a prompt 𝑝𝑎
+specially tailored for searching and generating the nuances of the
+diseases on an LLM denoted by M𝑎 . As shown in Equation 5, each
+generated diagnostic key difference node 𝑒𝐿4𝑎𝑖 𝑗 is then connected
+to its corresponding 𝑒𝐿3𝑖 with relationship 𝑟𝑚 . Thus we obtain
+
+𝑖
+{𝑒𝐿3𝑖 }𝑛𝑖=1 −−−−−−−−−−−→ {𝑒𝐿4𝑎𝑖 𝑗 }𝑛,𝑚
+𝑖=1,𝑗=1 ,
+
+(8)
+
+𝑒𝐿2𝑠 = arg max
+𝑒𝐿2𝑖𝑘
+
+∑︁
+
+𝜒 (𝑡𝑖 , 𝑒𝐿2𝑖𝑘 ),
+
+(13)
+
+𝑡𝑖 ∈𝑇
+
+Taking this 𝑒𝐿2𝑠 as the parent node, we traverse downward towards 𝐸𝐿4 , retrieving all 𝑒𝐿3𝑖 that are adjacent to 𝑒𝐿2𝑠 and their
+adjacent 𝑒𝐿4𝑎𝑖 . Given 𝑒𝐿2𝑠 , let 𝐸𝐿3𝑠 = {𝑒𝐿3𝑖 | 𝑒𝐿3𝑖 ∈ Adj(𝑒𝐿2𝑠 )}
+denote the set of disease nodes that belong to 𝑒𝐿2𝑠 . Similarly, define
+𝐸𝐿4𝑎𝑠 = {𝑒𝐿4𝑎 𝑗 | 𝑒𝐿4𝑎 𝑗 ∈ Adj(𝑒𝐿3𝑖 ), 𝑒𝐿3𝑖 ∈ 𝐸𝐿3𝑠 } to denote the set
+of feature nodes linked to the disease nodes in 𝐸𝐿3𝑠 .
+We concatenate all triples (𝑒𝐿3𝑠 , 𝑟𝑚 , 𝑒𝐿4𝑎𝑖 ), where 𝑒𝐿3𝑠 ∈ Adj(𝑒𝐿2𝑠 )
+and 𝑒𝐿4𝑎𝑖 ∈ Adj(𝑒𝐿3𝑠 ), to form the set of diagnostic differences KG:
+
+Diagnostic Differences KG Searching
+
+4.2.1 Decomposition of Manifestations. Given 𝑞 as a query, which
+is a description of the patient’s manifestations, we perform sentence
+
+4446
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+Ø
+
+𝐾 (𝑒𝐿2𝑠 ) =
+
+Xuejiao Zhao, Siyan Liu, Su-Yin Yang, & Chunyan Miao
+
+{(𝑒𝐿3𝑠 , 𝑟𝑚 , 𝑒𝐿4𝑎𝑠 )},
+
+adjustable trade-offs between speed and search accuracy. After obtaining all inputs, we designed a tailored prompt 𝑝𝑠 for guiding the
+LLM to reason through 𝐾, generating answers to assist doctors in
+distinguishing between similar diseases and proactively generating
+follow-up questions.
+
+(14)
+
+𝑒𝐿3𝑠 ∈Adj(𝑒𝐿2𝑠 )
+
+where 𝐾 represents the diagnostic differences KG used for the
+reasoning in the LLM next.
+4.2.4 Proactive Diagnostic Questioning Mechanism. Inaccurate diagnoses often stem from insufficient or incomplete patient descriptions. To address this issue, we propose a Proactive Diagnostic
+Questioning Mechanism. When the initial input 𝑞 lacks some crucial information required for doctors or LLMs to make more precise
+diagnostic decisions, this mechanism acts as a copilot to cast targeted follow-up questions.
+In the diagnostic knowledge graph G, a feature 𝑒𝐿4𝑑𝑖 may be
+connected to multiple disease nodes 𝑒𝐿3 , with each 𝑒𝐿4𝑑𝑖 varying in
+its discriminability. For instance, certain features are more prevalent,
+such as “pain located in the lumbar region”, while others represent
+more distinctive characteristics, like “pain worsens while walking”.
+Here we define the discriminability score of 𝑒𝐿4𝑑𝑖 as the reciprocal
+of the degree centrality in G:
+𝑛−1
+𝜎 (𝑒𝐿4𝑑𝑖 ) =
+,
+(15)
+𝑑𝑒𝑔(𝑒𝐿4𝑑𝑖 )
+
+5 Experiments
+5.1 Datasets
+We evaluate MedRAG using two distinct datasets: one public and
+one private. The public dataset DDXPlus [15] contains 49 different diagnoses with over 1.3 million patients, each of whom has
+approximately 10 symptoms and 3 antecedents on average, demonstrating the model’s general applicability. The private dataset is the
+Chronic Pain Diagnostic Dataset (CPDD), a specialized EHR dataset
+focused on chronic pain patients. This dataset is collected from
+Tan Tock Seng Hospital, it comprises 551 patients with 33 distinct
+diagnoses. CPDD offers manifestations-specific chronic pain patient data, making it an invaluable resource for testing MedRAG’s
+diagnostic capabilities in clinical settings. For more details on the
+public datasets, the partitioning, preprocessing, and experimental
+setup, please refer to the Appendix.
+
+where 𝑛 represents the total number of 𝑒𝐿4𝑑𝑖 G.
+We calculate the discriminability score 𝜎 (𝑒𝐿4𝑑 𝑗 ) for each feature
+node 𝑒𝐿4𝑑 𝑗 ∈ 𝐸𝐿4𝑑𝑠 and select those with the highest discriminability scores as follows:
+{𝑒𝐿4𝑑𝑠 , 𝑒𝐿4𝑑𝑠 , . . . , 𝑒𝐿4𝑑𝑠 } = arg
+1
+
+2
+
+𝑘
+
+max
+
+{𝑒𝐿4𝑑 𝑗 |𝑒𝐿4𝑑 𝑗 ∈𝐸𝐿4𝑑𝑠 }
+
+5.2
+
+In order to explore the performance of the MedRAG, we compare
+the MedRAG results against six other models, including Naive
+RAG with COT [59], FL-RAG [45], FS-RAG [54], FLARE [25], DRAGIN [52] and SR-RAG [57]. More detailed introduction to each
+baseline model is provided in the appendix.
+
+𝜎 (𝑒𝐿4𝑑 𝑗 ), (16)
+
+where {𝑒𝐿4𝑑𝑠 , 𝑒𝐿4𝑑𝑠 , . . . , 𝑒𝐿4𝑑𝑠 } represents the selected features
+1
+2
+𝑘
+with the highest discriminability scores, which are used to proactively guide follow-up questions for clarifying the diagnosis.
+
+4.3
+
+6
+
+Experimental Results
+
+In this section, we present the results of the experiments to answer
+the following research questions:
+
+KG-elicited Reasoning RAG
+
+• RQ1: Does MedRAG outperform the SOTA RAG methods
+using the same datasets?
+• RQ2: Does MedRAG demonstrate compatibility, generalizability and adaptability across different backbone LLMs?
+• RQ3: Does MedRAG’s proactive diagnostic questioning mechanism provide users with impactful, relevant follow-up questions to enhance diagnostic performance?
+• RQ4: Is the MedRAG system we designed effective? What is
+the impact of each module on its overall performance, and
+how do specific KG components contribute to MedRAG?
+
+KG-elicited Reasoning RAG is the core component of MedRAG, we
+use an LLM to generate diagnoses, personalized treatment plans,
+and medication suggestions. Additionally, the system proactively
+suggests follow-up questions for doctors to clarify missing or ambiguous patient information. As shown in Equation 17, MedRAG
+utilizes diagnostic differences KG augmented by LLM and a tailored
+prompt 𝑝𝑠 to elicit the reasoning capabilities of LLM.
+𝐴 = M𝑔 (𝑞, 𝑑𝑟 , 𝐾, 𝑝𝑠 )
+
+Baselines
+
+(17)
+
+Unlike most RAG systems that focus on answering short factual
+questions, our system is tailored for complex tasks in clinical scenarios. The prompts are designed explicitly to optimize the reasoning
+capabilities of the LLM, particularly in distinguishing between diseases with similar manifestations. The system conducts thorough
+reasoning by using both the retrieved documents and the diagnostic
+differences KG extracted from 𝐺.
+We use the EHR database as a document repository to retrieve
+the most relevant documents 𝑑𝑟 corresponding to the patient’s
+manifestations 𝑞. We then perform a similarity search over the database to identify the most relevant k records. For this, we employ
+Facebook AI Similarity Search (FAISS) [11], a library optimized for
+efficient approximate nearest neighbor searches. FAISS allows rapid
+retrieval of similar records in large-scale EHR datasets, enabling
+
+6.1
+
+Quantitative Comparison (RQ1)
+
+Our experiments evaluate MedRAG against six different SOTA RAG
+models on 2 two datasets. We report the results using: 1) Accuracy, defined as the number of correct diagnoses out of the total
+diagnoses; 2) Specificity, which uses 𝐿1, 𝐿2, and 𝐿3 to represent
+different diagnostic granularity levels. As outlined in Section 3
+(Definition 3.1), 𝐿𝑖 refers to the MedRAG select potential diagnoses
+from 𝐸𝐿𝑖 . This metric evaluates the model’s specificity and its ability to differentiate between similar diseases across varying levels of
+diagnostic granularity; 3) Text Generation Metrics, which uses
+BERTScore, BLEU, ROUGE, METEOR and subjective evaluation
+from doctors to evaluate generated reports.
+
+4447
+
+MedRAG: Enhancing Retrieval-augmented Generation with
+Knowledge Graph-Elicited Reasoning for Healthcare Copilot
+
+Method
+
+CPDD
+
+Model
+
+Baselines
+
+Ours
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+DDXPlus
+
+𝐿1
+
+𝐿2
+
+𝐿3
+
+𝐿1
+
+𝐿2
+
+𝐿3
+
+Naive RAG + COT
+FS-RAG
+FLARE
+FL-RAG
+DRAGIN
+SR-RAG
+
+75.47
+64.71
+54.84
+65.45
+78.72
+73.58
+
+54.72
+49.02
+48.39
+50.91
+59.57
+60.38
+
+43.40
+45.10
+45.16
+49.09
+40.42
+54.72
+
+79.28
+78.18
+71.09
+90.12
+80.51
+78.65
+
+71.89
+68.20
+56.70
+83.32
+70.83
+70.28
+
+56.84
+51.40
+31.02
+66.78
+50.24
+52.16
+
+MedRAG
+
+79.25
+
+75.47
+
+66.04
+
+88.65
+
+83.46
+
+68.01
+
+Table 1: Results of quantitative performance comparison
+
+Backbone LLMs
+
+Size
+
+w/o KG-elicited Reasoning
+
+w/ KG-elicited Reasoning
+
+𝐿1
+
+𝐿2
+
+𝐿3
+
+𝐿1
+
+𝐿2
+
+𝐿3
+
+Open-source Models
+
+Mixtral-8x7B
+Qwen-2.5
+Llama-3.1-Instruct
+Llama-3.1-Instruct
+
+13B
+72B
+8B
+70B
+
+60.38
+66.04
+75.47
+86.79
+
+32.08
+41.51
+54.72
+67.92
+
+22.34
+39.62
+43.40
+56.60
+
+84.62
+80.36
+79.25
+86.79
+
+82.69
+73.21
+75.47
+83.02
+
+63.46
+64.29
+66.04
+71.70
+
+Closed-source Models
+
+GPT-3.5-turbo
+GPT-4o-mini
+GPT-4o
+
+-
+
+83.02
+88.68
+90.57
+
+56.60
+67.92
+71.70
+
+45.28
+56.60
+60.38
+
+70.56
+85.85
+91.87
+
+68.68
+75.00
+81.78
+
+50.57
+60.38
+73.23
+
+Table 2: Performance of MedRAG on different LLM backbones with and without KG-elicited reasoning
+
+6.2
+
+The disease prediction result is shown in Table 1, MedRAG
+achieved the best or second-best (with only one exception) performance across multiple metrics in all datasets. Accuracy on the
+𝐿3 metric is the best indicator of MedRAG’s performance, as higher
+specificity increases diagnostic difficulty. MedRAG outperformed
+the second-best scores on the CPDD and DDXPlus datasets by
+11.32% and 1.23%.
+Additionally, most RAG models designed for simpler QA tasks do
+not perform as well in the more complex medical domain, leading to
+longer contextual and prompt. These models are often optimized for
+generating short and straightforward answers, which limits their
+effectiveness in handling intricate medical queries. We observe
+models that have a simpler mechanism in the query-organizing
+phase perform better than part of more sophisticated ones. Except
+for our MedRAG, models like SR-RAG and FL-RAG also secured several second-best performances. Even the Chain-of-Thought model,
+which lacks improvements in the retriever or generator components, outperformed some of the other SOTA models in complex
+medical tasks.
+For report generation evaluation, we conducted both objective
+and subjective assessments. The objective evaluation used the standard rule-based text generation metrics: BERTScore [72], BLEU [44],
+ROUGE [34], METEOR [5]. The subjective evaluation followed
+Mini-CEX (Clinical Evaluation Exercise) [39], a clinical assessment
+framework that has been incorporated into LLMs for report evaluation [50]. To ensure reliability, we consulted doctors to review and
+validate the results. Details are in the Appendix.
+
+Compatibility, Generalizability and
+Adaptability (RQ2)
+
+The results in Table 2 demonstrate the performance of incorporating
+KG-elicited reasoning to various backbone LLMs, including both
+open-source and closed-source models. The results demonstrate
+that the inclusion of KG-elicited reasoning significantly enhances
+diagnostic accuracy across 𝐿1, 𝐿2, and 𝐿3 for all backbone LLMs. For
+example, Mixtral-8x7B shows a significant 𝐿3 improvement from
+22.34% to 63.46%, demonstrating the effectiveness of our proposed
+KG-elicited reasoning, particularly in smaller models.
+Among both open-source and closed-source models, the RAG
+with the GPT-4o as the backbone LLM outperforms all others, showing its superior adaptability with knowledge graph integration.
+Additionally, MedRAG achieves the best performance on closedsource models, highlighting its compatibility, generalizability, and
+adaptability. In contrast, token-level RAG models like DRAGIN and
+FLARE face challenges in adapting to closed-source models due
+to their inherent frameworks, limiting their potential to achieve
+better performance across various LLMs.
+We also observe an interesting result that incorporating KG
+into small-scale closed-source models reduces L1 performance. We
+deduce that introducing similar disease difference complicates the
+reasoning. GPT-3.5 and GPT-4o-mini struggle with incorporating
+highly granular information due to parameter limitations, leading
+to knowledge conflicts and blurred classification boundaries, which
+impact L1 performance. However, GPT-4o’s larger parameter scale
+and stronger reasoning capacity result in higher L1 accuracy.
+
+4448
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+6.3
+
+Xuejiao Zhao, Siyan Liu, Su-Yin Yang, & Chunyan Miao
+
+Proactive Diagnostic Questioning (RQ3)
+
+levels. the best outcomes are achieved when RAG and KG components are combined and aligned, especially for granular diagnosis
+tasks that demand high specificity. Notably, randomly selected documents performed better than no documents at all, this phenomenon
+was explored in detail by [9]. We also observed a performance decline in the lower-granularity levels of 𝐿1 and 𝐿2 when transitioning
+from random to no knowledge from KG when random documents
+are retrieved. Once correct KG-augmented knowledge was added,
+this noise effect was mitigated, leading to accuracy improvements
+across all metrics: an average accuracy increase of 18.88% for 𝐿1,
+26.92% for 𝐿2, and 18.89% for 𝐿3, compared to the baseline with
+random or without KG-elicited reasoning module. The ablation
+study of KG components is shown in the Appendix.
+
+The results in Table 3 show the impact of following MedRAG’s optimized instructive questions and obtaining corresponding patient
+responses on diagnostic accuracy.
+Manifestation Masking Ratio
+
+𝐿1
+
+𝐿2
+
+𝐿3
+
+100%
+66.6%
+33.3%
+0%
+
+60.38
+69.39
+71.43
+79.25
+
+56.60
+67.35
+67.35
+75.47
+
+52.83
+55.10
+61.22
+66.04
+
+Table 3: Result of proactive diagnostic questioning
+
+7
+
+As more detailed information is gathered through these targeted
+questions, the 𝐿3 accuracy progressively improves. Initially, with
+no specific patient information obtained through this questioning
+process, the 𝐿3 accuracy is 52.83%, representing MedRAG making a
+diagnosis with other information with very few manifestations. As
+the doctor collects more critical details about disease representation, covering from 33.3% to 100% of the key manifestations, the 𝐿3
+score rises from 55.10% to 66.04% and other levels’ metrics follow
+the same trend. This demonstrates the significant effectiveness of
+MedRAG’s proactive diagnostic questioning mechanism, validating its capability to provide doctors with impactful questions that
+not only enhance diagnostic performance but also improve the
+efficiency of the medical consultation process.
+
+6.4
+
+Conclusion
+
+In conclusion, MedRAG significantly improves diagnostic accuracy
+and specificity in the medical domain by integrating KG-elicited
+reasoning with RAG models. By systematically retrieving and reasoning over EHRs and dynamically incorporating critical diagnostic
+differences KG, MedRAG offers more precise diagnosis and personalized treatment recommendations. Additionally, MedRAG’s
+proactive diagnostic questioning mechanism effectively enhances
+diagnostic performance and consultation efficiency by generating
+impactful questions for doctors and patients. The evaluation of public and private datasets demonstrates that MedRAG outperforms
+state-of-the-art RAG models, particularly in reducing misdiagnosis rates for diseases with similar manifestations, showcasing its
+potential as a key module in healthcare copilot.
+For future work, we aim to integrate multimodal data, including
+imaging, physiological signals, etc., and deploy the MedRAG system
+in hospitals for real-world testing. Furthermore, to improve usability
+for doctors, we will integrate a speech recognition module into the
+system. For further details, please refer to the Appendix.
+
+Ablation Study (RQ4)
+
+Acknowledgments
+This research is supported by the Joint NTU-UBC Research Centre
+of Excellence in Active Living for the Elderly (LILY) and the College of Computing and Data Science (CCDS) at NTU Singapore.
+It is also partially supported by the Singapore Ministry of Education Academic Research Fund Tier 1 (Grant No. 2017-T1-001-270).
+This research is also supported, in part, by the National Research
+Foundation, Prime Minister’s Office, Singapore under its NRF Investigatorship Programme (NRFI Award No. NRF-NRFI05-2019-0002).
+Any opinions, findings, conclusions, or recommendations expressed
+in this material are those of the authors and do not reflect the views
+of National Research Foundation, Singapore. This research is supported, in part, by the Singapore Ministry of Health under its National Innovation Challenge on Active and Confident Ageing (NIC
+Project No. MOH/NIC/HAIG03/2017). This research is supported,
+in part, by the RIE2025 Industry Alignment Fund – Industry Collaboration Projects (IAF-ICP) (Award I2301E0026), administered by
+A*STAR, as well as partially supported by Alibaba Group and NTU
+Singapore through Alibaba-NTU Global e-Sustainability CorpLab
+(ANGEL). This work is partially supported by the Wallenberg Al,
+Autonomous Systems and Software Program (WASP) funded by the
+Knut and Alice Wallenberg Foundation.
+
+Figure 3: Ablation result on Llama-3.1-Instruct 8B backbone
+using the CPDD dataset
+We perform ablation studies to evaluate the effectiveness of different components in MedRAG and present the result in Figure 3.
+Specifically, we assess the retriever R and KG-elicited reasoning
+module G under three configurations: “random”, “with” and “without”. In the “random” setting for R, we choose documents from the
+entire EHR database randomly. The “without” of the retriever refers
+to the scenario where no documents are passed to M𝑔 . The “with”
+setting of the retriever means to pass the top-𝑘 relevant documents
+to M𝑔 . For the KG-elicited reasoning module, the “random” configuration denotes randomly selecting subcategory 𝑒𝐿2𝑠 and collecting
+corresponding 𝐾 accordingly. The “without” is the scenario where
+no diagnostic differences KG are passed to M𝑔 . Configuration “with”
+means to pass correct 𝐾 by the 𝑒𝐿2𝑠 to M𝑔 .
+As shown in Figure 3, both the retriever and KG-elicited reasoning module significantly enhance performance across all specificity
+
+4449
+
+MedRAG: Enhancing Retrieval-augmented Generation with
+Knowledge Graph-Elicited Reasoning for Healthcare Copilot
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+References
+
+[24] Xinke Jiang, Ruizhe Zhang, Yongxin Xu, Rihong Qiu, Yue Fang, Zhiyuan Wang,
+Jinyi Tang, Hongxin Ding, Xu Chu, Junfeng Zhao, et al. 2024. HyKGE: A Hypothesis Knowledge Graph Enhanced Framework for Accurate and Reliable Medical
+LLMs Responses. arXiv preprint arXiv:2312.15883 (2024).
+[25] Zhengbao Jiang, Frank F Xu, Luyu Gao, Zhiqing Sun, Qian Liu, Jane Dwivedi-Yu,
+Yiming Yang, Jamie Callan, and Graham Neubig. 2023. Active retrieval augmented
+generation. arXiv preprint arXiv:2305.06983 (2023).
+[26] Wall Street Journal. 2023.
+OpenAI Expands Healthcare Push With
+Color Health’s Cancer Copilot.
+The Wall Street Journal (2023).
+https://www.wsj.com/articles/openai-expands-healthcare-push-with-colorhealths-cancer-copilot-86594ff1 Accessed: 2024-09-18.
+[27] Minki Kang, Jin Myung Kwak, Jinheon Baek, and Sung Ju Hwang. 2023. Knowledge graph-augmented language models for knowledge-grounded dialogue generation. arXiv preprint arXiv:2305.18846 (2023).
+[28] Urvashi Khandelwal, Omer Levy, Dan Jurafsky, Luke Zettlemoyer, and Mike
+Lewis. 2019. Generalization through memorization: Nearest neighbor language
+models. arXiv preprint arXiv:1911.00172 (2019).
+[29] Ching Hung Lee, Zehao Zhang, and Xuejiao Zhao. 2021. A survey of smart
+healthcare for the elderly based on user requirements and supply accessibility. In
+5th International Conference on Crowd Science and Engineering. 108–112.
+[30] Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin,
+Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rocktäschel,
+et al. 2020. Retrieval-augmented generation for knowledge-intensive nlp tasks.
+Advances in Neural Information Processing Systems 33 (2020), 9459–9474.
+[31] Hongwei Li, Sirui Li, Jiamou Sun, Zhenchang Xing, Xin Peng, Mingwei Liu, and
+Xuejiao Zhao. 2018. Improving api caveats accessibility by mining api caveats
+knowledge graph. In 2018 IEEE International Conference on Software Maintenance
+and Evolution (ICSME). IEEE, 183–193.
+[32] Yunxiang Li, Zihan Li, Kai Zhang, Ruilong Dan, Steve Jiang, and You Zhang. 2023.
+Chatdoctor: A medical chat model fine-tuned on a large language model meta-ai
+(llama) using medical domain knowledge. Cureus 15, 6 (2023).
+[33] Zhiang Li and Tong Ruan. 2024. Knowledge-routed Automatic Diagnosis with
+Heterogeneous Patient-oriented Graph. IEEE Access (2024).
+[34] Chin-Yew Lin. 2004. Rouge: A package for automatic evaluation of summaries.
+In Text summarization branches out. 74–81.
+[35] Ye Liu, Yao Wan, Lifang He, Hao Peng, and S Yu Philip. 2021. Kg-bart: Knowledge
+graph-augmented bart for generative commonsense reasoning. In Proceedings of
+the AAAI conference on artificial intelligence, Vol. 35. 6418–6425.
+[36] Linhao Luo, Yuan-Fang Li, Gholamreza Haffari, and Shirui Pan. 2023. Reasoning
+on graphs: Faithful and interpretable large language model reasoning. arXiv
+preprint arXiv:2310.01061 (2023).
+[37] Kaixin Ma, Hao Cheng, Yu Zhang, Xiaodong Liu, Eric Nyberg, and Jianfeng Gao.
+2023. Chain-of-skills: A configurable model for open-domain question answering.
+arXiv preprint arXiv:2305.03130 (2023).
+[38] David E Newman-Toker, Najlla Nassery, Adam C Schaffer, Chihwen Winnie YuMoe, Gwendolyn D Clemens, Zheyu Wang, Yuxin Zhu, Ali S Saber Tehrani, Mehdi
+Fanai, Ahmed Hassoon, et al. 2024. Burden of serious harms from diagnostic
+error in the USA. BMJ Quality & Safety 33, 2 (2024), 109–120.
+[39] John J Norcini, Linda L Blank, Gerald K Arnold, and Harry R Kimball. 1995. The
+mini-CEX (clinical evaluation exercise): a preliminary investigation. Annals of
+internal medicine 123, 10 (1995), 795–799.
+[40] OpenAI. 2023. Color Health’s Cancer Copilot. https://openai.com/index/colorhealth/ Accessed: 2024-09-18.
+[41] OpenAI. 2024. ChatGPT. https://openai.com/index/chatgpt/ Accessed: 2024-1007.
+[42] OpenAI. 2024. GPT-4o. https://openai.com/index/hello-gpt-4o/ Accessed:
+2024-10-07.
+[43] World Health Organization et al. 1992. ICD-11. (No Title) (1992).
+[44] Kishore Papineni, Salim Roukos, Todd Ward, and Wei-Jing Zhu. 2002. Bleu: a
+method for automatic evaluation of machine translation. In Proceedings of the
+40th annual meeting of the Association for Computational Linguistics. 311–318.
+[45] Ori Ram, Yoav Levine, Itay Dalmedigos, Dor Muhlgay, Amnon Shashua, Kevin
+Leyton-Brown, and Yoav Shoham. 2023. In-context retrieval-augmented language
+models. Transactions of the Association for Computational Linguistics 11 (2023),
+1316–1331.
+[46] Haocong Rao, Minlin Zeng, Xuejiao Zhao, and Chunyan Miao. 2024. A Survey of
+Artificial Intelligence in Gait-Based Neurodegenerative Disease Diagnosis. arXiv
+preprint arXiv:2405.13082 (2024).
+[47] Zhiyao Ren, Yibing Zhan, Baosheng Yu, Liang Ding, and Dacheng Tao. 2024.
+Healthcare copilot: Eliciting the power of general llms for medical consultation.
+arXiv preprint arXiv:2402.13408 (2024).
+[48] Parth Sarthi, Salman Abdullah, Aditi Tuli, Shubh Khanna, Anna Goldie, and
+Christopher D Manning. 2024. Raptor: Recursive abstractive processing for
+tree-organized retrieval. arXiv preprint arXiv:2401.18059 (2024).
+[49] Priyanka Sen, Sandeep Mavadia, and Amir Saffari. 2023. Knowledge graphaugmented language models for complex question answering. In Proceedings of
+the 1st Workshop on Natural Language Reasoning and Structured Explanations
+(NLRSE). 1–8.
+
+[1] 2024. Doctor Co-Pilot. https://demos.amotion.ai/3. Accessed: 2024-10-11.
+[2] 2024. Microsoft Copilot in Healthcare. https://www.avanade.com/en/services/
+artificial-intelligence/ai-copilot-hub/health-ai-copilot. Accessed: 2024-10-11.
+[3] Durga Prasad Amballa. 2023. AI-Powered Copilot for Healthcare Sales Agents: Enhancing Customer Engagement and Test Recommendations. Journal of Scientific
+and Engineering Research 10, 10 (2023), 164–167.
+[4] Akari Asai, Zeqiu Wu, Yizhong Wang, Avirup Sil, and Hannaneh Hajishirzi. 2023.
+Self-rag: Learning to retrieve, generate, and critique through self-reflection. arXiv
+preprint arXiv:2310.11511 (2023).
+[5] Satanjeev Banerjee and Alon Lavie. 2005. METEOR: An automatic metric for
+MT evaluation with improved correlation with human judgments. In Proceedings
+of the acl workshop on intrinsic and extrinsic evaluation measures for machine
+translation and/or summarization. 65–72.
+[6] Payal Chandak, Kexin Huang, and Marinka Zitnik. 2023. Building a knowledge
+graph to enable precision medicine. Scientific Data 10, 1 (2023), 67.
+[7] Siyuan Chen, Mengyue Wu, Kenny Q Zhu, Kunyao Lan, Zhiling Zhang, and
+Lyuchun Cui. 2023. LLM-empowered chatbots for psychiatrist and patient simulation: application and evaluation. arXiv preprint arXiv:2305.13614 (2023).
+[8] Hao Cheng, Yelong Shen, Xiaodong Liu, Pengcheng He, Weizhu Chen, and
+Jianfeng Gao. 2021. UnitedQA: A hybrid approach for open domain question
+answering. arXiv preprint arXiv:2101.00178 (2021).
+[9] Florin Cuconasu, Giovanni Trappolini, Federico Siciliano, Simone Filice, Cesare
+Campagnano, Yoelle Maarek, Nicola Tonellotto, and Fabrizio Silvestri. 2024. The
+power of noise: Redefining retrieval for rag systems. In Proceedings of the 47th
+International ACM SIGIR Conference on Research and Development in Information
+Retrieval. 719–729.
+[10] Ram A Dixit, Christian L Boxley, Sunil Samuel, Vishnu Mohan, Raj M Ratwani,
+and Jeffrey A Gold. 2023. Electronic health record use issues and diagnostic error:
+a scoping review and framework. Journal of patient safety 19, 1 (2023), e25–e30.
+[11] Matthijs Douze, Alexandr Guzhva, Chengqi Deng, Jeff Johnson, Gergely Szilvasy,
+Pierre-Emmanuel Mazaré, Maria Lomeli, Lucas Hosseini, and Hervé Jégou. 2024.
+The faiss library. arXiv preprint arXiv:2401.08281 (2024).
+[12] Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad
+Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan,
+et al. 2024. The llama 3 herd of models. arXiv preprint arXiv:2407.21783 (2024).
+[13] Darren Edge, Ha Trinh, Newman Cheng, Joshua Bradley, Alex Chao, Apurva
+Mody, Steven Truitt, and Jonathan Larson. 2024. From local to global: A graph
+rag approach to query-focused summarization. arXiv preprint arXiv:2404.16130
+(2024).
+[14] Wenqi Fan, Yujuan Ding, Liangbo Ning, Shijie Wang, Hengyun Li, Dawei Yin,
+Tat-Seng Chua, and Qing Li. 2024. A survey on rag meeting llms: Towards
+retrieval-augmented large language models. In Proceedings of the 30th ACM
+SIGKDD Conference on Knowledge Discovery and Data Mining. 6491–6501.
+[15] Arsene Fansi Tchango, Rishab Goel, Zhi Wen, Julien Martel, and Joumana Ghosn.
+2022. Ddxplus: A new dataset for automatic medical diagnosis. Advances in
+neural information processing systems 35 (2022), 31306–31318.
+[16] Yanjun Gao, Ruizhe Li, John Caskey, Dmitriy Dligach, Timothy Miller, Matthew M
+Churpek, and Majid Afshar. 2023. Leveraging a medical knowledge graph into
+large language models for diagnosis prediction. arXiv preprint arXiv:2308.14321
+(2023).
+[17] Yifu Gao, Linbo Qiao, Zhigang Kan, Zhihua Wen, Yongquan He, and Dongsheng
+Li. 2024. Two-stage Generative Question Answering on Temporal Knowledge
+Graph Using Large Language Models. arXiv preprint arXiv:2402.16568 (2024).
+[18] Kelvin Guu, Kenton Lee, Zora Tung, Panupong Pasupat, and Mingwei Chang. 2020.
+Retrieval augmented language model pre-training. In International conference on
+machine learning. PMLR, 3929–3938.
+[19] Tianyu Han, Lisa C Adams, Jens-Michalis Papaioannou, Paul Grundmann,
+Tom Oberhauser, Alexander Löser, Daniel Truhn, and Keno K Bressem. 2023.
+MedAlpaca–An Open-Source Collection of Medical Conversational AI Models
+and Training Data. arXiv preprint arXiv:2304.08247 (2023).
+[20] Gautier Izacard, Mathilde Caron, Lucas Hosseini, Sebastian Riedel, Piotr Bojanowski, Armand Joulin, and Edouard Grave. 2021. Unsupervised dense information retrieval with contrastive learning. arXiv preprint arXiv:2112.09118
+(2021).
+[21] Albert Q Jiang, Alexandre Sablayrolles, Antoine Roux, Arthur Mensch, Blanche
+Savary, Chris Bamford, Devendra Singh Chaplot, Diego de las Casas, Emma Bou
+Hanna, Florian Bressand, et al. 2024. Mixtral of experts. arXiv preprint
+arXiv:2401.04088 (2024).
+[22] Jinhao Jiang, Kun Zhou, Wayne Xin Zhao, Yaliang Li, and Ji-Rong Wen. 2023. Reasoninglm: Enabling structural subgraph reasoning in pre-trained language models
+for question answering over knowledge graph. arXiv preprint arXiv:2401.00158
+(2023).
+[23] Xinke Jiang, Yue Fang, Rihong Qiu, Haoyu Zhang, Yongxin Xu, Hao Chen,
+Wentao Zhang, Ruizhe Zhang, Yuchen Fang, Xu Chu, et al. 2024. TC-RAG:
+Turing-Complete RAG’s Case study on Medical LLM Systems. arXiv preprint
+arXiv:2408.09199 (2024).
+
+4450
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+Xuejiao Zhao, Siyan Liu, Su-Yin Yang, & Chunyan Miao
+
+[50] Xiaoming Shi, Jie Xu, Jinru Ding, Jiali Pang, Sichen Liu, Shuqing Luo, Xingwei
+Peng, Lu Lu, Haihong Yang, Mingtao Hu, et al. 2023. Llm-mini-cex: Automatic
+evaluation of large language model for diagnostic conversation. arXiv preprint
+arXiv:2308.07635 (2023).
+[51] Karthik Soman, Peter W Rose, John H Morris, Rabia E Akbas, Brett Smith, Braian
+Peetoom, Catalina Villouta-Reyes, Gabriel Cerono, Yongmei Shi, Angela RizkJackson, et al. 2023. Biomedical knowledge graph-enhanced prompt generation
+for large language models. arXiv preprint arXiv:2311.17330 (2023).
+[52] Weihang Su, Yichen Tang, Qingyao Ai, Zhijing Wu, and Yiqun Liu. 2024. Dragin:
+Dynamic retrieval augmented generation based on the real-time information
+needs of large language models. arXiv preprint arXiv:2403.10081 (2024).
+[53] Zhi Rui Tam, Cheng-Kuang Wu, Yi-Lin Tsai, Chieh-Yen Lin, Hung-yi Lee, and YunNung Chen. 2024. Let me speak freely? a study on the impact of format restrictions
+on performance of large language models. arXiv preprint arXiv:2408.02442 (2024).
+[54] Harsh Trivedi, Niranjan Balasubramanian, Tushar Khot, and Ashish Sabharwal.
+2022. Interleaving retrieval with chain-of-thought reasoning for knowledgeintensive multi-step questions. arXiv preprint arXiv:2212.10509 (2022).
+[55] Yi-Lin Tuan, Yun-Nung Chen, and Hung-yi Lee. 2019. Dykgchat: Benchmarking
+dialogue generation grounding on dynamic knowledge graphs. arXiv preprint
+arXiv:1910.00610 (2019).
+[56] Deeksha Varshney, Aizan Zafar, Niranshu Kumar Behera, and Asif Ekbal. 2023.
+Knowledge graph assisted end-to-end medical dialog generation. Artificial Intelligence in Medicine 139 (2023), 102535.
+[57] Jinge Wang, Zien Cheng, Qiuming Yao, Li Liu, Dong Xu, and Gangqing Hu.
+2024. Bioinformatics and biomedical informatics with ChatGPT: Year one review.
+Quantitative Biology (2024).
+[58] Zixiang Wang, Yinghao Zhu, Junyi Gao, Xiaochen Zheng, Yuhui Zeng, Yifan He,
+Bowen Jiang, Wen Tang, Ewen M Harrison, Chengwei Pan, et al. [n. d.]. RetCare:
+Towards Interpretable Clinical Decision Making through LLM-Driven Medical
+Knowledge Retrieval. In Artificial Intelligence and Data Science for Healthcare:
+Bridging Data-Centric AI and People-Centric Healthcare.
+[59] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Fei Xia, Ed Chi,
+Quoc V Le, Denny Zhou, et al. 2022. Chain-of-thought prompting elicits reasoning
+in large language models. Advances in neural information processing systems 35
+(2022), 24824–24837.
+[60] Sidong Wei, Xuejiao Zhao, and Chunyan Miao. 2018. A comprehensive exploration to the machine learning techniques for diabetes identification. In 2018
+IEEE 4th World Forum on Internet of Things (WF-IoT). IEEE, 291–295.
+[61] Chaoyi Wu, Weixiong Lin, Xiaoman Zhang, Ya Zhang, Weidi Xie, and Yanfeng
+Wang. 2024. PMC-LLaMA: toward building open-source language models for
+medicine. Journal of the American Medical Informatics Association (2024), ocae045.
+[62] Junde Wu, Jiayuan Zhu, and Yunli Qi. 2024. Medical Graph RAG: Towards Safe
+Medical Large Language Model via Graph Retrieval-Augmented Generation.
+arXiv preprint arXiv:2408.04187 (2024).
+[63] Sixing Wu, Ying Li, Dawei Zhang, Yang Zhou, and Zhonghai Wu. 2020. Diverse
+and informative dialogue generation with context-specific commonsense knowledge awareness. In Proceedings of the 58th annual meeting of the association for
+computational linguistics. 5811–5820.
+[64] Yunfei Xie, Juncheng Wu, Haoqin Tu, Siwei Yang, Bingchen Zhao, Yongshuo
+Zong, Qiao Jin, Cihang Xie, and Yuyin Zhou. 2024. A Preliminary Study of o1
+in Medicine: Are We Closer to an AI Doctor? arXiv preprint arXiv:2409.15277
+
+(2024).
+[65] Ziqi Yang, Xuhai Xu, Bingsheng Yao, Ethan Rogers, Shao Zhang, Stephen Intille,
+Nawar Shara, Guodong Gordon Gao, and Dakuo Wang. 2024. Talk2Care: An
+LLM-based Voice Assistant for Communication between Healthcare Providers
+and Older Adults. Proceedings of the ACM on Interactive, Mobile, Wearable and
+Ubiquitous Technologies 8, 2 (2024), 1–35.
+[66] Ori Yoran, Tomer Wolfson, Ori Ram, and Jonathan Berant. 2023. Making
+retrieval-augmented language models robust to irrelevant context. arXiv preprint
+arXiv:2310.01558 (2023).
+[67] Donghan Yu, Chenguang Zhu, Yuwei Fang, Wenhao Yu, Shuohang Wang, Yichong
+Xu, Xiang Ren, Yiming Yang, and Michael Zeng. 2021. Kg-fid: Infusing knowledge
+graph in fusion-in-decoder for open-domain question answering. arXiv preprint
+arXiv:2110.04330 (2021).
+[68] Cyril Zakka, Joseph Cho, Gracia Fahed, Rohan Shad, Michael Moor, Robyn Fong,
+Dhamanpreet Kaur, Vishnu Ravi, Oliver Aalami, Roxana Daneshjou, et al. 2024.
+Almanac Copilot: Towards Autonomous Electronic Health Record Navigation.
+arXiv preprint arXiv:2405.07896 (2024).
+[69] Charlotte Zelin, Wendy K Chung, Mederic Jeanne, Gongbo Zhang, and Chunhua
+Weng. 2024. Rare disease diagnosis using knowledge guided retrieval augmentation for ChatGPT. Journal of Biomedical Informatics 157 (2024), 104702.
+[70] Houyu Zhang, Zhenghao Liu, Chenyan Xiong, and Zhiyuan Liu. 2019. Grounded
+conversation generation as guided traverses in commonsense knowledge graphs.
+arXiv preprint arXiv:1911.02707 (2019).
+[71] Kai Zhang, Yangyang Kang, Fubang Zhao, and Xiaozhong Liu. 2024. LLMbased Medical Assistant Personalization with Short-and Long-Term Memory
+Coordination. In Proceedings of the 2024 Conference of the North American Chapter
+of the Association for Computational Linguistics: Human Language Technologies
+(Volume 1: Long Papers). 2386–2398.
+[72] Tianyi Zhang, Varsha Kishore, Felix Wu, Kilian Q Weinberger, and Yoav
+Artzi. 2019. Bertscore: Evaluating text generation with bert. arXiv preprint
+arXiv:1904.09675 (2019).
+[73] Penghao Zhao, Hailin Zhang, Qinhan Yu, Zhengren Wang, Yunteng Geng,
+Fangcheng Fu, Ling Yang, Wentao Zhang, and Bin Cui. 2024. Retrieval-augmented
+generation for ai-generated content: A survey. arXiv preprint arXiv:2402.19473
+(2024).
+[74] Xuejiao Zhao. 2021. Explainable Q&A system based on domain-specific knowledge graph. (2021).
+[75] Xuejiao Zhao, Huanhuan Chen, Zhenchang Xing, and Chunyan Miao. 2021. Braininspired search engine assistant based on knowledge graph. IEEE Transactions
+on Neural Networks and Learning Systems 34, 8 (2021), 4386–4400.
+[76] Xuejiao Zhao, Zhenchang Xing, Muhammad Ashad Kabir, Naoya Sawada, Jing Li,
+and Shang-Wei Lin. 2017. Hdskg: Harvesting domain specific knowledge graph
+from content of webpages. In 2017 ieee 24th international conference on software
+analysis, evolution and reengineering (saner). IEEE, 56–67.
+[77] Lingfeng Zhong, Jia Wu, Qian Li, Hao Peng, and Xindong Wu. 2023. A comprehensive survey on automatic knowledge graph construction. Comput. Surveys
+56, 4 (2023), 1–62.
+[78] Hao Zhou, Minlie Huang, Yong Liu, Wei Chen, and Xiaoyan Zhu. 2021. EARL:
+informative knowledge-grounded conversation generation with entity-agnostic
+representation learning. In Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing. 2383–2395.
+
+4451
+
+MedRAG: Enhancing Retrieval-augmented Generation with
+Knowledge Graph-Elicited Reasoning for Healthcare Copilot
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+Appendix
+
+B.3
+
+This appendix is organized as follows:
+• Section A includes variables and definitions in the paper.
+• Section B demonstrates the detailed data preprocessing
+steps and experimental setup, ensuring transparency and
+reproducibility.
+• Section C describes the details of the baseline models in the
+experiments.
+• Section D presents intermediate results from experiments.
+• Section E shows the evaluation of report generation.
+• Section F shows the ablation study on KG components.
+• Section G shows the user interface of the healthcare copilot.
+• Section H show the future work of this paper.
+
+A
+
+We mask certain existing manifestations of a patient to simulate scenarios where they are missing. MedRAG then generates follow-up
+questions based on the remaining information. If MedRAG identifies the removed manifestations during questioning, they are added
+back to the patient’s record, and diagnostic reasoning is repeated
+to evaluate the improvement in diagnostic accuracy.
+We begin by selecting all matching manifestation nodes 𝐸𝐿4𝑑𝑠
+and ranking them according to their discriminability scores. A proportion 𝑟 of the nodes with the highest discriminability scores is
+then removed, simulating the scenario where certain key patient
+features are missing or unclear, shown in Equation 18. After redel with each 𝑓 , if the
+moving, we match the removed nodes 𝐸𝐿4𝑑
+𝑖
+𝑠
+similarity score, the corresponding sentence 𝑓𝑖 is also removed, as
+formalized in Equation 19, which simulates the loss of relevant
+patient information from the input.
+
+del
+𝑒𝐿4𝑑
+= Top-r 𝑒𝐿4𝑑𝑠 , 𝜎 (𝑒𝐿4𝑑𝑠 ) ,
+(18)
+𝑠
+Ø
+del
+𝑓𝑖del =
+{𝑓𝑖 | S(𝑓𝑖 , 𝑒𝐿4𝑑
+, E) > 𝑡 },
+(19)
+
+Variables and Definitions
+
+The variables used throughout this paper and their definitions are
+provided in Table A3.
+
+B Data Preprocessing and Experimental Setup
+B.1 Datasets
+
+𝑠
+
+𝑓𝑖
+
+The public dataset, DDXPlus [15], is a large-scale synthesized EHR
+dataset, recognized for its complex and diverse medical cases. It
+includes comprehensive patient data such as socio-demographic
+information, underlying diseases, symptoms, and antecedents, addressing the symptom-related data gap in common EHR datasets
+like MIMIC [15]. Many studies have employed DDXPlus to benchmark models in medical reasoning and diagnosis [7, 33, 53, 64].
+DDXPlus contains 49 different diagnoses with over 1.3 million
+patients, each of whom has approximately 10 symptoms and 3 antecedents on average. We ultimately utilized a maximum balanced
+sub-dataset comprising 13,230 patients’ EHRs.
+
+B.2
+
+Setup for Proactive Diagnostic Questioning
+Mechanism
+
+del represents the nodes removed from 𝑒
+where 𝑒𝐿4𝑑
+𝐿4𝑑𝑠 based on the
+𝑠
+
+similarity score threshold 𝑡 and 𝑓𝑖del is removed 𝑓𝑖 .
+
+B.4
+
+Prompt Engineering
+
+The prompt configuration for disease clustering is shown below:
+Cluster the following diseases into multiple categories based on
+the similarity of their manifestations, affected locations, and other
+characteristics. Diseases: {}.
+The prompt configuration for the generative model in MedRAG
+is illustrated in Figure A1. The first block provides instructions as
+the system prompt. The second block displays the answer template.
+In the final block, relevant information including the patient’s manifestations 𝑞, retrieved documents 𝑑𝑟 , and diagnostic differences 𝐾,
+is populated in this field.
+
+Settings for Datasets
+• CPDD We split the data set into a 9:1 ratio for the training set (to be retrieved) and test set. Since the dataset was
+collected from multiple doctors, the diagnosis descriptions
+are not standardized. Part of the diagnosis is presented as a
+type of pain instead of a specific disease. When calculating
+the accuracy of these pain-type diagnoses, if the predicted
+result is a disease associated with that type of pain, it will
+be considered a correct prediction.
+• DDXPlus We directly use the training set and test set in a
+split dataset in the ratio of 8:1:1(validation set). Due to the
+massive size of the dataset with over a million synthesized
+patients’ records, which is too large for the scale of our
+task, we first fixed the number of samples in the test set
+to 30, which corresponds to the fewest pathology. For the
+other pathology with more samples, we randomly select 30
+samples to form the whole test set. In the training set, we
+randomly pick 240 samples for each pathology to retrieve.
+This approach can ensure we get a maximum balanced subdataset containing 13230 patients’ EHR in total. The random
+seed is set to 42.
+
+C
+
+Baseline Details
+
+We conducted experiments on six baseline models and compared
+them with MedRAG.
+• Naive RAG + COT [59] We apply the chain-of-thought
+(COT) prompting with a naive RAG model, which only retrieves documents without additional enhancements.
+• FL-RAG [45] FL-RAG is a multi-round retrieval method that
+triggers the retrieval module every n tokens.
+• FS-RAG [54] FS-RAG is an interleaving retrieval method
+that improves multi-round question answering by alternating between COT reasoning and document retrieval.
+• FLARE [25] FLARE is an active RAG method that improves
+knowledge-intensive tasks by retrieving relevant documents
+when the model encounters uncertain tokens.
+• DRAGIN [52] DRAGIN is a dynamic retrieval method that
+enhances language models by retrieving relevant documents
+based on real-time information needs during generation,
+triggered by token uncertainty.
+
+4452
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+Xuejiao Zhao, Siyan Liu, Su-Yin Yang, & Chunyan Miao
+
+Configuration
+
+L1
+
+L2
+
+L3
+
+w/ augmented feature node
+w/o augmented feature node
+w/ diagnostic key difference node
+w/o diagnostic key difference node
+w/ L2 & L3
+w/o L2 & L3
+
+79.25
+66.04
+79.25
+77.36
+79.25
+63.64
+
+75.47
+60.38
+75.47
+71.70
+75.47
+57.58
+
+67.92
+49.06
+67.92
+64.15
+67.92
+51.52
+
+and assessed by GPT-4o [50], with validation by doctors. The
+results were: SRRAG 277, MedRAG 290 out of 360.
+
+F
+
+Table A2: Impact of KG components on the performance of
+MedRAG
+
+Models
+
+BERTScore
+
+BLEU
+
+ROUGE
+
+METEOR
+
+FSRAG
+FLARE
+FL-RAG
+Dragin
+SRRAG
+MedRAG
+
+0.7853
+0.8328
+0.8130
+0.8259
+0.8346
+0.8359
+
+0.0963
+0.1637
+0.1551
+0.2036
+0.2013
+0.2189
+
+0.1459
+0.1011
+0.2171
+0.2053
+0.2722
+0.2863
+
+0.1490
+0.1923
+0.2054
+0.2081
+0.2756
+0.2822
+
+G
+
+• SR-RAG [57] In SR-RAG, relevant passages are retrieved
+from an external corpus based on the initial query and then
+incorporated into the input of the language model
+
+D Intermediate Results
+D.1 Disease Clustering Result
+The result of disease clustering in CPDD is Shown in Figure A2.
+Through the disease clustering operation, we group different forms
+and representations of the same disease in the EHR database together, assigning a topic to each cluster. This process unifies the
+representation of diseases, ensuring consistency and comparability.
+Additionally, it provides a unified foundation for subsequent disease
+knowledge graph construction and augmentation.
+
+Example of Diagnostic Differences
+Knowledge Graph
+
+H
+
+While lumbar canal stenosis and sciatica share some similar features,
+the critical distinguishing factor lies in the response to sitting. In
+lumbar canal stenosis, features are typically alleviated when sitting,
+whereas in sciatica, sitting tends to exacerbate the discomfort. The
+augmented disease features are shown in Figure A3.
+
+E
+
+User Interface (UI)
+
+This section introduces how our MedRAG can be integrated into
+the user interface design of the healthcare copilot system. The
+healthcare copilot offers three modes of interaction, as shown in
+Figure A4.
+• Consultation Mode: By monitoring the consultation dialogue between the doctor and patient, the system extracts
+patient manifestations in real-time and provides diagnostic
+suggestions along with proactive questioning recommendations to guide the consultation.
+• EHR Mode: By uploading the patient’s EHR to the healthcare copilot system, this system automatically extracts the
+relevant patient manifestations for diagnostic purposes.
+• Typewritting Mode: The user can manually input the patient’s manifestations into the system.
+On the results page shown in Figure A5, the output of the healthcare copilot system include diagnoses, instructive follow-up questions, physiotherapy treatments, and medication treatments. This
+UI integrates the most essential functions derived from extensive
+interviews we conducted with numerous healthcare practitioners.
+It ensures that the healthcare copilot system meets the practical
+needs of healthcare professionals, ultimately enhancing the overall
+quality of care.
+
+Table A1: Results of objective performance on CCPD
+
+D.2
+
+Ablation Study on KG Components
+
+In order to evaluate how different components in diagnostic differences KG, we conducted extra ablation study focusing on key
+components. Specifically, we examined the effects of diagnostic key
+difference nodes, augmented feature nodes, patient clinical feature
+matching, and the augmentation of diagnostic differences.
+Results in Table A2 show that KG components like diagnostic
+key difference nodes, augmented feature nodes, the patient clinical feature matching and the augmentation of diagnostic differences contribute to MedRAG’s overall effectiveness significantly.
+Moreover, the hierarchical structure of the constructed diagnostic
+differences KG directly impacts the experimental results as well.
+
+Future work
+
+For future work, we aim to further enhance MedRAG’s capabilities by incorporating multimodal data, such as medical imaging
+(e.g., MRI), physiological signal data (e.g., ECG), and blood test data
+to improve diagnostic accuracy and broaden its applicability to a
+wider range of medical conditions. Additionally, we plan to deploy
+MedRAG within our healthcare copilot systems (The user interface
+is shown in the Appendix) for real-world hospital testing, ensuring
+its effectiveness in clinical settings. Furthermore, to improve usability for doctors, we will integrate a speech recognition module
+into the system. This feature will passively listen to conversations
+between doctors and patients during consultations without causing
+disruptions. Based on the dialogue content, it will provide real-time
+suggestions for follow-up questions and relevant explanations, assisting doctors in conducting more comprehensive and efficient
+patient assessments.
+
+Report Generation Evaluation
+
+To evaluate the report generation of MedRAG, we conducted both
+objective and subjective evaluations on the generated reports of
+CCPD, since the DDXPlus dataset does not contain report data.
+• Objectice Evaluation: We use BERTScore, BLEU, ROUGE,
+and METEOR as metrics. The result is shown in Table A1.
+• Subjective Evaluation: Reports were generated for 10 randomly selected patients using SRRAG and MedRAG. The
+results were scored on 4 Mini-CEX criteria (Scale 1-9) [39],
+
+4453
+
+MedRAG: Enhancing Retrieval-augmented Generation with
+Knowledge Graph-Elicited Reasoning for Healthcare Copilot
+
+Variable
+C
+𝑑𝑟
+𝐷
+𝐸𝐿1
+𝐸𝐿2
+𝑒𝐿2𝑠
+𝐸𝐿3
+𝐸𝐿3𝑟𝑎𝑤
+𝐸𝐿3𝑠
+𝐸𝐿4
+𝐸𝐿4𝑠
+del
+𝐸𝐿4𝑑
+𝑠
+𝐸𝐿4𝑎
+𝐸𝐿4𝑑
+𝑒𝐿2𝑖𝑘
+𝑒𝐿𝑖 𝑗
+𝑓𝑖
+𝐾
+𝑝𝑎
+𝑝𝑛𝑎𝑖𝑣𝑒
+𝑝𝑠
+𝑃
+𝑞
+𝑟
+𝑟𝑚
+𝑟𝑠
+𝑠𝑖𝑚
+𝑇
+𝑡
+𝜒
+𝛿
+E
+G
+G𝐷
+M𝑎
+M𝑔
+Mℎ
+S
+𝜙
+𝜎 (𝑒𝐿4𝑑𝑖 )
+Θ
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+Definition
+The clustering model
+Retrieved relevant documents
+Electronic Health Record (EHR) database
+The set of broad disease categories
+The set of disease subcategories
+The matched subcategory
+The set of specific disease names
+the set of original disease descriptions in 𝐷
+The set of disease nodes connected with 𝐸𝐿2𝑠
+The set of disease-specific features
+The set of features nodes connected with node in 𝐸𝐿3𝑠
+Deleted features in proactive diagnostic questioning
+Disease-specific features augmented by the LLM
+Features decomposed from the EHR database
+The closest disease subcategory node
+A disease or category name in the graph where 𝑒𝐿𝑖 𝑗 ∈ 𝐸𝐿𝑖
+A specific feature of the patient’s manifestation
+The set of diagnostic differences KG identified in the knowledge graph
+Prompt used by M𝑎 for disease manifestation augmentation
+Simple prompt used by M𝑔
+Prompt designed for reasoning and generating diagnostic reports
+The shortest path function
+A input patient’s manifestations
+𝐸𝐿4𝑠 removing proportion in proactive diagnostic questioning mechanism
+Relation type "has_manifestation_of" between diseases and their manifestations
+Relation type "is_a" for hierarchical relationships
+The similarity score between patient features and nodes in the knowledge graph
+Set of relevant matching nodes in the knowledge graph
+Similarity score threshold in proactive diagnostic questioning mechanism
+The voting indicator function
+The matching filtering indicator function
+Embedding model used to compute similarity between features
+The four-tier hierarchical diagnostic knowledge graph
+The four-tier disease knowledge graph
+LLM used for disease manifestation augmentation
+LLM used for generating diagnostic reports
+LLM used for topic aggregation
+The similarity model
+The decomposition function for 𝑞
+Discriminability score of a feature in the knowledge graph
+The hierarchical aggregation operator
+Table A3: List of variables and their definitions
+
+4454
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+Xuejiao Zhao, Siyan Liu, Su-Yin Yang, & Chunyan Miao
+
+Prompt
+Character
+Definition
+
+Diagnostic
+Differences
+Searching
+
+KG-elicited
+Reasoning
+
+Diagnosis
+
+Treatments
+
+Medication
+Follow Up
+Questions
+Populate
+Information
+
+You are a knowledgeable medical assistant with expertise in pain management.
+Your task are:
+1.
+Analyse and refer to the retrieved similar patients' cases and knowledge graph which may be relevant to
+the diagnosis and assist with new patient cases.
+2.
+Output of "Diagnoses" must come from Head pain, Migraine, Trigeminal neuralgia, Cervical spondylosis,
+Chronic neck pain, Neck pain, Chest pain, Abdominal pain, Limb pain, Shoulder pain, Hip pain, Knee
+pain, Buttock pain, Calf pain, Low back pain, Chronic low back pain, Mechanical low back pain, Upper
+back pain, Degenerative disc disease, Lumbar spondylosis, Lumbar canal stenosis, Spinal stenosis,
+Foraminal stenosis, Lumbar_radicular_pain, Radicular pain, Sciatica, Lumbosacral pain, Generalized
+body pain, Fibromyalgia, Musculoskeletal pain, Myofascial pain syndrome, Neuropathic pain, Postherpetic neuralgia.
+3.
+You are given differences in diagnoses of similar symptoms or pain locations. Read that information as a
+reference to your diagnostic if applicable.
+4.
+Do mind the nuance between these factors of similar diagnosis with knowledge graph information and
+consider it when diagnosing new patient's information.
+5.
+Ensure that the recommendations are evidence-based and consider the most recent and effective
+practices in pain management.
+6.
+The output should include four specific treatment-related fields:
+- "Diagnoses (related to pain) and Explanations of diagnose
+- "Pain/General Physiotherapist Treatments\nSession No.: General Overview\n- Specific
+interventions/treatments"
+- "Pain Psychologist Treatments"
+- "Pain Medicine Treatments"
+7.
+In "Diagnoses (related to pain)", only output the diagnosis itself. Place all other explanations and
+analyses (if any) into "Explanations of diagnose".
+8.
+You can leave Psychologist Treatments blank if not applicable for the case, leaving the text "Not
+applicable"
+9.
+If you think information is needed, guide the doctor to ask further questions about which following areas
+to distinguish between the most likely diseases: Pain restriction; Location; and Symptom. Separate
+answers with ",". The output should only include aspects.
+10. The output should follow this structured format:
+
+### Diagnoses
+1. **Diagnosis**: Answer.
+2. **Explanations of diagnose**: Answer.
+### Instructive question
+1. **Questions**: Answer.
+### Pain/General Physiotherapist Treatments
+1. **Session No.: General Overview**
+- **Specific interventions/treatments**:
+- **Goals**:
+- **Exercises**:
+- **Manual Therapy**:
+- **Techniques**:
+2. **Exercise Recommendations from the Exercise List**:
+### Pain Psychologist Treatments(if applicable)
+1. **Treatment 1**:
+### Pain Medicine Treatments
+### Recommendations for Further Evaluations
+1. **Evaluation 1**:
+
+.
+
+New patient’s information: {q}.
+Retrieved Documents {d_r}.
+Augmented knowledge from knowledge graph about relevant diagnoses {K}.
+Now complete the tasks in that format.''
+
+.
+
+Figure A1: Prompt for the generative model of MedRAG
+
+4455
+
+MedRAG: Enhancing Retrieval-augmented Generation with
+Knowledge Graph-Elicited Reasoning for Healthcare Copilot
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+Figure A2: The result of disease clustering in CPDD
+
+cause lower_back_pain
+cause leg_pain
+cause numbness
+cause weakness
+lumbar canal stenosis
+
+has_symptom pain_reliref_with_sitting
+has_symptom pain_worsens_with_standing
+has_symptom tingling
+has_symptom cramping
+
+Low back pain related
+
+lumbar related pain
+
+is_a sciatica
+cause lumbar_disc_herniation
+
+Key diagnostic
+difference
+
+has_symptom low_back_pain
+has_symptom buttock_pain
+sight sided sciatica
+
+has_symptom pain_worsens_with_sitting
+has_symptom leg_pain
+has_symptom tingling
+has_symptom numbness
+has_symptom muscle_weakness
+
+Figure A3: Diagnostic differences knowledge graph between lumbar canal stenosis and sciatica. (Similar manifestations but
+opposite responses to sitting (Alleviation vs. Exacerbation))
+
+4456
+
+WWW ’25, April 28-May 2, 2025, Sydney, NSW, Australia
+
+Xuejiao Zhao, Siyan Liu, Su-Yin Yang, & Chunyan Miao
+
+Healthcare Copilot
+ Within 24 Hours
+• Chronic pain
+• lumbago
+• headache
+
+Hi, I am your copilot Chris. Interact with me in the following ways:
+
+ Within 1 Week
+• angiocarp
+• coronary heart disease
+• postoperative pain
+ Within 30 Days
+• postpartum depression
+• postpartum depression
+• head injuries
+
+Speaking
+Speak to a patient
+or tell me a patient’s
+condition.
+
+Uploading file
+
+Typewriting
+
+Upload a patient’s
+electronical medical
+record.
+
+Type in a question or
+a patient's condition.
+
+Input your question here!
+
+Figure A4: The interactive interface of healthcare copilot allows multi-turn medical Q&A through voice, files, and text.
+Healthcare Copilot
+
+patient_501.json
+
+ Within 24 Hours
+• Chronic pain
+• lumbago
+• headache
+ Within 1 Week
+• angiocarp
+• coronary heart disease
+• postoperative pain
+ Within 30 Days
+• postpartum depression
+• postpartum depression
+• head injuries
+
+
+
+Me
+
+Diagnoses
+- Diagnosis: Lumbar canal stenosis
+- Explanations of diagnosis: The MRI findings indicate severe spinal canal stenosis at the L4/5 level leading to cauda
+equina compression. This can result in significant back and limb pain, as evidenced by the patient's symptoms of aching
+pain in the lower back with radiating pain down the […].
+
+
+
+Instructive Follow-up Question
+- Does leaning forward or sitting relieve your pain?
+
+
+
+Pain/General Physiotherapist Treatments:
+- Specific interventions/treatments: General physiotherapy focusing on patient education, […].
+- Goals: To reduce pain levels, improve functional mobility, […].
+- Exercises: Tailored exercises including back extensions, nerve glides, hamstring stretches, […].
+- Manual Therapy: Techniques including Grade III mobilization of affected vertebral segments, […].
+- Techniques: Application of hot packs for pain relief, pacing strategies in exercises, and […].
+
+
+
+Pain Medicine Treatments
+- Medicine: The patient is advised to continue the usage of gabapentin and paracetamol as […].
+
+Input your question here!
+
+Figure A5: A specific example of how healthcare copilot could handle the diagnosis of lumbar canal stenosis using a JSON
+format medical record input, and output relevant treatments.
+
+4457
+
+

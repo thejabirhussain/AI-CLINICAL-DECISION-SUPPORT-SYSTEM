@@ -1,0 +1,2487 @@
+BiomedRAG: A Retrieval augmented Large Language
+Model for Biomedicine
+Mingchen Li1 , Halil Kilicoglu2 , Hua Xu3 , and Rui Zhang1
+
+arXiv:2405.00465v3 [cs.CL] 3 May 2024
+
+1 Division of Computational Health Sciences, Department of Surgery, University of Minnesota, Minneapolis, MN,
+
+USA
+2 School of Information Sciences, University of Illinois at Urbana-Champaign, Champaign, USA
+3 Section of Biomedical Informatics and Data Science, School of Medicine, Yale University, New Haven, CT, USA
+* Corresponding author: Rui Zhang, Ph.D
+* Email: zhan1386@umn.edu
+
+ABSTRACT
+Large Language Models (LLMs) have swiftly emerged as vital resources for different applications in the
+biomedical and healthcare domains; however, these models encounter issues such as generating inaccurate information or hallucinations. Retrieval-augmented generation provided a solution for these models
+to update knowledge and enhance their performance. In contrast to previous retrieval-augmented LMs,
+which utilize specialized cross-attention mechanisms to help LLM encode retrieved text, BiomedRAG
+adopts a simpler approach by directly inputting the retrieved chunk-based documents into the LLM. This
+straightforward design is easily applicable to existing retrieval and language models, effectively bypassing
+noise information in retrieved documents, particularly in noise-intensive tasks. Moreover, we demonstrate
+the potential for utilizing the LLM to supervise the retrieval model in the biomedical domain, enabling
+it to retrieve the document that assists the LM in improving its predictions. Specifically, B IOMED RAG
+retrieves relevant documents from a specifically curated, diverse chunk database through a unique,
+purpose-built chunk scoring mechanism by a tunable scorer. This retrieval process then integrates the
+selected information directly into the LLM’s input, facilitating the generation of expected output, such as
+structured knowledge. Our experiments reveal that with the tuned scorer, B IOMED RAG attains superior
+performance across 4 biomedical NLP tasks, encompassing information extraction (triple extraction,
+relation extraction), text classification, and link prediction leveraging over 8 datasets. For instance, in the
+triple extraction task, B IOMED RAG outperforms other triple extraction systems with micro-F1 scores of
+81.42 and 88.83 on GIT and ChemProt corpora, respectively. The outstanding performance underscores
+the potential of B IOMED RAG in constructing effective biomedical intervention systems for various tasks.
+
+1 Introduction
+As research in the field deepens, the volume of biomedical literature has grown exponentially. For instance,
+PubMed is a biomedical literature database, encompassing over 33 million literatures1 . The widespread
+adoption of biomedical literature has led to the development and adoption of numerous data mining
+and statistical techniques. Knowledge extraction technology endeavors to extract structural information
+from unstructured text2, 3 , while link prediction4, 5 tasks seek to discern the relationship types between
+two entities, aiding in drug discovery. To improve support for medical professionals and enhance the
+performance of BioNLP systems, Biomedical Large Language Models (LLMs)6 provide a path through pretraining or fine-tuning open-source LLMs in the general domain using biomedical data. This demonstrates
+notable performance across a range of biomedical tasks. For instance, MedLLaMA7 utilized biomedical
+literature for training and evaluation via biomedical question-answering tasks. GatorTronGPT8 was trained
+1
+
+on clinical texts and fine-tuned for various NLP tasks, including biomedical relation extraction, biomedical
+question answering, etc.
+These models are commonly trained on extensive datasets, containing a significant amount of world
+or domain knowledge implicitly stored within their parameters. However, they are also prone to hallucination9, 10 . Retrieval-augmented language models11–14 , in contrast, can retrieve knowledge from an
+external datastore when needed, potentially reducing hallucination and increasing knowledge coverage.
+Previous methods involving retrieval-augmented language models typically require a fixed retriever, such
+as K-nearest neighbors (KNN)15 , to retrieve the most relevant document for the input sentence. However,
+these methods mainly perform knowledge retrieval on unlabelled sentences, meaning that the model
+cannot be guided to learn the (input, label) information. Moreover, in some noise-intensive tasks, input
+sentences are likely to introduce words irrelevant to the labels, introducing noise that can adversely affect
+the performance of the model. For example, in the sentence-level triple extraction task, consider the
+sentence Chitin synthetase was activated by fungal acid proteases; however, it was subsequently destroyed
+by proteases from both animal and plant sources, the STIMULATES relationship between head entity
+proteases and tail entity synthetase is discerned from the key chunk was activated by. The prior retrievalaugmented language models need access to the internal LM representations (e.g., for model training16 ),
+which poses challenges for their application to very large LMs. Moreover, numerous state-of-the-art LLMs
+are only accessible through APIs, with their internal representations undisclosed and lacking support for
+fine-tuning.
+Therefore, to solve the above challenges, in this work, we primarily investigate the effectiveness of
+integrating chunk knowledge into LLMs in the biomedical domain, and we propose a novel retrievalaugmented language framework for the biomedical domain, namely B IOMED RAG, which is enhanced by
+a new tailored chunk retriever. The key idea is to adapt the retriever to the LLM, which is in contrast to
+prior work17 that adapts language models to the retriever. We employ a training objective that prioritizes
+retrieving chunk-based documents to enhance language model perplexity. B IOMED RAG consists of three
+major steps: (1) constructing the diverse chunk database. In our work, the "chunk" is a broad concept,
+For instance, in noise-intensive tasks, such as sentence-level relation extraction1 and text classification
+tasks, the relation type or label typically pertains to several consecutive words in the sentence. Hence, the
+sentence is divided into multiple chunks. Conversely, in tasks like link prediction, where the input sentence
+contains only two entities and the output is the relation type, the chunk comprises these two entities. (2)
+training the tailored chunk scorer to select the relevant document from the diverse chunk database for the
+input sentence. (3) incorporating the retrieved document into the LLM to generate the output (e.g. label,
+structure knowledge, etc.) for the given sentence. We perform extensive experiments and demonstrate
+the effectiveness of our proposed B IOMED RAG framework over five tasks ( triple extraction, relation
+extraction, text classification, link prediction), showing significant improvement over strong baseline
+models. The contributions of this work can be summarized as follows:
+• We proposed B IOMED RAG, a new framework that automatically retrieval chunk information from
+pre-constructed diverse chunk database for biomedical NLP tasks;
+• To improve the retrieval quality, we proposed a learnable tailored chunk scorer to adapt LLM,
+utilizing the LLM scores as a supervision signal.
+• To assess the model’s generalizability, we validated it on 4 biomedical NLP tasks with 8 datasets.
+1 Relation extraction: by giving the sentence and two entities in this sentence, the model needs to extract the relation between
+
+these two entities. Triple extraction: by giving the sentence, the model needs to joint extract the triple (head entity, relation, tail
+entity).
+
+2/17
+
+• We conducted a thorough analysis of our method, including an ablation study, demonstrating the
+robustness of our framework.
+
+2 Results
+In this section, we present our main results on BIOMED RAG with a focus on several practical facets,
+including 1) Comparative evaluations of the BIOMED RAG framework against other models across 5 tasks
+and 9 datasets. 2) Comparative assessments with the current RAG model. 3) Module (tailored chunk
+scorer, diversity operation) assessment. 4) Model performance under different chunk sizes.
+2.1 Comparative Assessments between Our BIOMED RAG Framework with Other Models
+Table 1 and Table 2 present the experiment results on triple extraction, relation extraction, text classification,
+link prediction. Through our experiments, we noted that our BIOMED RAG model exhibited the capacity
+to enhance the performance of different LLMs such as GPT-4, LLaMA2 13B, and MedLLaMA 13B.
+(1) Triple Extraction (TE)
+DDI
+TE Approach
+
+(2) Relation Extraction (RE)
+
+ChemProt
+
+Precision Recall
+
+GIT
+
+GIT-RE
+
+F1
+
+Precision
+
+Recall
+
+F1
+
+Precision
+
+Recall
+
+F1
+
+RE Approach
+
+Precision
+
+Recall
+
+F1
+
+UniRel18
+
+25.59
+
+21.92
+
+27.13
+
+29.00
+
+17.45
+
+21.79
+
+36.36
+
+12.50
+
+18.60 RT-1012
+
+42.80
+
+43.44
+
+43.12
+
+OneRel19
+
+34.72
+
+81.07
+
+22.09
+
+44.95
+
+45.22
+
+44.68
+
+47.97
+
+52.01
+
+44.52 RT-512
+
+44.91
+
+46.45
+
+45.67
+
+UIE (base)3
+
+30.74
+
+29.07
+
+29.88
+
+48.15
+
+44.79
+
+46.41
+
+34.81
+
+30.59
+
+32.56 RT-112
+
+44.86
+
+46.02
+
+45.44
+
+E2H (large)20
+
+30.24
+
+30.16
+
+30.20
+
+49.86
+
+47.78
+
+48.80
+
+31.47
+
+26.89
+
+29.00 RT-2012
+
+44.94
+
+45.81
+
+45.37
+
+E2H (base)20
+
+34.23
+
+34.25
+
+34.24
+
+48.92
+
+46.51
+
+47.68
+
+31.29
+
+26.68
+
+28.80 BERT21
+
+86.25
+
+86.25
+
+86.25
+
+UIE (large)3
+
+37.50
+
+35.05
+
+36.24
+
+49.74
+
+46.27
+
+47.94
+
+33.99
+
+29.93
+
+31.83 BioBERT22
+
+85.43
+
+85.43
+
+85.43
+
+GPT-4
+
+5.08
+
+9.00
+
+6.50
+
+20.79
+
+37.00
+
+26.61
+
+9.48
+
+9.46
+
+9.47
+
+48.17
+
+48.17
+
+48.17
+
+MedLLaMA 13B7
+
+76.63
+
+76.63
+
+76.63
+
+52.10
+
+49.04
+
+50.52
+
+42.60
+
+41.51
+
+42.05 MedLLaMA 13B7
+
+67.02
+
+66.88
+
+66.95
+79.18
+
+GPT-4
+
+LLaMA2 13B23
+
+79.61
+
+79.61
+
+79.61
+
+78.58
+
+76.41
+
+77.48
+
+61.76
+
+56.45
+
+58.99 LLaMA2 13B23
+
+79.43
+
+78.92
+
+MedLLaMA 13B + BIOMED RAG
+
+76.90
+
+76.90
+
+76.90
+
+77.48
+
+76.46
+
+76.97
+
+76.88
+
+76.56
+
+76.72 MedLLaMA 13B + BIOMED RAG
+
+86.66
+
+86.66
+
+86.66
+
+LLaMA2 13B + BIOMED RAG
+
+80.50
+
+79.10
+
+80.00
+
+89.25
+
+88.42
+
+88.83
+
+81.78
+
+81.07
+
+81.42 LLaMA2 13B + BIOMED RAG
+
+89.03
+
+89.03
+
+89.03
+
+Table 1. Results of various approaches on triple extraction, relation extraction over 4 datasets.
+
+(1) Text Classification
+
+(2) Link Prediction
+
+Ade-corpus-v2
+
+MTsample
+
+UMLS
+
+ADInt
+
+Precision
+
+Recall
+
+F1
+
+Precision
+
+Recall
+
+F1
+
+Precision
+
+Recall
+
+F1
+
+Precision
+
+Recall
+
+F1
+
+BERT21
+
+95.00
+
+97.00
+
+96.00
+
+38.00
+
+38.00
+
+38.00
+
+57.00
+
+57.00
+
+57.00
+
+58.15
+
+58.15
+
+58.15
+
+BioBERT22
+
+95.00
+
+97.00
+
+97.00
+
+37.00
+
+37.00
+
+37.00
+
+58.00
+
+58.00
+
+58.00
+
+59.37
+
+59.37
+
+59.37
+
+GatorTron24
+
+95.00
+
+98.00
+
+97.00
+
+38.00
+
+38.00
+
+38.00
+
+59.00
+
+59.00
+
+59.00
+
+59.23
+
+59.23
+
+59.23
+
+MedLLaMA 13B7
+
+95.40
+
+95.40
+
+95.40
+
+24.27
+
+23.14
+
+23.69
+
+34.51
+
+32.37
+
+33.41
+
+46.25
+
+46.25
+
+46.25
+
+LLaMA2 13B23
+
+96.40
+
+96.40
+
+96.40
+
+38.49
+
+36.80
+
+37.62
+
+56.12
+
+56.12
+
+56.12
+
+61.38
+
+61.38
+
+61.38
+
+GPT-4
+
+41.00
+
+41.00
+
+41.00
+
+41.33
+
+41.33
+
+41.33
+
+6.00
+
+6.00
+
+6.00
+
+33.33
+
+33.33
+
+33.33
+
+MedLLaMA 13B + BIOMED RAG
+
+99.89
+
+99.89
+
+99.89
+
+32.52
+
+32.45
+
+32.49
+
+58.00
+
+58.00
+
+58.00
+
+59.16
+
+59.16
+
+59.16
+
+LLaMA2 13B + BIOMED RAG
+
+99.80
+
+99.80
+
+99.80
+
+38.50
+
+38.50
+
+38.50
+
+59.80
+
+59.80
+
+59.80
+
+62.22
+
+62.22
+
+62.22
+
+GPT-4 + BIOMED RAG
+
+75.60
+
+75.60
+
+75.60
+
+41.93
+
+41.93
+
+41.93
+
+24.35
+
+24.35
+
+24.35
+
+37.08
+
+37.08
+
+37.08
+
+TE Approach
+
+Table 2. Results of various approaches on text classification, link prediction over 4 datasets.
+Triple Extraction In our paper, triple extraction is defined as the task where the model extracts the triple
+
+(head entity, relation, tail entity) from sentences. From Table 1 (1), we have the following observations: On
+3/17
+
+Triple
+
+DDI
+ChemProt
+GIT
+
+Head Entity
+
+Tail Entity
+
+Relation
+
+Approach
+
+Precision
+
+Recall
+
+F1
+
+Precision
+
+Recall
+
+F1
+
+Precision
+
+Recall
+
+F1
+
+Precision
+
+Recall
+
+F1
+
+UIE (large)
+
+37.50
+
+35.05
+
+36.24
+
+68.89
+
+64.40
+
+66.57
+
+63.37
+
+59.24
+
+61.23
+
+45.63
+
+42.66
+
+44.10
+
+LLaMA2 13B + BIOMED RAG
+
+80.50
+
+79.10
+
+80.00
+
+97.01
+
+97.01
+
+97.01
+
+85.59
+
+85.59
+
+85.59
+
+92.11
+
+92.10
+
+92.12
+
+E2H (large)
+
+49.86
+
+47.78
+
+48.80
+
+80.45
+
+77.09
+
+78.73
+
+78.23
+
+74.97
+
+76.56
+
+71.26
+
+68.29
+
+69.74
+
+LLaMA2 13B + BIOMED RAG
+
+89.25
+
+88.42
+
+88.83
+
+98.26
+
+97.35
+
+97.80
+
+96.71
+
+95.81
+
+96.25
+
+93.01
+
+92.14
+
+92.57
+
+OneRel
+
+47.97
+
+52.01
+
+44.52
+
+65.26
+
+71.54
+
+60.00
+
+68.16
+
+75.46
+
+62.15
+
+74.70
+
+82.94
+
+67.96
+
+LLaMA2 13B + BIOMED RAG
+
+81.78
+
+81.07
+
+81.42
+
+92.84
+
+92.04
+
+92.44
+
+91.76
+
+90.96
+
+91.36
+
+87.20
+
+86.45
+
+86.82
+
+Table 3. Triple, head entity, tail entity and relation results of various approaches on DDI, ChemProt and
+GIT
+GIT, (1) our BIOMED RAG significantly outperforms all the strong baselines across all evaluation metrics.
+(2) we observe that BIOMED RAG improve the original MedLLaMA 13B and LLaMA2 13B by 34.67%,
+22.43% respectively, in terms of Triple-F1. (3) The performance of lightweight models like UniRel and
+OneRel significantly lags behind that of the LLaMA2 family, like LLaMA2 7B. On DDI and ChemProt,
+we have the following observations: (1) our BIOMED RAG still outperforms all baselines across F1 value
+on these open datasets. (2) We observe that BIOMED RAG improve the original MedLLaMA 13B and
+LLaMA2 13B by 0.27%, 0.39% respectively on the DDI. (3) We observe that BIOMED RAG improve the
+original MedLLaMA 13B and LLaMA2 13B by 26.45%, 11.35% respectively on the ChemProt. (4) The
+lower performance observed in Unirel and Onerel can be attributed to the table-filling method struggling
+to recognize complex biomedical entities or relations. For example, as illustrated in Table 3, on DDI, UIE
+achieves only a 61.23% accuracy for tail entity recognition.
+Table 3 presents the entities, relation types, and triple comparisons among the top-1 baseline models
+from Table 1 and BIOMED RAG. We observed that (1) BIOMED RAG achieved state-of-the-art performance
+in triple F1, relation F1 and entity F1. (2) For the lightweight model, such as UIE, it achieves a lower F1
+score for relations on the DDI dataset. (3) Lightweight models like UIE and OneRel struggle with entity
+recognition in biomedical sentences. To further validate the performance of our model, we present the
+results of triple extraction from several state-of-the-art systems: SPBERE25 and JBUIM26 , as sourced from
+their respective papers. Since their code is not publicly available, we compare their model performance
+solely on the DDI and ChemProt datasets. Our findings indicate that our model continues to demonstrate
+superior performance compared to these systems. On the DDI dataset, JBUIM and SPBERE achieved F1
+scores of 77.70% and 79.20% respectively, whereas our model achieved an F1 score of 80.00%. Similarly,
+on the ChemProt dataset, JBUIM and SPBERE achieved F1 scores of 68.80% and 69.70%, while our
+model achieved an F1 score of 88.83%.
+Relation Extraction In our paper, the relation extraction task involves predicting the type of relationship
+
+between two entities (head entity and tail entity) based on a given sentence, head entity, and tail entity. To
+assess the scalability of our model, in this part, we evaluate the performance of BIOMED RAG in relation
+extraction tasks. Table 1 (2) presents the experiment results of various approaches. We have the following
+observations: (1) our BIOMED RAG significantly outperforms all the strong baselines and its variants
+across all evaluation metrics. (2) We observed that BIOMED RAG improve the original M ED LL A MA
+13B , and LL A MA2 13B by 19.71%, and 9.85% respectively, in term of F1. (3) Without training, GPT-4
+struggles to extract the relationship in the sentence.
+Text Classification Table 2 (1) presents the experiment results of various approaches on the two datasets
+
+ade-corpus-v2 and MT-sample. (1) It’s notable that BIOMED RAG enhances the original M ED LL A MA
+13B, LL A MA2 13B and GPT-4 by 4.49%, 3.40% and 34.60 respectively, in terms of F1 score. (2) Without
+4/17
+
+fine-tuning, GPT-4 exhibits lower performance on the ade-corpus-v2 dataset. Nevertheless, BIOMED RAG
+has the capability to enhance the performance of GPT-4, surpassing the performance achieved by BERT,
+BioBERT, and GatorTron. On MTSample, we observed that: (1) GPT-4, without fine-tuning, achieves the
+best performance when compared to models like LLaMA2 13B and MedLLAMA 13B, which require
+fine-tuning. (2) Remarkably, BIOMED RAG boosts the performance of the original M ED LL A MA 13B,
+LL A MA2 13B, and GPT-4 models by 8.80%, 0.88%, and 0.60%, respectively, in F1 score.
+Link Prediction Table 2 (2) presents the experiment results of various approaches on the UMLS and
+
+ADInt. On UMLS, we can see that: (1) BIOMED RAG improve the original M ED LL A MA 13B , LL A MA2
+13B and GPT-4 by 24.59%, 3.68% and 18.35% respectively, in term of F1. On ADInt, (1) we observed
+that BIOMED RAG improve the original M ED LL A MA 13B, LL A MA2 13B and GPT-4 by 12.91%,
+0.84% and 3.75% respectively, in term of F1.
+2.2 Comparative Assessments with RAG models
+The core of our method design lies in establishing a relational key-value memory at the chunk level and
+training a tailored chunk scorer to adapt the LLM. To comprehensively assess our model’s performance,
+we conduct a comparative analysis with the prevailing retrieval-based LLM, employing a retriever to
+obtain the top-n relevant documents related to the input sentence. we called this model as RA-KNN-n,The
+results from the top-performing baseline models and the BIMED RAG are illustrated in Figure 1.
+80.2
+
+90
+
+80
+
+100
+
+80
+
+80
+
+79.8
+79.61
+
+70
+
+80
+
+88.83
+
+85.08
+
+90
+69.7
+
+60
+
+50
+
+79.4
+
+50
+
+40
+
+40
+
+30
+
+79.2
+
+30
+
+20
+
+79
+
+20
+
+10
+
+10
+
+78.8
+LLaMA2 13B
+
+LLaMA2 13B+BR
+
+44.52
+
+OneRel
+SPBERE
+
+LLaMA2 13B‐top1
+
+(a) DDI
+
+MedLLaMA
+13B+top1
+
+LLaMA2 13B+BR
+
+(b) ChemProt
+
+MedLLaMA
+13B+BR
+
+LLaMA2 13B‐ LLaMA2 13B+BR
+top20
+
+(c) GIT
+43
+
+90
+
+100.5
+
+89.03
+89
+
+88.38
+
+100
+
+41.33
+
+41
+
+99
+
+86.66
+
+86.25
+
+86
+
+41.93
+
+42
+
+99.8
+
+99.6
+
+99.5
+
+88
+87
+
+81.42
+
+0
+
+0
+
+SPBERE
+
+77.66
+
+60
+
+79.6
+
+79.2
+
+76.72
+
+70.96
+
+70
+
+40
+
+98.5
+98
+
+85.16
+
+97.5
+
+85
+
+39
+38
+
+97
+
+38
+
+97
+84
+
+96.5
+
+37
+
+96
+
+83
+BERT
+
+MedLLaMA
+13B+top1
+
+MedLLaMA
+13B+BR
+
+LLaMA2 13B‐ LLaMA2 13B+BR
+top20
+
+36
+
+95.5
+BioBERT
+
+(d) GIT-RE
+
+LLaMA2 13B+top1
+
+GatorTron
+
+LLaMA2 13B+BR
+
+(e) Ade-corpus-v2
+
+60
+
+GPT‐4+BR
+
+(f) MTsample
+62.63
+
+63
+
+62.22
+
+59.8
+59.8
+
+GPT‐4
+
+62
+
+59.6
+
+61
+
+59.4
+60
+
+59.15
+
+59.2
+59
+
+59.37
+
+59
+
+59
+
+58
+
+58.8
+58.6
+
+57
+
+GatorTron
+
+LLaMA2 13b+top10
+
+(g) UMLS
+
+LLaMA2 13b+BR
+
+BioBERT
+
+LLaMA2 13b+top15
+
+LLaMA2 13b+BR
+
+(h) ADInt
+
+Figure 1. F1(a-h)/Accuracy(i) performance of different models. BR refers to BIOMED RAG. The red font
+indicates the performance of BIOMED RAG.
+More specifically, same as12, 27 , we employ K-nearest neighbors (KNN) as the retriever to obtain the
+top-n (sentence, label) pairs from the retrieval database (same with the retrieval database as our method).
+The model results of different n are shown in Figure 2.
+5/17
+
+90
+
+90
+85.08
+80
+79
+
+85
+
+83.42
+
+80
+
+79.61
+
+76.25
+
+77.17
+75.81
+
+50.52
+
+50
+
+44.55
+40
+
+74
+
+45
+
+42.94
+
+1
+
+5
+
+30
+1
+
+5
+
+10
+
+15
+
+20
+
+25
+
+30
+
+0
+
+(a) DDI (LLaMA2 13B)
+
+1
+
+5
+
+10
+
+15
+
+20
+
+25
+
+(b) ChemProt (LLaMA2 13B)
+
+42
+
+100
+87.09
+79.18
+
+85.37
+
+75.72
+
+70
+
+86.02
+74.73
+
+87.09
+
+88.38
+
+77.1
+
+77.66
+
+41.5
+
+99.6
+
+40.5
+75.59
+
+73.27
+
+69.53
+
+96
+
+69.67
+
+94
+58.99
+
+93.69
+
+93.6
+
+94.2
+
+39.5
+
+92.2
+
+92
+
+39
+
+92.2
+
+38
+
+40
+5
+
+10
+
+15
+
+TE
+
+RE
+
+20
+
+25
+
+88
+
+30
+
+0
+
+(d) GIT& GIT-RE (LLaMA2 13B)
+
+38.91
+
+38.5
+
+90.2
+
+90
+1
+
+40.4
+
+40
+
+94.4
+
+50
+
+0
+
+41.33
+
+41
+
+98
+
+84.73
+
+15
+
+RE
+
+(c) GIT & GIT-RE (MedLLaMA 13B)
+
+102
+
+90
+
+10
+
+TE
+
+30
+
+100
+
+60
+
+42.05
+
+40
+
+0
+
+73
+0
+
+62.47
+
+50
+
+75
+
+80
+
+65.01
+
+60
+55
+
+76.08
+
+76
+
+60
+
+77.17
+
+76.9
+
+81.72
+
+72
+
+66.95
+
+65
+77.17
+
+83.96
+
+70.96
+
+70
+
+77.98
+
+77
+
+84.51
+
+75
+
+73.15
+
+70
+
+78
+
+85.16
+
+80
+
+78.8
+
+1
+
+5
+
+10
+
+15
+
+20
+
+25
+
+37.5
+
+30
+
+0
+
+(e) Ade-corpus-v2 (LLaMA2 13B)
+
+1
+
+2
+
+(f) MTsample (GPT-4)
+
+70
+
+60
+59
+
+59.15
+
+59
+
+60
+
+61.38
+
+62.77
+
+62.22
+
+61.66
+
+62.63
+
+61.66
+
+58.39
+
+51.54
+
+50
+
+58
+57.63
+
+40
+
+57
+56
+
+56.12
+
+55.97
+
+30
+55.67
+
+55.21
+
+55
+
+20
+10
+
+54
+
+0
+
+53
+0
+
+1
+
+5
+
+10
+
+15
+
+20
+
+25
+
+(g) UMLS (LLaMA2 13B)
+
+30
+
+0
+
+1
+
+5
+
+10
+
+15
+
+20
+
+25
+
+(h) ADInt (LLaMA2 13B)
+
+Figure 2. Different F1 (a-h)/Accuracy (i) performance of KNN-based retrieval model on 5 tasks over 9
+datasets. We select the LLM with the highest baseline performance as our primary LLM model. The
+number of document samples depends on the input length constraint of the LLM. For instance, in dataset
+Mssample, when top − n > 2, the maximum input token length of 8318 exceeds the maximum input token
+length of 8192 tokens for GPT-4. y-axis: F1 (a-h)/Accuracy (i). x-axis: 0 represents no retriever, while
+1-30 represents the top-n documents retrieved. The red font refers to the best performance.
+
+6/17
+
+In the experiment of GIT and GIT-RE, we selected LLaMA2 13B and MedLLaMA 13B as LLM.
+Due to input length constraints, we present the performance results for the top-15 in MedLLaMA 13B
+and top-30 in LLaMA2 13B. As shown in Figure 1, upon comparing the F1 values between OneRel and
+MedLLaMA 13B+top1, we observe that the retrieval-based model proves effective in enhancing triple
+extraction performance. As depicted in Figure 2(a) and Figure 2(b), we observed that the value of n
+in top-n does not exhibit a direct proportionality with the LLM’s performance. Notably, as shown in
+Figure 1(c-d), with the incorporation of BIOMED RAG, we observed an enhancement in the performance
+of both MedLLaMA 13B and LLaMA2 13B beyond the best achieved through retrieval alone. Otherwise,
+we observed that even though our model retrieves only the top-1 document from the diverse chunk
+database, it still outperforms the KNN-based RAG-LLM in retrieving the top-20 documents, For instance,
+in Figure 1 (c), BIMED RAG achieves 89.03%, whereas LL A MA2 13B+top20 only achieves 88.38% on
+GIT (retrieving top-20 document from the train set). It is also crucial to highlight that while retrieving
+more sentences can improve the performance of the original LLM, it also leads to increased training
+time. Despite the superior performance of LLaMA2 13B+top15 compared to LLaMA2 13B+BR, as
+demonstrated in Figure 1, retrieving larger documents will impact both training and inference times, along
+with consuming additional computational resources.
+From Figure 2(a,b,c,d,e,f,g,h), We’ve discovered that retrieving as much as documents is not necessary
+to enhance the model’s performance, for example, Figure 2(b), as when n = 30, the model gets a worse
+performance. For both the triple extraction (Figure 2(c)), text classification task (Figure 2(e)) and relation
+extraction tasks (Figure 2(c)), we observed that the model achieves its best performance when n = 1.
+Retrieving documents appears to be beneficial for enhancing label prediction accuracy. In Figure 2,
+we observe that not all tasks benefit from using the LLM with the KNN-based retrieval method. For
+instance, on the DDI dataset, the RA-KNN-n model exhibits lower performance compared to the LLM
+without example-guided generation. However, our BIOMED RAG demonstrates superior performance
+when compared to both the RA-KNN-n and other base models.
+Consequently, our model also proves effective in reducing training time associated with retrieving
+additional sentences and addressing challenges related to input length limitations.
+
+P
+
+HEAD ENTITY
+
+(a)
+
+87.1
+
+P
+
+89.03
+
+F
+
+RELATION
+
+87.96
+
+R
+
+TAIL ENTITY
+
+87.1
+
+P
+
+89.03
+
+F
+
+87.1
+TRIPLE
+
+m=5
+
+87.96
+
+84.84
+86.08
+86.82
+
+P
+
+m=4
+
+89.03
+
+84.3
+85.8
+86.45
+
+R
+
+87.96
+
+85.4
+86.36
+87.2
+
+F
+
+m=3
+
+88.09
+89.75
+91.36
+
+R
+
+m=5
+87.52
+89.46
+90.96
+
+P
+
+m=4
+
+88.67
+90.04
+91.76
+
+89.82
+91.69
+92.44
+
+F
+
+89.24
+91.39
+92.04
+
+77.48
+78.96
+81.42
+
+R
+
+m=3
+
+90.41
+91.99
+92.84
+
+76.98
+78.71
+81.07
+
+77.99
+79.22
+81.78
+
+2.3 Model Performance under Different Chunk Sizes
+
+R
+
+F
+
+(b)
+
+Figure 3. (a): Precision (P), Recall (R), F1 results with different chunk length m settings in the task of
+biomedical triple extraction task. (b): Precision (P), Recall (R), F1 results with different chunk length m
+settings in the task of biomedical relation extraction task.
+In our proposed model, there is a parameter that controls the number of chunks: m ∈ {3, 4, 5} when
+constructing the relational key-value memory, which represents the length of each chunk. This parameter
+aids in retrieving relevant chuck information, considering that the input sentence often contains noise
+7/17
+
+that can impact generation progress. In this section, we show the model performance on two tasks triple
+extraction and relation extraction—that have shown significant improvement by BIOMED RAG, as shown
+in Figure 3(a) and Figure 3(b). As we can see, in these two tasks, when m = 5, BIOMED RAG can
+construct the more rich relation-based information, and retrieve the more relevant relation chunk to the
+input sentence. In addition, the performance of m = 5 is better than m = 3 or m = 4, also indicating that if
+the granularity of relation chunk is too coarse, it will impact relation recognition and consequently affect
+model performance.
+2.4 Module (tailored chunk scorer, diversity operation) assessment
+Approach
+Triple Extraction
+
+Precision Recall
+
+F1
+
+LLM + BIOMED RAG
+
+81.78
+
+81.07
+
+81.42
+
+LLM+BIOMED RAG -WTCS
+
+79.31
+
+79.14
+
+79.22
+
+LLM+BIOMED RAG -WD
+
+75.93
+
+74.62
+
+75.27
+
+LLM + BIOMED RAG
+
+89.03
+
+89.03
+
+89.03
+
+86.66
+
+86.66
+
+86.66
+
+85.80
+
+85.80
+
+85.80
+
+Relation Extraction LLM+BIOMED RAG -WTCS
+LLM+BIOMED RAG -WD
+
+Table 4. BIOMED RAG performance about its ablated model. we chose the LLaMA2 13B as the LLM.
+The contribution of our model components can also be learned from ablated models. In this part, we
+mainly focus on biomedical triple extraction and relation extraction task, which get significant improvement
+over our BIOMED RAG. We introduce two ablated models of BIOMED RAG, (1) BIOMED RAG-WTCS uses
+a cosine similarity to choose the most relevant document from diverse chunk database , without using the
+Tailored Chunk Scorer. (2) BIOMED RAG-WD does not consider the diversity of the chunk database. In
+these experiments, we selected LLaMA2 13B + BIOMED RAG as it demonstrated the highest performance
+from Table 4. We find that the performance of BIOMED RAG degrades as we remove important model
+components. Specifically, as shown in Figure. 4 both BIOMED RAG-WTCS and BIOMED RAG-WD
+perform poorly when compared to BIOMED RAG, indicating the importance of training a tailored chunk
+scorer to adapt the LLM and improve the diversity of chunk database.
+
+3 Discussion
+In this paper, we introduce BIOMED RAG, a novel approach aimed at enhancing the performance of
+original Language Learning Models (LLMs) such as MedLLaMA 13B, LLaMA2 13B, and GPT-4. Our
+proposed method leverages the utilization of retrieved chunk documents, acquired through a specifically
+trained tailored chunk scorer, to augment the capabilities of LLMs. This improvement highlights the
+efficacy of integrating retrieved chunk documents into the LLM framework. For example, by comparing
+our model with the current RAG model as shown in Figure 2, we observe that even when retrieving only
+the top-1 document from the diverse chunk database, our model outperforms the KNN-based RA-LLM
+in retrieving the top-n documents. This suggests that BIOMED RAG excels in retrieving diverse chunk
+documents by utilizing a tailored chunk scorer, thereby significantly enhancing the overall performance of
+the model.
+On the triple extraction task, GPT-4 demonstrates notably lower performance, particularly in the case
+of GIT. The main reason is that the reported results are in the zero-shot setting due to the unavailability of
+open resources. UniRel performs significantly worse than OneRel, primarily due to the superiority of the
+BIE operation in OneRel compared to the Interaction Map in UniRel for entity recognition. However, the
+lower performance observed in Unirel and Onerel can be attributed to the table-filling method struggling
+8/17
+
+to recognize complex biomedical entities or relations. For instance, Onerel achieves only 62.15% for
+tail entity recognition on GIT. It remains challenging to recognize some complex biomedical words.
+In the realm of triple extraction tasks, GPT-4 exhibits markedly diminished performance, particularly
+evident in its performance on GIT. This decline can be chiefly attributed to the fact that the reported
+outcomes stem from a zero-shot setting, necessitated by the absence of accessible resources. UniRel
+finds itself notably outpaced by OneRel, primarily owing to the superior efficacy of the BIE operation
+within OneRel in contrast to the Interaction Map employed in UniRel for entity recognition. Nonetheless,
+the subdued performance witnessed in both UniRel and OneRel can be ascribed to the limitations of the
+table-filling method in accurately identifying intricate biomedical entities or relationships. For instance,
+OneRel achieves a meager 62.15% accuracy for tail entity recognition on GIT, underscoring the persistent
+challenge of accurately recognizing certain complex biomedical terms.
+It is noteworthy that during experimentation on both GIT and GIT-RE, we observed intriguing results
+when varying the chunk number parameter. Specifically, when setting m = 5, BIOMED RAG demonstrated
+an enhanced capacity to construct richer relation-based information and retrieve more relevant relation
+chunks corresponding to the input sentence. Moreover, the performance achieved with m = 5 surpassed that
+of m = 3 or m = 4, highlighting the detrimental impact of overly coarse granularity on relation recognition
+and subsequently on model performance. Furthermore, the efficacy of this particular chunk number
+extends beyond the GIT dataset, proving beneficial in tackling noise-intensive tasks and datasets such as
+ChemProt, DDI, and Ade-corpus-v2. This underscores the versatility and effectiveness of utilizing an
+optimal chunk number parameter in enhancing model performance across various domains and challenging
+datasets.
+In both the text classification task and link prediction, we made the intriguing observation that the
+lightweight language model demonstrated performance on par with the larger language model. This parity
+may stem from the lightweight model’s adeptness at handling general tasks, coupled with the absence of
+particularly challenging input sentences necessitating intricate semantic parsing. Notably, our exploration
+of the MTsample dataset revealed a fascinating phenomenon: even without fine-tuning, GPT-4 exhibited
+superior performance compared to the larger language model such as LLamA2 13B, even when fine-tuned.
+We postulate that GPT-4’s ability to harness its inherent knowledge for performance enhancement during
+prompt tuning contributes to this phenomenon.
+
+4 Method
+4.1 Datasets
+In this section, we describe the dataset we used in our paper, Table 5 shows the data statistics for GIT,
+CHEMPROT and DDI. Table 6 shows the data statistics for ade-corpus-v2, MTsample, UMLS, ADInt.
+4.1.1 Triple Extraction Dataset
+
+In this paper, we utilized GIT, DDI, and Chemprot as the foundational datasets.
+• GIT28 is a high-quality biomedical triple extraction dataset for non-drug therapies, characterized by
+its high-quality annotations and comprehensive coverage of relation types. It includes 22 relation
+types from SemMedDB.
+• CHEMPROT29 : The Chemical Protein Interaction Corpus comprises 2432 PubMed abstracts annotated with chemical-protein interactions, encompassing 23 distinct interaction relations. Building
+upon prior research30 , the corpus exclusively considers sentence-level instances, with a particular
+focus on five prominent interaction types for classification: CPR3, CPR4, CPR5, CPR6, CPR9.
+9/17
+
+• DDI31 : The DDI dataset was formulated to support drug information extraction (IE) research for
+SemEval 2013. It comprises 233 texts sourced from Medline abstracts and 792 texts from the
+DrugBank database. This dataset encompasses four distinct types of relations between drug entities,
+namely Advice, Mechanism, Effect, and Int.
+
+Dataset
+
+# Entities
+
+#Relation Types
+
+# train/test/dev
+
+CHEMPROT29
+
+5,990
+
+5
+
+4,111/3,438/2,411
+
+DDI31
+
+13,107
+
+4
+
+5,154/1,376/1,436
+
+GIT28
+
+5,644
+
+22
+
+3,734/465/492
+
+Table 5. Data Statistics for CHEMPROT, DDI, and GIT. "train/test/dev" denotes the counts of (sentence,
+triples) pairs within each training, testing, and development dataset split.
+
+Dataset
+ade-corpus-v232
+
+test
+
+dev
+
+4,000 500
+
+train
+
+500
+
+MTsample 2
+
+4,029 500 500
+
+ADInt33
+
+6,000 720 720
+
+UMLS34
+
+5,216 661 652
+
+Table 6. Data Statistics for ade-corpus-v2, MTsample, UMLS,ADInt. "train/test/dev" denotes the counts
+of (sentence, triples) pairs within each training, testing, and development dataset split.
+4.1.2 Relation Extraction
+
+In this paper, we utilized GIT-RE as the foundational dataset in relation extraction task. The biomedical
+triple extraction dataset GIT serves as the source data for the relation extraction task. We convert the GIT
+dataset into the relation extraction dataset GIT-RE by using the input context, head entity, and tail entity as
+model inputs, where the model’s output signifies the relationship between the input head entity and tail
+entity.
+4.1.3 Text Classification
+
+In this paper, we utilized ade-corpus-v232 and MTsample 3 as the foundational dataset in the text classification task.
+• ade-corpus-v2 dataset is designed for classifying whether a sentence is ADE( Adverse Drug
+Reaction)-related (True) or not (False). In our paper, we randomly select 4,000 instances for
+training, 500 for testing, and 500 for validation.
+• The MTsample dataset, aims to understand the nature of the language used in medical transcriptions
+of various kinds. It includes more than 40 classes.
+4.1.4 Link Prediction
+
+In this paper, we utilized UMLS34 and ADInt33 as the foundational dataset in the link prediction task.
+• UMLS34 contains triples from the Unified Medical Language System, providing knowledge in the
+domain of healthcare and medicine. It comprises 6,529 triples, divided into 5,216 for training, 652
+for validation, and 661 for testing.
+3 https://mtsamples.com/
+
+10/17
+
+O1)
+
+Cs11
+
+Cx1
+
+Cs11
+Cs12
+Cs21
+
+Cs21
+T(ls1)
+
+Cs12
+Cs22
+
+C 3
+
+...
+
+s1
+
+Cx2
+
+Cs23
+
+s2
+
+Value
+
+...
+
+or
+O2)
+
+...
+
+ls1
+ls1
+ls2
+ls2
+
+Cs22
+
+T(ls2)
+
+s1
+
+Key
+
+Value
+
+Key
+
+s1
+s2
+
+ls1
+ls2
+
+(1) Relational Key-Value Memory
+(RKVM) Construction
+
+Cx3
+
+(2) Chunk Retriever (CR)
+
+x
+
+d0: s rs Diverse Chunk
+Database
+d1: Cs11 ls1
+d2: Cs12 ls1
+d3: Cs11 ls1 Cs12 ls1
+d4: Cs12 ls1 Cs11 ls1
+...
+
+Output
+
+Tailored Chunk
+Scorer
+PT(d | x)
+
+Large Language
+Model
+
+Loss
+|PT-PLLM|
+
+Tailored Chunk Scorer
+
+Diverse
+Chunk
+Database
+
+x
+
+CR
+
+Task Instruction
+
+x
+
+(3) Diversity Operation
+
+Cs11
+
+ls1
+
+Cs12
+
+ls1
+
+...
+
+a) Diverse Chunk Database Construction
+
+Large Language
+Model
+PLLM(d | x,y)
+b) Tailored Chunk Scorer Training
+
+RKVM
+
+c) Information Extractor
+
+Figure 4. Overview of B IOMED RAG.
+• ADInt33 is a dataset for identifying new pharmaceutical interventions (PI) for Alzheimer’s Disease
+(AD). In our paper, we randomly select 6,000 samples from the source training set for training, 720
+samples from the source testing set for testing, and 720 samples from the source validation set for
+validation.
+4.2 O UR METHOD : B IOMED RAG
+Figure 4 gives an overview our B IOMED RAG, which consists of three major parts:
+(a) Diverse Chunk Database Construction involves three substeps: 1) Develop the Relational Key-
+
+Value Memory (RKVM) M. 2) Employ the Chunk Scorer to retrieve the relevant key-value (chuck-label)
+pairs corresponding to the input sentence. 3) Construct the diverse chunk database through diversity
+operations, incorporating relevant key-value pairs along with the most pertinent (sentence, label) pair
+extracted from the validation dataset for each input sentence.
+(b)Tailored Chunk Scorer Training The Tailored Chunk Scorer’s training process centers on choosing
+
+the most relevant document from a diverse chunk database based on a given input sentence, with guidance
+from the LLM scores.
+(c) Information Extractor The Information Extractor generates the output (e.g. relation type, structural
+
+knowledge, etc.) by combining the input with the document that has the highest weight score from the
+diverse chunk database.
+4.2.1 Diverse Chunk Database Construction
+
+RKVM Construction: In this part, we introduce how to construct the key-value memory based on chunks
+to aid in biomedical applications. For noise-intensive tasks, such as text classification, sentence-level
+relation extraction, the chunk refers to the several consecutive words divided into a sentence. Specifically,
+we utilize the validation data to aid in constructing the source dataset D = {s, ls }, where s denotes the
+sentence and ls signifies the label of sentence s, for example, if this task is relation extraction, ls refers the
+relation type of the entity pair in sentence s.
+Subsequently, the sentence s is divided into v chunks, each with a length of m = w/v, where w
+represents the length of the s. Following this, we compute the similarity between each label ls and the v-th
+chunk Cvs in sentence s using the cosine similarity S(, ), as follows:
+sim(T (ls ),Cvs ) = S(E(T (ls )), E(Cvs ))
+
+11/17
+
+where T (ls ) is the text description of label ls . E(.) is the encoder function, we used MedLLaMA 13B7
+as E(.) in our work. Subsequently, for each value ls in M, we determine its associated key by selecting the
+top two chunks from the sentence s. RKVM M can be defined as:
+Mrs = {( C1s , ls ), ( C2s , ls )}
+|{z} |{z} |{z} |{z}
+key
+
+value
+
+key
+
+value
+
+M = {Mrs }
+Where, C1s and C2s represent the top-1 and top-2 chunks, respectively, for the label ls within the sentence s.
+s1 pertaining to label rl regarding sentence s1 can be defined
+For example, in Figure 4, the sub memory Ml1
+as follows: (C1s1 , ls1 ) and (C2s1 , ls1 ).
+When constructing M for none noise-intensive tasks, like link prediction, the chunk (key) denotes the
+input (head entity, tail entity) pair, with the value representing the relation. In our work, the noise-intensive
+task includes triple extraction, relation extraction, and text classification, while none noise-intensive tasks
+include link prediction.
+Chunk Retriever: The chunk retriever aims to get the most relevant key-value (k-v) pairs from RKVM
+for the i-th split chunk Cix which has the same length as Cvs in input sentence x. More specifically, we use
+MedLLaMA 13b as our encoder to map each key k and chunk Cix to the embeddings E(k) and E(Cix ). The
+similarity between the chunk embedding and key embedding is computed by the cosine similarity:
+sim(k,Cix ) = S(E(k), E(Cix ))
+Subsequently, the key with the highest similarity, along with its corresponding value, will serve as the
+retrieved key-value pair ai for chunk Cix . So the retrieved key-value pairs Ax for the input sentence x can
+be represented by:
+Ax = {a0 , a1 , ..., ai }, ai = ki
+
+M
+
+vi
+
+For tasks that aren’t heavily reliant on noise, Ax comprises the top-n relevant key values in M. In our paper,
+we set n = 10. For example, if the task is a classification task, the Ax includes the top n {key (sentence),
+value (label)} pairs.
+4.2.2 Diversity Operation
+
+Retrieving diverse knowledge has shown the potential to enhance the generation capabilities in NLP tasks,
+as observed in tasks like Dialogue State Tracking35 . In our study, we assume that diverse knowledge has
+the potential to offer more meaningful and rich information to guide the LLM and enhance its ability
+in expected output identification. Therefore, we use permutation as the diversity operation in our work.
+Specifically, the permutation operation is specifically applied to Ax . The resulting permutation of Ax ,
+combined with the (s, ls ) pair, constitutes the Diverse Chunk Database Aˆx . Here, (s, ls ) is selected from the
+source dataset D = {(s, ls )}, demonstrating the highest cosine similarity with x.
+M
+
+M
+
+d0
+
+dj
+
+Aˆx = {s
+ls , a0 , a1 , ..., ..ai−1
+| {z }
+| {z
+
+ai }
+}
+
+An example of permutation operation on Ax ,
+Ax : (C1s1
+
+M
+
+ls1 ,C2s1
+
+M
+
+ls1 ) →
+− Aˆx : (s
+
+M
+
+ls ,C1s1
+
+M
+
+ls1 ,C2s1
+
+M
+
+ls1 ,C1s1
+
+M
+
+ls1
+
+M
+
+C2s1
+
+M
+
+ls1 ,C2s1
+
+M
+
+ls1
+
+M
+
+C1s1
+
+M
+
+ls1 )
+
+12/17
+
+Note that if the number of chunks is too large, the permutation operation will impact the training time, and
+the model
+Mwill be affected by the maximum length limitation of the language model. So in this situation,
+ˆ
+Ax = {s
+ls , Ax }.
+| {z }
+d0
+
+4.2.3 Tailored Chunk Scorer Training
+
+Tailored Chunk Scorer: There exists a different weight value between input sentence x and document
+d j in Aˆx . Tailored Chunk Scorer aims to learn the weight value between input context x and each d j .
+Specifically, the input sentence x and each document d j in Aˆx are encoded into the sentence embedding
+E(x) and document embedding E(d j ). We then calculate the similarity of each document d j by:
+PT (d j |x) =
+
+esim(x,d j )/η
+∑d j ∈Aˆx esim(x,d j )/η
+
+Where η represents a hyperparameter that regulates the temperature of the softmax function. The document retrieval likelihood PT (d|x) is calculated by calculating the highest probability between document
+d j and input sentence x.
+Training the Tailored Chunk Scorer: We use the LLM as a scoring function to help train the Tailored
+Chunk Scorer and measure how much each document d j could improve the LLM perplexity. In the training
+process, the d j that makes the LLM’s output as close as possible to the ground truth is considered to
+be providing the document that the LLM needs. Specifically, we first compute PLLM (y|d j , x), the LLM
+probability of the ground truth y given the input sentence x and a document d j . The higher the probability,
+the better the document d j is at improving the LLM’s perplexity. So we compute the LM likelihood of
+each document d j as follows:
+PLLM (d|x, y) = max(PLLM (y|d1 , x), ..., PLLM (y|d j , x))
+The Tailored Chunk Scorer is trained by minimizing the loss function between the document retrieval
+likelihood and LM likelihood:
+L=
+
+1
+∑ | PT (d|x) − PLLM (d|x, y)
+| B | x∈B
+
+4.2.4 Information Extractor
+
+We construct the instruction-based datasets for each biomedical application. Specifically, the dataset
+contains four components: 1) Instruction (I), a manually defined guide for the LLM to generate output
+(such as, triples) for each sentence. 2) Example, where we employ the trained tailored chunk scorer to
+assign weights to each document in Aˆx for each input context x. The document d¯j with the highest weight
+score is considered as the example. 3) Input sentence x. 4) output t. The expected output t in our model is
+predicted by the function,
+M M
+P(t|x) = P(t|I
+d¯j
+x)
+In the generation progress, instruction I, example d¯j , and input sentence x are fed into the LLM to generate
+the t of the x.
+4.3 Baselines
+To validate the effectiveness of our framework B IOMED RAG, this section describes the baselines employed
+across various tasks.
+13/17
+
+4.3.1 Triple Extraction
+
+We selected six open triple extraction models as the baseline for the triple extraction task, they are UniRel18 ,
+OneRel19 , UIE (base)3 , UIE (large)3 , E2H (base)20 , and E2H (large)20 . We also assess the performance of
+B IOMED RAG by comparing it with several robust baselines built on state-of-the-art LLMs, including 1)
+LLaMA family as baselines, namely MedLLaMA 13B7 and LLaMA2 13b23 . 2) GPT-4, we formulate
+prompts to guide the GPT-4 models in generating triples for each input sentence, along with providing the
+corresponding relation definitions in the prompts. 3) Retrieval-argumented Large Language Model
+(RA-KNN-n). As shown in Figure 2, we used the MedLLaMA 13B and LLaMA2 13B as the base model.
+To further assess the efficacy of B IOMED RAG, we also employed two state-of-the-art biomedical triple
+extraction models as baselines on the DDI and ChemProt datasets. Their respective results from their
+source papers include JBUIM26 , and SPBERE25 . As the unavailability of the code, we did not report the
+results on GIT.
+4.3.2 Relation Extraction
+
+We compare the performance of B IMED RAG with several strong baselines based on the LLM, including
+1) GPT-4: In GPT-4, we design prompts to guide the GPT models in predicting relations between the
+head and tail entities for each input sentence. 2) RT-n: We also employ RT12 , a retrieval-augmented
+and chain-of-thoughts method, to extract the relation between the head and tail entity. n refers the top-n
+documents. Same as the baselines in our triple extraction task, we consider 3) LLAMA family as the
+baselines: MedLLaMA 13B7 , LLaMA2- 13b23 . 4) RA-KNN-n: it is consistent with the RA-KNN-n
+in the baseline of the triple extraction task. As shown in Figure 2, we used the MedLLaMA 13B and
+LLaMA2 13B as the base model. 5)BERT21 and BioBERT22 .
+4.3.3 Text Classification
+
+On the text classification task, we compare the performance of B IMED RAG with several strong baselines
+based on the language models, including 1) BERT21 and BioBERT22 , 2) GatorTron24 , we also consider
+3) LLAMA family as the baselines: MedLLaMA 13B7 , LLaMA2-13B23 . 4)GPT-4. 5) RA-KNN-n: As
+shown in Figure 2, in Ade-corpus-v3, LLaMA2 13B serves as the base model, while in MTsample, GPT-4
+serves as the base model.
+4.3.4 Link Prediction
+
+On the link prediction task, we compare the performance of B IMED RAG with several strong baselines
+based on the language models, including 1) BERT21 and BioBERT22 , 2) GatorTron24 , we also consider
+3) LLAMA family as the baselines: MedLLaMA 13B7 , LLaMA2-13b23 . 5) GPT-4. 6) RA-KNN-n: As
+shown in Figure 2, LLaMA2 13B serves as the base model in UMLS and ADInt.
+4.4 Evaluation Metrics
+In the Triple Extraction task, same as18, 36 , triple is regarded as correct when its relation type, the head
+entity and the tail entity are all correct. For example, in the sentence: Infusion of prostacyclin (PGI2)
+reportedly attenuates renal ischemic injury in the dog and the rat., triple <Infusion, treats, rat> is regarded
+as correct while <injury, treats, rat> is not. Following the evaluation method of the previous work3, 18–20 ,
+we evaluated all the models and reported the evaluation metric, including Micro Precision, Recall, and
+F1-score. For the relation extraction, text classification, and link prediction task, we follow the same
+evaluation metrics as triple extraction.
+
+14/17
+
+5 Conclusion
+In this paper, we introduce a novel biomedical RAG framework called B IOMED RAG. Unlike the traditional
+retrieval-argument language model, our framework retrieval the knowledge from the diverse chunk database
+and adapts the tailored chunk scorer to the LLM. Experimental results show that our framework achieves
+consistent improvements in 4 biomedical NLP tasks over 8 datasets.
+
+6 Code and data availability
+The complete code and data will be available in the repository:
+–https://github.com/ToneLi/PETAILOR-for-bio-triple-extraction
+
+7 Acknowledgments
+This work was supported by the National Institutes of Health’s National Center for Complementary and
+Integrative Health grant number R01AT009457, National Institute on Aging grant number R01AG078154
+and National Cancer Institute grant number R01CA287413. The content is solely the responsibility of the
+authors and does not represent the official views of the National Institutes of Health. Thanks to Huixue
+Zhou for suggesting revisions to the method section. Thanks to Chad Dupuis for solving the issues with
+our GPU server.
+
+8 Competing Interests
+The authors declare no competing financial or non-financial interests.
+
+References
+1. Hong, L. et al. A novel machine learning framework for automated biomedical relation extraction
+from large-scale literature repositories. Nat. Mach. Intell. 2, 347–355 (2020).
+2. Luo, L. et al. A neural network-based joint learning approach for biomedical entity and relation
+extraction from biomedical literature. J. biomedical informatics 103, 103384 (2020).
+3. Lu, Y. et al. Unified structure generation for universal information extraction. arXiv preprint
+arXiv:2203.12277 (2022).
+4. Li, M., Ling, C., Zhang, R. & Zhao, L. A condensed transition graph framework for zero-shot link
+prediction with large language models. arXiv preprint arXiv:2402.10779 (2024).
+5. Li, M. et al. A hierarchical n-gram framework for zero-shot link prediction. arXiv preprint
+arXiv:2204.10293 (2022).
+6. Ling, C. et al. Domain specialization as the key to make large language models disruptive: A
+comprehensive survey. arXiv preprint arXiv 2305 (2023).
+7. Wu, C., Zhang, X., Zhang, Y., Wang, Y. & Xie, W. Pmc-llama: Further finetuning llama on medical
+papers. arXiv preprint arXiv:2304.14454 (2023).
+8. Peng, C. et al. A study of generative large language model for medical research and healthcare. NPJ
+Digit. Medicine 6, 210 (2023).
+9. Ji, Z. et al. Survey of hallucination in natural language generation. ACM Comput. Surv. 55, 1–38
+(2023).
+15/17
+
+10. Zhang, Y. et al. Siren’s song in the ai ocean: a survey on hallucination in large language models.
+arXiv preprint arXiv:2309.01219 (2023).
+11. Khandelwal, U., Levy, O., Jurafsky, D., Zettlemoyer, L. & Lewis, M. Generalization through
+memorization: Nearest neighbor language models. arXiv preprint arXiv:1911.00172 (2019).
+12. Li, M. & Zhang, R. How far is language model from 100% few-shot named entity recognition in
+medical domain. arXiv preprint arXiv:2307.00186 (2023).
+13. Lewis, P. et al. Retrieval-augmented generation for knowledge-intensive nlp tasks. Adv. Neural Inf.
+Process. Syst. 33, 9459–9474 (2020).
+14. Li, M. & Huang, L. Understand the dynamic world: An end-to-end knowledge informed framework
+for open domain entity state tracking. arXiv preprint arXiv:2304.13854 (2023).
+15. Taunk, K., De, S., Verma, S. & Swetapadma, A. A brief review of nearest neighbor algorithm for
+learning and classification. In 2019 international conference on intelligent computing and control
+systems (ICCS), 1255–1260 (IEEE, 2019).
+16. Borgeaud, S. et al. Improving language models by retrieving from trillions of tokens. In International
+conference on machine learning, 2206–2240 (PMLR, 2022).
+17. Shi, W. et al. Replug: Retrieval-augmented black-box language models.
+arXiv:2301.12652 (2023).
+
+arXiv preprint
+
+18. Tang, W. et al. Unirel: Unified representation and interaction for joint relational triple extraction.
+arXiv preprint arXiv:2211.09039 (2022).
+19. Shang, Y.-M., Huang, H. & Mao, X. Onerel: Joint entity and relation extraction with one module in
+one step. In Proceedings of the AAAI Conference on Artificial Intelligence, vol. 36, 11285–11293
+(2022).
+20. Gao, C., Zhang, W., Lam, W. & Bing, L. Easy-to-hard learning for information extraction. arXiv
+preprint arXiv:2305.09193 (2023).
+21. Devlin, J., Chang, M.-W., Lee, K. & Toutanova, K. Bert: Pre-training of deep bidirectional transformers for language understanding. arXiv preprint arXiv:1810.04805 (2018).
+22. Lee, J. et al. Biobert: a pre-trained biomedical language representation model for biomedical text
+mining. Bioinformatics 36, 1234–1240 (2020).
+23. Touvron, H. et al. Llama: Open and efficient foundation language models. arXiv preprint
+arXiv:2302.13971 (2023).
+24. Yang, X. et al. Gatortron: a large clinical language model to unlock patient information from
+unstructured electronic health records. arXiv preprint arXiv:2203.03540 (2022).
+25. Yang, C., Deng, J., Chen, X. & An, Y. Spbere: Boosting span-based pipeline biomedical entity and
+relation extraction via entity information. J. Biomed. Informatics 145, 104456 (2023).
+26. Tan, H. et al. Joint biomedical entity and relation extraction with unified interaction maps. In 2023
+IEEE International Conference on Bioinformatics and Biomedicine (BIBM), 1437–1442 (IEEE, 2023).
+27. Ram, O. et al. In-context retrieval-augmented language models. arXiv preprint arXiv:2302.00083
+(2023).
+28. Li, M., Chen, M., Zhou, H. & Zhang, R. Petailor: Improving large language model by tailored chunk
+scorer in biomedical triple extraction. arXiv preprint arXiv:2310.18463 (2023).
+16/17
+
+29. Taboureau, O. et al. Chemprot: a disease chemical biology database. Nucleic acids research 39,
+D367–D372 (2010).
+30. Sun, C. et al. Mrc4bioer: joint extraction of biomedical entities and relations in the machine reading
+comprehension framework. J. Biomed. Informatics 125, 103956 (2022).
+31. Segura-Bedmar, I., Martínez Fernández, P. & Herrero Zazo, M. Semeval-2013 task 9: Extraction of
+drug-drug interactions from biomedical texts (ddiextraction 2013) (Association for Computational
+Linguistics, 2013).
+32. Gurulingappa, H. et al. Development of a benchmark corpus to support the automatic extraction of
+drug-related adverse effects from medical case reports. J. Biomed. Informatics 45, 885 – 892, DOI:
+https://doi.org/10.1016/j.jbi.2012.04.008 (2012). Text Mining and Natural Language Processing in
+Pharmacogenomics.
+33. Xiao, Y. et al. Repurposing non-pharmacological interventions for alzheimer’s diseases through link
+prediction on biomedical literature. medRxiv 2023–05 (2023).
+34. Kok, S. & Domingos, P. Statistical predicate invention. In Proceedings of the 24th international
+conference on Machine learning, 433–440 (2007).
+35. King, B. & Flanigan, J. Diverse retrieval-augmented in-context learning for dialogue state tracking.
+arXiv preprint arXiv:2307.01453 (2023).
+36. Zeng, X. et al. Learning the extraction order of multiple relational facts in a sentence with reinforcement learning. In Proceedings of the 2019 conference on empirical methods in natural language
+processing and the 9th international joint conference on natural language processing (EMNLPIJCNLP), 367–377 (2019).
+
+A Appendix
+
+17/17
+
+

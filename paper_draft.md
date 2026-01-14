@@ -1,0 +1,27 @@
+# An End-to-End AI Clinical Decision Support System Using Retrieval-Augmented Generation
+
+## Abstract
+The rapid advancement of Large Language Models (LLMs) has opened new frontiers for Clinical Decision Support Systems (CDSS), yet their adoption in healthcare is hindered by the risk of hallucinations and the lack of up-to-date medical knowledge. While Retrieval-Augmented Generation (RAG) offers a promising solution by grounding model outputs in external verified data, much of the existing research remains confined to theoretical algorithms or isolated prototypes. This paper presents the design and implementation of a complete, end-to-end AI-powered CDSS that integrates a modular microservices architecture with a RAG pipeline. The system features a responsive React-based frontend for clinician interaction, a robust FastAPI backend, and a specialized vector database (Qdrant) for the semantic retrieval of medical guidelines. We detail the system's architectural components, including a secure data ingestion pipeline capable of processing complex medical documents. System-level evaluation demonstrates that the proposed architecture achieves low-latency retrieval and generates grounded, relevant clinical responses, mitigating the risks associated with unverified LLM generation. This work contributes a practical, deployment-ready architectural blueprint for modernizing clinical workflows with reliable AI assistance.
+
+**Keywords**: Clinical Decision Support Systems, Retrieval-Augmented Generation, Healthcare AI, Medical Information Retrieval, Vector Databases, Microservices Architecture.
+
+## 1. Introduction
+Clinical Decision Support Systems (CDSS) have long been a cornerstone of modern healthcare, aiming to assist clinicians by providing timely, evidence-based information at the point of care. The recent emergence of Large Language Models (LLMs) has significantly expanded the potential of these systems, offering natural language understanding and generation capabilities that can synthesize complex medical data [1]. However, the deployment of LLMs in critical healthcare settings is fraught with challenges, primarily due to "hallucinations"—the generation of plausible but factually incorrect information—and the inability of static models to access the latest medical guidelines or patient-specific context [2].
+
+To address these limitations, Retrieval-Augmented Generation (RAG) has emerged as a promising paradigm. RAG enhances LLMs by retrieving relevant documents from an external knowledge base before generating a response, thereby grounding the output in verifiable evidence [1]. While recent surveys have highlighted the theoretical benefits of RAG in healthcare [2, 3], there remains a gap between algorithmic research and practical, deployment-ready systems. Many existing studies focus on component-level analysis or isolated prototypes [4], often lacking a comprehensive architectural blueprint that addresses real-world constraints such as latency, scalability, and integration with clinical workflows.
+
+This paper presents an end-to-end, modular AI CDSS framework designed to bridge this gap. Our system leverages a microservices architecture, utilizing a high-performance vector database (Qdrant) for semantic retrieval, a robust backend (FastAPI), and a clinician-centric frontend (React). Unlike generic RAG implementations, our approach integrates a specialized ingestion pipeline for processing complex medical PDF documents, ensuring that the system is context-aware and capable of providing precise, evidence-backed answers. Furthermore, we address critical ethical considerations, including transparency and bias, which are essential for clinical adoption [5].
+
+The contributions of this work are as follows:
+1.  **End-to-End Architecture**: We propose a complete, scalable architecture for a RAG-based CDSS, detailing the integration of frontend, backend, and vector database components.
+2.  **Practical Implementation**: We provide a reference implementation using open-source technologies, demonstrating domain adaptation from general-purpose RAG to a specialized Medical CDSS.
+3.  **Context-Aware Retrieval**: We demonstrate a pipeline for ingesting and retrieving from authoritative medical guidelines, mitigating hallucinations and improving response relevance.
+
+The remainder of this paper is organized as follows: Section 2 reviews related work in medical LLMs and RAG. Section 3 details the system architecture. Section 4 describes the methodology and implementation. Section 5 presents the experimental setup and evaluation. Section 6 discusses limitations and ethical considerations, and Section 7 concludes the paper.
+
+## References
+[1] Y. Gao et al., "Retrieval-Augmented Generation for Large Language Models: A Survey," arXiv preprint arXiv:2312.10997, 2023.
+[2] L. M. Amugongo et al., "Retrieval augmented generation for large language models in healthcare: A systematic review," *arXiv preprint*, 2025.
+[3] M. Li et al., "BiomedRAG: A Retrieval augmented Large Language Model for Biomedicine," arXiv preprint arXiv:2405.00465, 2024.
+[4] V. B. Shetty, "Retrieval-Augmented Generation (RAG) with LLMs: Architecture, Methodology, System Design, Limitations, and Outcomes," 2025.
+[5] S. C. E. Nouis et al., "Evaluating accountability, transparency, and bias in AI-assisted healthcare decision-making: a qualitative study of healthcare professionals’ perspectives in the UK," *BMC Medical Ethics*, 2025.

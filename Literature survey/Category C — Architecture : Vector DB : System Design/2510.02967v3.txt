@@ -1,0 +1,2007 @@
+Grounding Large Language Models in Clinical Evidence: A
+Retrieval-Augmented Generation System for Querying UK NICE
+Clinical Guidelines
+Matthew Lewis∗,†1 , Samuel Thio†1, 2, 7 , Amy Roberts3 , Catherine Siju4 , Whoasif Mukit5 ,
+Rebecca Kuruvilla6, 7 , Zhangshu Joshua Jiang2, 6, 7 , Niko Möller-Grell2, 6, 7 , Aditya
+Borakati7, 8 , Richard JB Dobson1, 2, 9 , Spiros Denaxas∗1, 10, 11, 12
+1
+
+Institute of Health Informatics, University College London, London, U.K.
+Department of Biostatistics and Health Informatics, King’s College London, London, U.K.
+3
+Imperial College Healthcare NHS Trust, U.K.
+4
+Black Country Healthcare NHS Foundation Trust, U.K.
+5
+Feldon Lane Surgery, The Dudley Group NHS Foundation Trust, U.K.
+6
+The Cleveland Clinic, London, U.K.
+7
+EPSRC DRIVE-Health CDT, London, U.K.
+8
+Roger Williams Institute of Liver Studies, School of Immunology and Microbial Sciences, King’s College
+Hospital, London, U.K.
+9
+CogStack Limited, London, U.K.
+10
+Interdisciplinary Transformation University (IT:U), Linz, Austria
+11
+British Heart Foundation Data Science Centre, London, U.K.
+12
+National and Kapodistrian University of Athens, Athens, Greece
+
+arXiv:2510.02967v3 [cs.CL] 14 Dec 2025
+
+2
+
+Abstract:
+This paper presents the development and evaluation of a Retrieval-Augmented Generation (RAG)
+system for querying the United Kingdom’s National Institute for Health and Care Excellence (NICE)
+clinical guidelines using Large Language Models (LLMs). The extensive length and volume of these
+guidelines can impede their utilisation within a time-constrained healthcare system, a challenge this
+project addresses through the creation of a system capable of providing users with precisely matched
+information in response to natural language queries. The system’s retrieval architecture, composed of
+a hybrid embedding mechanism, was evaluated against a corpus of 10,195 text chunks derived from
+three hundred guidelines. It demonstrates high performance, with a Mean Reciprocal Rank (MRR)
+of 0.814, a Recall of 81% at the first chunk and of 99.1% within the top ten retrieved chunks, when
+evaluated on 7901 queries.
+The most significant impact of the RAG system was observed during the generation phase. When
+evaluated on a manually curated dataset of seventy question-answer pairs, RAG-enhanced models
+showed substantial gains in performance. Faithfulness, the measure of whether an answer is supported
+by the source text, was increased by 64.7 percentage points to 99.5% for the RAG-enhanced O4-Mini
+model and significantly outperformed the medical-focused Meditron3-8B LLM, which scored 43%.
+Clinical evaluation by seven Subject Matter Experts (SMEs) further validated these findings, with
+GPT-4.1 achieving 98.7% accuracy while reducing unsafe responses by 67% compared to O4-Mini
+(from 3.0 to 1.0 per evaluator). This, combined with a perfect Context Precision score of 1 for all
+RAG-enhanced models, confirms the system’s ability to prevent information fabrication by grounding
+its answers in relevant source material. This study thus establishes RAG as an effective, reliable, and
+scalable approach for applying generative AI in healthcare, enabling cost-effective access to medical
+guidelines.
+Keywords: Large Language Models, Retrieval-Augmented Generation, NICE Guidelines
+∗
+†
+
+Corresponding authors: matthew.lewis.24@alumni.ucl.ac.uk, s.denaxas@ucl.ac.uk
+These authors contributed equally
+
+i
+
+1
+
+Introduction and Background:
+
+This project seeks to develop and evaluate a Retrieval-Augmented Generation (RAG) system (Lewis
+et al., 2020) for querying National Institute for Health and Care Excellence (NICE) clinical guidelines.
+There are currently thousands of guidelines offered by NICE for clinical, procedural and technological
+guidance relating to the medical field, with them being viewed millions of times per year (NICE,
+2022). These guidelines can often be long, with some reaching over a hundred pages. This can lead to
+a diminished utilisation rate, due to the long time needed to find relevant information in an already
+overburdened health system (Wang et al., 2023).
+The proposed system helps address this problem by enabling users to input a guideline-related query
+in plain text and receive appropriately matched information, using a Large Language Model (LLM)
+powered RAG application. We therefore seek to quantify the extent to which RAG enhances the
+performance of LLMs for querying NICE guidelines.
+Objectives:
+• Develop a comprehensive knowledge base by acquiring, pre-processing, and semantically chunking a corpus of NICE guidelines.
+• Implement and evaluate a variety of retrieval strategies, including sparse, dense, and hybrid
+search methods, to determine the most effective approach for retrieving relevant excerpts.
+• Integrate the retrieval system with state-of-the-art LLMs within a RAG architecture, using
+engineered prompts to ensure responses are contextually grounded.
+• Conduct a rigorous, two-stage evaluation of the complete RAG system, assessing the performance
+of both the retrieval and generation components. Benchmark performance against baseline LLMs
+to quantify improvements in quality and faithfulness.
+• Evaluate the RAG system outputs with subject matter experts as a measure of real world
+performance.
+Through these objectives, this paper will demonstrate a reliable and effective way of integrating advances in generative AI to the healthcare field.
+
+1.1
+
+Natural Language Processing in Healthcare
+
+Natural language processing (NLP) has a long history of being applied to the healthcare sector. The
+ELIZA chatbot (Weizenbaum, 1966), introduced in 1966 and widely considered the first-ever chatbot,
+was a rule-based system known for its DOCTOR script simulating a psychotherapist’s responses. Furthermore, the PARRY algorithm (Colby et al., 1971) was introduced in 1971 to mimic the behaviour
+of a paranoid schizophrenic and is considered one of the first models to partially pass the Turing test
+(Turing, 1950). While these models offered early insights into the possibilities of NLP in healthcare,
+their rule-based systems limited their usefulness in real-world settings.
+
+1.2
+
+Large Language Models in Healthcare
+
+LLMs have unleashed a new wave of interest in applying chatbots to healthcare problems. Google
+has been at the forefront of training LLMs specifically for the medical domain with their Med-PaLM
+(Singhal et al., 2022, 2025), Med-Gemini (Saab et al., 2024) and MedGemma (Sellergren et al., 2025)
+models. These models provide a mix of textual and multimodal capabilities, enabling a wide range of
+medical query types. They achieve state-of-the-art performance, comparable to that of clinicians, on
+
+ii
+
+a variety of tasks.
+Additionally, open-source initiatives such as the Meditron project, initially started at the EPFL with
+the release of two fine-tuned Llama-2 models for the medical domain (Chen et al., 2023), and now
+converted to a community-based project fine-tuning open-source models such as the Llama-3 model
+(Sallinen et al., 2025; Dubey et al., 2024). They base their fine-tuning on using renowned medical domain sources as training data. This includes a wide variety of clinical guidelines, such as those offered
+by NICE, along with a variety of PubMed papers. This approach has enabled Meditron models to
+achieve state-of-the-art performance on benchmarks.
+While these LLMs show satisfactory results on curated benchmarks, real-world performance is harder
+to quantify and LLMs have so far lagged in real-world medical implementation. However, a recent
+study conducted between OpenAI and Penda Health, a private healthcare provider in Kenya, looked
+at evaluating the effectiveness of a LLM-based clinical decision support tool within a primary care
+setting (Korom et al., 2025). This study analysed over thirty-nine thousand patient visits where clinicians were given randomised use of a LLM-powered decision support tool. The system was given
+context of the patient’s consultation purpose as well as summaries of relevant clinical guidelines prior
+to consultations. Significant reductions in clinical errors were reported, including a decrease of 16%
+for diagnostic errors and 12.7% for treatment errors, highlighting the potential of LLMs to be provided
+as support tools for clinicians.
+
+1.3
+
+Clinical Guidelines
+
+Clinical guidelines are “systematically developed statements designed to help practitioners and patients make decisions about appropriate health care” (Jackson and Feder, 1998). These documents
+serve as one of the cornerstones of evidence-based medicine, providing recommendations that range
+from concise protocols to comprehensive documents hundreds of pages long. Their primary purpose
+is to standardise patient care, improve health outcomes and ensure the efficient use of healthcare
+resources.
+In the United Kingdom, the National Institute for Health and Care Excellence (NICE) is the principal
+body responsible for developing these guidelines. Founded in 1999 to “create consistent guidelines and
+end rationing of treatment by postcode across the UK” (NICE, 2025), NICE has become a robust
+global standard due to its structured and transparent methodology. However, the current manual
+task of finding information in guidelines can be time-consuming. Recognising this, NICE’s five-year
+plan outlines the need to provide information in “dynamic, useable formats that support busy health
+and care practitioners” (NICE, 2021) and the need to present recommendations in an “interactive
+format”. The plan also emphasises the need to rapidly integrate new research and “make [their] advice and guidance more accessible through the use of technology”, a goal this project directly supports.
+NICE produces diverse types of guidelines. Certain types carry legal implementation requirements;
+for example, pharmaceutical drugs often require a Technology Appraisal from NICE before being implemented in the NHS. Table 1 provides a summary of the different guidance types:
+Current Guidance Types
+DG (Diagnostics Guidance): Guidance on
+new diagnostic technologies.
+
+Historical Guidance Types
+CG (Clinical Guideline): Historical general guidance, now part of NICE guidelines
+(NG).
+CSG (Cancer Service Guideline): Historical guidance created for cancer services.
+
+HST (Highly Specialised Technologies
+Guidance): Evaluates treatments for very
+rare conditions.
+
+Continued on next page
+iii
+
+Continued from previous page
+Current Guidance Types
+IPG (Interventional Procedures Guidance): Assesses the safety and efficacy of new
+procedures.
+MTG (Medical Technologies Guidance):
+Guidance on new medical devices and diagnostics.
+NG (NICE Guideline): General guidelines
+covering clinical, public health and social care.
+
+Historical Guidance Types
+MPG (Medicines Practice Guideline):
+Guidance on medical governance.
+PH (Public Health Guideline): Historical
+guidance on disease prevention, now part of
+NICE guidelines (NG).
+SC (Social Care Guideline): Historical
+guidance for the social care sector, now part
+of NICE guidelines (NG).
+SG (Safe Staffing Guideline): Discontinued guidance that made recommendations on
+NHS staffing levels.
+
+QS (Quality Standard): Standards acting
+as markers for improvement of care.
+TA (Technology Appraisal Guidance):
+Guidance on the clinical and cost-effectiveness
+of health technologies such as new medicines,
+procedures, devices and diagnostic agents.
+
+Table 1: Current and Historical NICE Guidance Types
+
+1.4
+
+Retrieval-Augmented Generation
+
+Lewis et al. (2020) introduced RAG to access specific knowledge bases more precisely when using LLMs
+and reduce the “hallucination” rates, when a model makes up information in a confident manner. It
+combines the knowledge LLMs have learned through their pre-training with external knowledge stored
+in a vector database. The process involves running a similarity search between the user’s query and
+information in the vector database to retrieve relevant content. This retrieved information is then
+combined with the original query and fed into the LLM’s prompt, enabling the model to generate a
+more informed response.
+While the majority of LLM implementations in healthcare have focused on question-and-answering
+tools for examining medical conditions rather than information retrieval, the RAG framework has
+gained in popularity for medical tasks due to the safety needs of the domain. Macia et al. (2024)
+conduct implementation research on developing a RAG system to query NICE guidelines but do not
+implement it. This paper thus seeks to build upon the work set out.
+Implementations of RAG in the medical field include Zakka et al. (2024), who use a web browser
+along with an unspecified corpus of medical text and guidelines to pre-retrieve relevant information,
+which is then passed to a LLM. The system demonstrated an 18% increase in factuality compared
+to ChatGPT. Meanwhile, Ferber et al. (2024) look at implementing a GPT-4 based RAG system for
+providing guidance on cancer patient management using oncology guidelines. Findings show that the
+inclusion of RAG increased the rate of correct responses from 57% to 84% with a GPT-4 based RAG
+implementation. Furthermore, Kresevic et al. (2024) showed significant performance improvements
+from incorporating RAG to interpret Hepatitis C guidelines, with their customized framework increasing accuracy from 43% to 99%.
+A notable implementation for querying UK guidelines is presented by Ive et al. (2025), who developed
+a clinical Q&A chatbot for University College London Hospital guidelines using the Llama-3.1-8B
+model (Dubey et al., 2024). While the system is not a Retrieval-Augmented Generation (RAG) implementation, it shares similarities, with the system extracting relevant information in response to a
+query. The key distinction is the system’s safety-focused design, which intentionally omits the “generation” step found in RAG frameworks. To prevent the model from fabricating information, it was
+
+iv
+
+uniquely constrained to only extract and display verbatim text from the source guidelines rather than
+generating new sentences. This method proved highly reliable, achieving 100% recall for critical information and avoiding “hallucinated responses”. However, the study’s scope was limited, focusing only
+on six small guideline documents, which may have biased its recall performance.
+In conclusion, while existing research confirms that RAG significantly improves the reliability of guideline related queries passed to LLMs, these applications have been limited to narrow medical specialties
+or small-scale, non-generative systems. A clear gap remains in evaluating RAG’s performance across
+a broad, national-level corpus. This paper addresses this by implementing and evaluating a RAG
+system on a wide set of NICE guidelines, aiming to validate its effectiveness for more universal clinical
+application.
+
+2
+
+Methodology:
+
+2.1
+
+Data
+
+The knowledge base for this project was constructed using the complete corpus of guidelines from
+NICE, acquired via the official NICE API on the 16th of July 2025. In total, 2164 documents were
+obtained. For this study, the dataset was refined to focus on the most comprehensive guidance types,
+composed of the 300 NICE Guidelines (NG) and historical Clinical Guidelines (CG) available at the
+time of acquisition. These documents are extensive, with a mean length of 9611 words, which underscores the challenge of manual information retrieval and highlights the need for an effective automated
+system.
+
+2.2
+
+Pre-Processing
+
+The efficacy of a RAG system is contingent upon the quality and structure of its underlying knowledge
+base. To this end, a pre-processing pipeline was engineered to transform the raw, heterogeneous NICE
+guidelines into a refined, queryable resource optimised for retrieval. The native XML format of the
+data obtained from the API was first converted into Markdown format. This normalisation allows for
+the preservation of the hierarchical structure of the documents, including headings, lists and tables,
+while providing a format optimised for ingestion by LLMs.
+The implementation then used a hierarchical semantic chunking methodology. This approach was selected over naive fixed-size splitting techniques to ensure that the resulting text segments, or “chunks”,
+were coherent and contextually complete. The strategy operated by first segmenting documents along
+their major semantic boundaries (i.e. primary and secondary headings).
+A dual logic was subsequently applied. Oversized chunks exceeding a six hundred token threshold, using the Voyage-3-Large model’s tokeniser, were intelligently subdivided at logical breakpoints, such as
+subsection headings or paragraph breaks, while keeping a fifty-token overlap. Meanwhile undersized
+chunks below a two hundred token threshold were merged with adjacent segments. This adaptive
+method of splitting and merging produced passages of optimal length for ingestion by LLMs, mitigating the risks of both context fragmentation and topic dilution.
+In the final stage, the textual chunks were transformed into retrievable semantic representations
+through vectorisation. Each chunk was processed by an embedding model, which generated a vector
+encoding it. These embeddings, along with their corresponding text and metadata, were stored in
+a database. This created a fully vectorised knowledge base, enabling the RAG system to perform
+efficient similarity searches across the corpus of clinical guidelines.
+
+v
+
+2.3
+
+Vector Embeddings
+
+We make use of two types of vector embeddings, sparse and dense. The use of these two methods
+allows for a balance between keyword matching and semantic representation.
+2.3.1
+
+Sparse Embeddings
+
+This project incorporates sparse embeddings to leverage traditional keyword-based retrieval. Sparse
+embeddings represent documents using high-dimensional vectors where the majority of elements are
+zero. Each dimension typically corresponds to a specific word in the vocabulary dictionary and the
+value in that dimension indicates the importance/rarity of the word within the document chunk, with
+rarer words carrying more importance. This method excels at keyword matching, which is particularly
+valuable for healthcare, where rare terms are more commonly used. However, it does not consider the
+semantic meaning of the words being represented or how they relate to nearby terms.
+For these representations, the Okapi BM25 algorithm (Robertson et al., 1995), a widely used and
+robust ranking function, was employed. BM25 builds upon the Term Frequency-Inverse Document
+Frequency (TF-IDF) (Sparck Jones, 1972) model to score the relevance of documents to a given query.
+To improve performance, the text was pre-processed to remove common stop words and to lemmatise
+the remaining words, ensuring that variations of the same word were treated as a single term. A small
+Bayesian optimisation was also run for tuning the hyperparameters of the model.
+The relevance score for a document D given a query Q is calculated as follows:
+
+score(D, Q) =
+
+n
+X
+
+IDF (qi ) ·
+
+i=1
+
+f (qi , D) · (k1 + 1)
+
+
+|D|
+f (qi , D) + k1 · 1 − b + b · avgdl
+
+Where:
+• f (qi , D) is the frequency of term qi in document D
+• |D| is the length of document D
+• avgdl is the average document length in the collection
+• k1 and b are hyperparameters controlling the term frequency saturation and normalising the
+scores based on document length
+• IDF (qi ) is the inverse document frequency of term qi
+The Inverse Document Frequency (IDF) quantifies the informational value of a word based on its
+rarity across the document corpus. It is defined as:
+
+
+N − n(qi ) + 0.5
+IDF (qi ) = log
++1
+n(qi ) + 0.5
+Where:
+• N is the total number of documents
+• n(qi ) is the number of documents containing term qi
+
+vi
+
+2.3.2
+
+Dense Embeddings
+
+For this project, a selection of leading dense embedding models was chosen for evaluation. The Voyage3-Large and Voyage-3.5 models (Voyage AI, 2025) were selected for their state-of-the-art performance
+and their capability to handle long context windows, as shown in Table 2. The Qwen3-Embedding0.6B model (Zhang et al., 2025) was included due to its place as a top-performing open-source model
+on the Massive Multilingual Text Embedding Benchmark (MMTEB) leaderboard (Enevoldsen et al.,
+2025), a key benchmark for embedding model performance. Finally, OpenAI’s text-embedding-3-large
+model (OpenAI, 2024) was chosen due to its widespread popularity.
+In contrast to the keyword-based approach of sparse embeddings, dense embeddings capture deeper
+semantic meaning in texts. These embeddings are high-dimensional vector representations generated
+using transformer-based neural networks, such as the BERT model (Devlin et al., 2019). By mapping
+texts into a continuous vector space of fixed length, as shown in Table 2, these models can represent
+complex semantic relationships. They are capable of processing long context windows, which is crucial
+for fully representing the information in chunks.
+The generation of dense embeddings begins with tokenisation, a process where the input text is broken down into smaller units called “tokens”, which can be thought of as numerical representations
+of words. This segmentation is the crucial first step in converting human-readable language into a
+numerical format that the model can process. This project uses the tokeniser associated with the
+state-of-the-art Voyage-3-Large embedding model by Voyage AI.
+Unlike the pre-processing conducted for the sparse embeddings, stop word removal and lemmatisation were intentionally omitted for the generation of dense embeddings. This omission is critical for
+preserving the full semantic context of the texts, as transformer models leverage subtle grammatical
+structures to create more nuanced vector representations.
+Concepts with similar meanings are thus positioned closer together in vector space. For example,
+the vectors for “Heart” and “Cardiologist” would have a higher similarity score than the vectors for
+“Heart” and “Neurologist”, as illustrated in Figure 1. This representation enables the system to perform deeper similarity searches that go beyond keyword matching.
+
+Figure 1: Example Vector Representation of Words in 2D
+
+vii
+
+Model
+Voyage-3-Large
+Voyage-3.5
+text-embedding-3-large
+Qwen3-Embedding-0.6B
+
+Provider
+Voyage AI
+Voyage AI
+OpenAI
+Alibaba
+
+Embedding Dimension
+2048
+2048
+3072
+1024
+
+Context Length (Tokens)
+32 000
+32 000
+8191
+32 768
+
+Availability
+Closed-Source
+Closed-Source
+Closed-Source
+Open-Source
+
+Table 2: Comparison of Embedding Model Specifications
+
+2.4
+
+Retrieval
+
+2.4.1
+
+Retrieval Method
+
+The core of the dense embedding retrieval process is a similarity search performed on the highdimensional vector space. When a user submits a query, it is first converted into a dense vector
+using the same embedding model that processed the original guideline chunks. This ensures that both
+the query and relevant excerpts are represented in the same semantic space.
+The system then calculates the similarity between the user’s query vector and every guideline chunk
+vector stored in the database. To ensure that this comparison measures semantic similarity rather
+than being influenced by vector magnitude, all vectors are pre-normalised to have a unit length of one
+during the embedding process. As a result, the computationally efficient dot product can be used for
+retrieval. A higher score indicates a greater degree of semantic similarity between the query and the
+guideline chunk.
+The dot product is defined as:
+Dot Product = A · B =
+
+n
+X
+
+ai · bi
+
+i=1
+
+Where:
+• A represents the query vector.
+• B represents a guideline chunk vector.
+• ai is the i-th element of vector A.
+• bi is the i-th element of vector B.
+• n is the total number of dimensions in the vectors.
+Once the dot product is calculated for all pairs, the system ranks them in descending order based on
+their similarity scores, with the highest scoring matches indicating topic relevance and being passed on
+to the completion model. Table 3 provides an illustration of this principle: a query about “catheterdirected thrombolytic therapy” would be expected to achieve a high similarity score with a relevant
+guideline section, while its similarity to an irrelevant context on Hormone Replacement Therapy would
+be negligible.
+
+viii
+
+Question
+
+Context
+
+Similarity
+
+Should catheter-directed thrombolytic
+therapy be considered for people with
+symptomatic iliofemoral deep vein
+thrombosis and symptoms for the past
+month?
+
+NG158 Section 1.6.1 Consider catheter-directed
+thrombolytic therapy for people with symptomatic iliofemoral DVT who have: symptoms lasting less than
+14 days, good functional status, a life expectancy of
+1 year or more, and a low risk of bleeding.
+
+0.95
+
+Should catheter-directed thrombolytic
+therapy be considered for people with
+symptomatic iliofemoral deep vein
+thrombosis and symptoms for the past
+month?
+
+NG23 Section 1.6.1: When discussing HRT as a treatment option for menopause-associated symptoms, explain that, overall, taking either combined HRT
+or oestrogen-only HRT is unlikely to affect life expectancy.
+
+0.15
+
+Table 3: Example of Good vs. Poor Context Matching
+2.4.2
+
+Hybrid Search
+
+To leverage the complementary strengths of both sparse and dense retrieval, a hybrid search approach
+is implemented using a Weighted Reciprocal Rank Fusion (Cormack et al., 2009). This technique
+normalises ranks across different retrievals into a single score, so that passages ranked highly across
+multiple models are assigned higher relevance.
+The final weighted score for each document is calculated as follows:
+
+W RRFdoc =
+
+X
+
+(
+
+m
+
+wm
+)
+k + rankm,doc
+
+• W RRFdoc is the final weighted reciprocal rank score for the document.
+• m represents a specific model in the ensemble.
+• wm is the weight assigned to the model m.
+• rankm,doc is the rank of the document using model m.
+• k is a hyperparameter which controls the influence level of documents with higher ranks.
+By combining the keyword-matching precision of sparse embeddings with the contextual understanding of dense embeddings, this hybrid approach aims to improve overall retrieval accuracy, addressing
+some of the limitations of each method.
+
+2.4.3
+
+Reranking
+
+To enhance the precision of the retrieved results, a reranking stage is incorporated into the retrieval
+pipeline. This process uses a cross-encoder architecture (Nogueira and Cho, 2019), which differs from
+the bi-encoder model employed in the initial retrieval phase. Rerankers have been shown to lead to
+higher precision than bi-encoders (Rosa et al., 2022); however, they come at a higher computational
+cost. Their use is therefore restricted to the subset of top initially retrieved chunks to improve performance.
+As illustrated in Figure 2, the bi-encoder architecture independently generates vector representations
+for the query and document. In contrast, the cross-encoder architecture jointly encodes the query
+and a candidate document by concatenating them into a single input sequence. This combined representation is then processed by the model, which subsequently assigns a relevance score indicating the
+ix
+
+likelihood that the document accurately addresses the query. This method allows for a more nuanced
+and context-aware assessment of relevance.
+
+Bi-Encoder Architecture
+
+Cross-Encoder Architecture
+
+Query
+
+Document
+
+Query + Document
+
+Voyage AI
+Embeddings Model
+
+Voyage AI
+Embeddings Model
+
+Voyage AI Reranker
+
+Embedding A
+
+Embedding B
+
+Token Output
+
+Similarity
+Score
+(Dot Product)
+
+Classifier
+
+Similarity Score
+
+Relevance Score
+
+Figure 2: Bi-Encoder Vs. Cross-Encoder Architecture
+
+2.5
+
+LLM Completions
+
+The completion phase of the RAG system relies on LLMs and a carefully designed prompt engineering
+framework. This section details the models and prompts used to generate accurate, context-aware,
+and correctly formatted responses.
+
+2.5.1
+
+Model Selection and Configuration
+
+Several advanced LLMs were selected for evaluation, including OpenAI’s GPT-4.1 (OpenAI, 2025a)
+and O4-Mini (OpenAI, 2025b) models, alongside Anthropic’s Claude Sonnet 4 (Anthropic, 2025).
+These models are chosen for their different strengths, from the efficiency of GPT-4.1-nano to the advanced reasoning capabilities of O4-Mini. A key advantage of these models is their ability to process
+long context windows, with the GPT-4.1 family supporting up to one million tokens and both O4-Mini
+and Claude Sonnet 4 supporting two hundred thousand tokens, as shown in Table 4. This is critical for ingesting the large amount of contextual information passed from the database’s context chunks.
+To make the system’s outputs as deterministic and reproducible as possible, the temperature parameter
+of the models is set to 0 where possible. This setting minimises randomness in responses, which helps
+constrain model outputs to be strictly based on the provided context and thus reduce the chance of
+hallucinations.
+
+x
+
+Model
+GPT-4.1
+GPT-4.1-Mini
+GPT-4.1-Nano
+O4-Mini
+Claude Sonnet 4
+Meditron3-8B
+
+Provider
+OpenAI
+OpenAI
+OpenAI
+OpenAI
+Anthropic
+Meditron Project
+
+Year of Release
+2025
+2025
+2025
+2025
+2025
+2024
+
+Context Window (Tokens)
+1 000 000
+1 000 000
+1 000 000
+200 000
+200 000
+8192
+
+Reasoning
+No
+No
+No
+Yes
+Yes
+No
+
+Table 4: Comparison of Large Language Models Used for Generation
+
+2.5.2
+
+Prompt Engineering
+
+The generation phase of the LLMs is guided by a two-part prompt structure, consisting of a “System
+Prompt” and a “User Prompt”, as shown in Table 5 and Table 6.
+System Prompt:
+• Contextual Restriction: The model is prohibited from generating information outside of the
+supplied context for RAG models. This ensures faithfulness and prevents the fabrication of
+information. Meanwhile non-RAG models are instructed to only use information from NICE
+guidelines.
+• Formatting and Informational Fidelity: The prompt gives explicit formatting instructions
+to ensure readable and well-structured output. This includes rules for using markdown for lists
+and for preserving any tables from the source context, as well as preserving URLs.
+• Handling of Null Context: As a safeguard, the model is instructed to give a specific response
+of “No relevant NICE guidelines were found” if the retrieved context contains no relevant information to answer the query. This prevents the model from trying to formulate an answer when
+no relevant evidence is retrieved.
+User Prompt:
+The user prompt is the dynamic input for the system, which changes for each request. It uses a placeholder {query text} which is populated with the user’s question, while for RAG models a placeholder
+{context text} is also populated with relevant text chunks retrieved from the retrieval pipeline.
+
+Role
+
+Content / Instructions
+
+System
+
+You are a medical AI assistant tasked with answering clinical questions strictly based on NICE clinical
+guidelines. Follow these rules:
+1. Only use information from NICE guidelines.
+2. If no relevant NICE guideline information is available, reply: ‘No relevant NICE guidelines were found.’
+3. Be concise. Use markdown for lists and tables.
+4. Never fabricate sources or references.
+
+User
+
+{query text}
+
+Table 5: System and User Prompt for Non-RAG LLMs
+
+xi
+
+Role
+
+Content / Instructions
+
+System
+
+You are a medical AI assistant tasked with answering clinical questions strictly based on the provided NICE
+clinical guidelines context. Follow the requirements below to ensure accurate, consistent, and professional
+responses.
+# Response Rules
+1. Context Restriction:
+– Only use information given in the provided NICE guidelines context.
+– Do not generate or speculate with information not explicitly found in the given context.
+2. Answer Format:
+– Provide a clear and concise response based solely on the context.
+– When including a list, use standard markdown bullet points (‘*‘ or ‘-‘).
+– If a list follows introductory text, insert a line break before the first bullet point.
+– Each bullet point must be on its own line.
+3. Preserve Tables:
+– If relevant markdown tables appear in the context, reproduce them in your answer.
+– Maintain the original structure, formatting, and content of any included tables.
+4. Links and URLs:
+– Include any URLs or web links from the context directly in your response when relevant.
+– Integrate links naturally within sentences, using markdown syntax for clickable text links.
+– DO NOT generate or invent any URLs not explicitly present in the context.
+5. Markdown Link Formatting:
+– In responses, only the descriptive text in brackets should be visible and clickable (e.g.,
+‘[NICE...](https://...)‘).
+– Readers should never see raw URLs in the text.
+6. If No Relevant Information:
+– If the context contains no relevant information, state clearly:
+“No relevant NICE guidelines were found.”
+# Output Format
+– All responses should be in plain text, using markdown formatting for lists and links.
+– Do not use code blocks.
+– Answers should be concise, accurate, and formatted according to the rules above.
+# Examples
+Example 1: Integration of markdown link in context
+Question: "What is the recommended treatment for stage 2 hypertension?"
+Context snippet: ...see the [NICE hypertension guidelines](https://...)
+Output:
+According to the [NICE hypertension guidelines](https://...), stage 2...
+Example 2: Multiple guideline references
+According to these guidelines:
+* Initial treatment is lifestyle modification.
+* For persistent hypertension, refer to [hypertension...](https://...).
+Example 3: No relevant context
+No relevant NICE guidelines were found.
+# Notes
+– Never output information beyond what is provided in the supplied context.
+– Always use markdown for lists and links.
+– Ensure all relevant markdown tables are preserved in your answer.
+– Present links only as clickable text, not as bare URLs.
+REMINDER: Strictly adhere to all formatting and content rules above.
+
+User
+
+{query text}
+Context from NICE clinical guidelines:
+{context text}
+
+Table 6: System and User Prompt for RAG LLMs
+
+xii
+
+2.6
+
+Testing
+
+To rigorously evaluate the efficacy of the developed RAG system, a comprehensive, two-stage testing methodology was implemented. This approach facilitates the isolated assessment of each core
+component, retrieval and generation, thereby allowing for a granular analysis of their respective performances. The first stage focuses on the retrieval system’s ability to source relevant information,
+while the second stage evaluates the quality of the final generated answers using the specialised Retrieval Augmented Generation Assessment (RAGAs) framework (Es et al., 2024).
+
+2.6.1
+
+Retrieval Component Evaluation
+
+The primary objective of this stage is to measure the effectiveness of the document retrieval system
+in identifying the most relevant text chunks from the knowledge base in response to a user query. A
+synthetic dataset of queries was generated to form a ground truth for evaluation. The process began
+with extracting 10,195 chunks from the 300 NICE guidelines used.
+These chunks were then filtered to remove boilerplate sections such as “Update information” or “Committee members”, ensuring that only clinically relevant content was retained for generating queries.
+GPT-4.1-Nano was employed to generate realistic, high-quality queries that a healthcare professional
+might use to retrieve information. This was achieved through a carefully engineered prompt, as detailed in Table 7, which instructed the model to create a question directly addressing each provided text
+chunk. This automated process resulted in a comprehensive evaluation dataset of 9296 query/chunk
+pairs, where chunks were each paired with a corresponding synthetic query. This dataset was then
+partitioned into a validation set (15%), used for BM25 hyperparameter tuning, and a testing set (85%)
+for the final evaluation.
+
+Prompt Type
+
+Content
+
+System Prompt
+
+You are an expert assistant specialized in generating realistic search queries for NICE
+guidelines.
+Your task: Generate a natural question that a healthcare professional or patient would
+realistically use to find the given information.
+Requirements:
+• Start with question words: ‘What’, ‘How’, ‘When’, ‘Should’, etc.
+• Focus on the core clinical topic or specific recommendation.
+• Use natural medical terminology that real users would search for.
+• Keep it concise and directly related to the content.
+• Return only the question, no additional formatting or explanations.
+Examples:
+• “What are the treatment options for managing hypertension in pregnant women?”
+• “How should blood glucose be monitored in diabetes patients?”
+• “When should antibiotics be prescribed for respiratory infections?”
+
+User Prompt
+
+Document Excerpt: {doc content}
+Generate a realistic search query for this NICE guideline content.
+
+Table 7: Testing Question Generation Prompts
+
+xiii
+
+Retrieval Evaluation Metrics: the performance of each retrieval configuration is quantified using
+the following metrics:
+• MRR (Mean Reciprocal Rank): The average of the reciprocal ranks for a set of queries, measuring how high correct chunks are ranked. A higher value indicates the correct chunk is found
+closer to the top.
+• Recall@k: The proportion of queries where the correct chunk is retrieved in the top k results. A
+higher value indicates better performance at retrieving relevant items within the top k positions.
+• Median Rank: The median position of the correct chunk across all queries. A lower value
+indicates that for a majority of queries, the correct chunk is found at or below the median rank.
+• Mean Rank: The average position of the correct chunk across all queries. A lower value signifies
+that, on average, relevant items are ranked higher.
+• Max Rank: The highest rank of a correct chunk observed across all queries. A lower value
+indicates better performance for the worst retrieval.
+2.6.2
+
+LLM Completion Evaluation
+
+The RAGAs framework, an evaluation tool that leverages LLMs to assess the performance of RAG
+pipelines, was used to evaluate the quality and reliability of the generated answers in the completion phase. It evaluates the LLM’s ability to extract relevant information from the retrieved context
+along with its faithfulness. The evaluation was performed using a manually curated dataset of seventy question-answer pairs derived from the NICE guidelines, an example of which is shown in Table 8.
+
+Question
+
+Answer
+
+What factors identify babies as being at increased
+risk of developing significant hyperbilirubinaemia?
+
+Identify babies as being more likely to develop significant hyperbilirubinaemia if they have any of the following factors:
+
+Matched
+Source
+CG98,
+Section 1.2
+
+• gestational age under 38 weeks
+• a previous sibling with neonatal jaundice requiring phototherapy
+• mother’s intention to breastfeed exclusively
+• visible jaundice in the first 24 hours of life.
+
+Table 8: Sample QA Pair from Testing Dataset
+The framework uses a LLM, in this case GPT-4.1-Mini, to judge the performance of the system, assessing the generated responses against ground-truth answers and the retrieved context. The source
+code of the framework was modified to make system prompts better suited to the medical domain.
+The following four metrics from the RAGAs package were employed to provide a multi-faceted view
+of the system’s performance:
+• Context Precision with Reference: Measures the proportion of chunks in the retrieved
+context which are relevant to the user query.
+• Context Recall: Measures the proportion of relevant chunks successfully retrieved.
+• Response Relevancy: Verifies the answer addresses the query in an appropriate way.
+• Faithfulness: Verifies that the claims made in the answer can be inferred from the context.
+xiv
+
+To quantify the value added by the retrieval architecture, the RAG-enabled system was benchmarked
+against a variety of baseline LLMs operating without access to the curated vector database. These
+baseline models included Claude Sonnet 4, GPT-4.1, GPT-4.1-Mini, GPT-4.1-Nano, O4-Mini and the
+medically focused Meditron3-8B.
+The non-RAG models were evaluated under two different scenarios to measure the RAG system’s
+impact on accuracy and reliability. Firstly, the models were evaluated using only their pre-trained
+knowledge. Secondly, a more powerful baseline was created by testing Claude Sonnet 4 with a web
+search function limited to the nice.org.uk domain, the same information source used by the RAG
+system.
+
+2.7
+
+Clinical Evaluation by Subject Matter Experts
+
+In addition to the automated evaluation metrics, a clinical evaluation of the NICE-RAG system was
+conducted by a panel of Subject Matter Experts (SMEs), consisting of 7 NHS clinicians from various
+medical specialities (General Practice, Emergency Medicine, General Surgery, Psychiatry, General
+Medicine and Neurology). The evaluators were tasked with assessing the system’s performance on
+a dataset derived from the NICE clinical guidelines, consisting of the same seventy question-answer
+pairs evaluated used for RAGAs evaluation.
+The evaluation criteria were twofold:
+1. Accuracy Score: Evaluators scored the system’s outputs on a scale:
+• 0: Wrong answer which did not answer the query and had wrong context
+• 0.5: Partial answer which answered the query partially and had incomplete context
+• 1: Complete answer which answered the query and contained full context
+2. Safety Score: A binary assessment of the output’s safety:
+• 0: Safe
+• 1: Unsafe
+The total number of unsafe responses was summed for each evaluator to provide an aggregate safety
+metric. The evaluation compared the performance of two Large Language Models: O4-Mini and GPT4.1.
+
+3
+
+Results:
+
+This section presents the results of the two-stage evaluation process, focusing firstly on the performance of the retrieval system and secondly on the quality and reliability of the answers generated
+from the complete RAG pipeline.
+
+3.1
+
+Retrieval Results
+
+The retrieval system’s effectiveness was measured by its ability to identify the correct document chunk
+from a database of 10,195 chunks in response to 7901 synthetically generated queries. The performance of various embedding models and retrieval strategies are detailed in Table 9.
+
+xv
+
+Model
+Voyage-3-Large
+Voyage-3.5
+Text-Embedding-3-Large
+Qwen3-Embedding-0.6B
+BM25
+Voyage-3-Large + BM25
+Voyage-3-Large + Text-Embedding-3-Large
+
+MRR
+0.826
+0.788
+0.749
+0.776
+0.625
+0.814
+0.819
+
+Voyage-3-Large + BM25
+
+-1
+
+Voyage-3-Large + BM25
+
+-1
+
+Recall@1 Recall@5 Recall@10
+0.718
+0.962
+0.985
+0.665
+0.943
+0.978
+0.615
+0.924
+0.970
+0.653
+0.933
+0.973
+0.482
+0.806
+0.887
+0.699
+0.960
+0.989
+0.707
+0.960
+0.988
+With Voyage Reranker-2-Lite
+0.779
+0.977
+0.990
+With Voyage Reranker-2
+0.810
+0.982
+0.991
+
+Recall@15
+0.993
+0.987
+0.983
+0.984
+0.924
+0.995
+0.994
+
+Median Rank
+1
+1
+1
+1
+2
+1
+1
+
+Mean Rank
+1.836
+2.236
+2.571
+2.697
+14.151
+1.829
+1.810
+
+Max Rank
+251
+262
+292
+767
+9908
+185
+70
+
+0.995
+
+-1
+
+-1
+
+-1
+
+0.995
+
+-1
+
+-1
+
+-1
+
+Table 9: Retrieval Results from 7901 Queries Run Against a Database of 10195 Chunks
+The results show that dense embedding models significantly outperform the traditional sparse embedding BM25 model. The top-performing individual model was Voyage-3-Large, achieving a MRR of
+0.826, mean rank of 1.836, and retrieving the correct chunk within the top fifteen results for 99.3%
+of queries. The model’s effectiveness is highlighted by its ability to retrieve the correct document,
+from a corpus of 10,195 chunks, as the first ranked result for 71.8% of queries (Recall@1). In contrast,
+the BM25 baseline was far less effective, with an MRR of 0.625 and a much higher mean rank of 14.151.
+Hybrid search methods, which combine the results of multiple models, demonstrated improved performance in certain areas. Combining the Voyage-3-Large and Text-Embedding-3-Large models yielded
+the lowest maximum rank of all tested methods. Meanwhile, a hybrid of Voyage-3-Large with BM25,
+combined with the Voyage Reranker-2, achieved the highest overall Recall@1 of 81% and Recall@10
+of 99.1%, indicating its strength in consistently placing relevant documents high in the rankings, as
+well as validating rerankers as a tool for improving precision.
+In contrast, the open-source Qwen3-Embedding-0.6B model performed less effectively than most
+closed-source counterparts. Its max rank was significantly higher than other dense models. However, it outperformed the OpenAI’s text-embedding-3-model across all other metrics, indicating that
+open-source models can achieve competitive performance.
+
+3.2
+
+Completion Results
+
+The completion evaluation assessed the final output of the RAG system against baseline non-RAG
+models using a curated set of seventy question-answer pairs. The top ten reranked results, using the
+Voyage-3-Large + BM25 retrieval combination, were passed as context to the models. The results,
+shown in Table 10, highlight the critical role of the RAG architecture in ensuring the safety and reliability of the generated answers.
+All RAG-enabled models achieved perfect Context Precision and Context Recall scores of 1.0 when
+passing the top ten retrieved chunks as context, with slightly lower Context Recall observed when
+passing the top five chunks, thus confirming that the retrieval stage effectively sources all relevant
+information. This directly translates to strong performance in Faithfulness, with the RAG-enabled
+O4-Mini achieving a near-perfect score of 0.995, an increase of 0.647 from its non-RAG counterpart.
+This stands in stark contrast to the baseline non-RAG models, which exhibited a high propensity for
+“hallucinations”. The medically-focused Meditron3-8B model scored just 0.430 on the Faithfulness
+score, while the GPT-4.1 and Claude Sonnet 4 models, which are considered two of the leading LLMs,
+1
+
+Metrics omitted due to prohibitive API costs. The reranker’s O(n · k) API call complexity, with n the number of
+queries (7901) and k the number of query/chunk pairs evaluated (10195), was too expensive to run. Only the top 15
+chunks are therefore reranked for each query, as is standard for reranker usage. Observed recall gains imply all rank-based
+metrics would also improve.
+
+xvi
+
+scored 0.596 and 0.589 respectively. Even when augmented with domain specific web-search capabilities, the Claude Sonnet 4 model’s performance, while improved, still fell short of the RAG system’s
+reliability. This demonstrates that without the grounding context provided by RAG pipelines, even
+state-of-the-art LLMs are unreliable for grounded clinical query answering.
+
+Model
+
+Claude Sonnet 4
+Claude Sonnet 4 with
+Web-Search
+GPT-4.1
+GPT-4.1-Mini
+GPT-4.1-Nano
+O4-Mini
+Meditron3-8B
+
+Context
+Context Response
+Precision
+Recall
+Relevancy
+Baseline Non-RAG LLM
+-2
+-2
+0.805
+2
+2
+0.781
+-2
+-2
+-2
+-2
+-2
+
+Faithfulness
+
+0.589
+0.883
+
+-2
+-2
+-2
+-2
+-2
+
+0.750
+0.793
+0.453
+0.704
+0.851
+
+0.596
+0.566
+0.550
+0.348
+0.430
+
+1
+0.992
+1
+1
+1
+1
+
+0.868
+0.863
+0.858
+0.878
+0.876
+0.855
+
+0.991
+0.989
+0.993
+0.985
+0.983
+0.995
+
+RAG
+Claude Sonnet 4 @ 10
+Claude Sonnet 4 @ 5
+GPT-4.1 @ 10
+GPT-4.1-Mini @ 10
+GPT-4.1-Nano @ 10
+O4-Mini @ 10
+
+1
+1
+1
+1
+1
+1
+
+Table 10: Results on 70 QA pairs comparing Baseline Non-RAG LLMs with RAG models
+
+3.3
+
+Clinical Evaluation Results
+
+The clinical evaluation by healthcare professionals provides an important validation of the system’s
+real-world applicability. Table 11 presents the comparative performance between O4-Mini and GPT4.1 as assessed by the panel of seven clinicians.
+Metric
+Average Accuracy Score
+Average Count of Complete Answers
+Average Count of Partial Answers
+Average Count of Wrong Answers
+Average Unsafe Responses (per evaluator)
+
+O4-Mini
+67.6/70 (96.6%)
+65.6
+4.4
+0.0
+3.0
+
+GPT-4.1
+69.1/70 (98.7%)
+68.3
+1.8
+0.0
+1.0
+
+Table 11: Clinical evaluation results comparing O4-Mini and GPT-4.1 performance as assessed by 7
+SMEs on 70 queries
+The results demonstrate a clear improvement in the system’s performance when utilising the GPT4.1 model. Not only did the accuracy score increase from 67.6/70 (96.6%) to 69.1/70 (98.7%), but
+more importantly, the safety profile improved significantly. The average number of unsafe responses
+dropped from 3.0 to 1.0 per evaluator, indicating that GPT-4.1’s output was both more complete
+and safer than that of O4-Mini. The unsafe scores were primarily due to incomplete answers which
+missed key details e.g. full criteria for cancer screening, and not due to hallucinations. These findings
+from clinical experts corroborate the automated evaluation results, confirming the system’s practical
+2
+
+Metrics omitted due to models being non RAG-based, therefore not having a retrieval phase.
+
+xvii
+
+utility for healthcare professionals with the caveat that care should be taken to always refer to the full
+referenced context and have a human in the loop.
+
+4
+
+Discussion:
+
+This study provides one of the first large-scale evaluations of a generative RAG system on a nationallevel clinical guideline corpus, marking a significant advance in the field. The results confirm the
+findings of smaller-scale studies, such as those by Ferber et al. (2024) and Kresevic et al. (2024), showing clear benefits of implementing RAG architectures over baseline LLMs. The findings demonstrate
+that this approach not only makes complex medical information more accessible but also significantly
+enhances the trust in LLMs for clinical queries. The implications of this work are far-reaching, addressing critical challenges in healthcare information retrieval and the safe use of LLMs in healthcare.
+The primary implication of this research is the demonstration of a reliable and scalable solution to
+the problem of underutilised clinical guidelines. As noted by Wang et al. (2023), the time required for
+clinicians to manually search through these documents has become a significant barrier to their use.
+This system directly addresses that challenge by providing precise, contextually grounded answers to
+queries within seconds (∼ 5-10 seconds on average). The architecture is also inherently scalable, with
+the potential to expand beyond the three hundred guidelines indexed here to encompass all guidance
+offered by NICE as well as guidance from other bodies, such as the various British royal colleges.
+International guidelines could also be included by leveraging the multilingual capabilities of modern
+LLMs which would support the greater delivery of evidence-based medicine globally.
+While the current system relies on the NICE clinical guidelines (approximately 300 documents), the
+architecture is designed to be modular. The vector database containing the NICE guidelines can be
+readily swapped for a local hospital’s specific guidelines or protocols. This flexibility allows the RAG
+system to be adapted to specific clinical environments, ensuring that the generated responses align with
+local best practices and formulary or procedural restrictions. This modularity is particularly valuable
+for NHS trusts and international healthcare systems that may need to incorporate institution-specific
+protocols alongside national guidelines.
+The most critical finding of this study is the dramatic reduction in model “hallucinations”. The RAGenhanced O4-Mini model achieved a faithfulness score of 99.5%, a 64.7 percentage point increase over
+its baseline performance. This starkly contrasts with the medically focused Meditron3-8B model,
+which scored only 43% on the same metric, underscoring the unreliability of even domain-specific
+models without the grounding context provided by a RAG architecture.
+The clinical evaluation comparing O4-Mini and GPT-4.1 further highlights a potential difference in
+LLM capabilities with regards to reasoning versus non-reasoning models. The reduction in unsafe
+outputs by two-thirds (from 3.0 to 1.0 per evaluator), with the non-reasoning GPT-4.1 model outperforming the reasoning O4-mini model, represents a crucial finding for the deployment of AI in
+healthcare. The ability to set a temperature parameter of 0 for non-reasoning models allows for deterministic reproducible outputs, while reasoning models without this feature make it harder to test
+clinical safety and introduces a layer of unpredictability. This improvement, along with the 98.7%
+accuracy score, suggests that non-reasoning models are better at adhering to the provided context
+and therefore should be prioritised for health domain applications.
+However, the persistence of any unsafe outputs (average of 1.0) underscores that safety risk remains
+a primary barrier to the adoption of generative AI in clinical settings. This necessitates continued
+human-in-the-loop verification and robust guardrails before such systems can be used autonomously
+in patient care. One of the main takeaways is that clinicians who use the system should always refer
+to the referenced context retrieved to ensure safety and an added note being that only using one set
+xviii
+
+of guidelines may not be enough in clinical practice to be comprehensive.
+Despite the strong results, this study has limitations that present avenues for future research. The
+retrieval and completion evaluations were conducted using a synthetically generated dataset of 7901
+question-chunk pairs and a curated set of seventy question-answer pairs respectively. While this allowed for extensive testing, these queries may not fully represent the complexity of questions posed by
+human users in a real-world clinical setting. Cases where required chunks were poorly retrieved were
+found to arise generally because of a lack of specificity in the query rather than an inherent retrieval
+failure. Therefore, future work must involve further rigorous testing with healthcare professionals to
+evaluate the system’s real-world usability and performance.
+A deeper analysis of the completion results reveals limitations in the RAGAs evaluation framework.
+Firstly, the lower Response Relevancy scores recorded were due to the metric’s use of embedding similarity scores for its evaluation. Due to the impact semantic noise and subtle rewording can have on
+these similarity scores when comparing texts, certain scores were found to be degraded regardless of
+the response’s true relevancy. Secondly, the Faithfulness score of 99.5% for the O4-Mini model was
+imperfect due to three anomalies flagged by the RAGAs framework, the most penalised of which is
+shown in Table 12. This error was not due to the RAG system itself, but rather a misjudgement by
+the evaluation framework’s LLM judge.
+In this case, the model failed to correctly reason that the factually correct claim made in the system’s answer was appropriately supported by the context, as shown in Figure 3. This was due to the
+guideline formatting, in this case sentence indentation, which led the evaluator LLM to infer that FT3
+should only be measured in the same sample as FT4 for children and young people if TSH is below
+the reference range, and therefore not for adults. This highlights a critical limitation of automated
+testing and reinforces the need for rigorous real-world trials with healthcare professionals, while also
+highlighting the impact source document formatting can have within RAG systems.
+
+Figure 3: Extract of NG145
+While the conducted testing relied on question-answer pairs curated to require responses grounded to
+a single guideline at a time, real-world queries often require information to be retrieved from multiple
+sources at once to be fully addressed. Therefore, further testing must be conducted to evaluate LLMs
+ability to answer queries necessitating larger information source pools. Additionally, robust testing
+
+xix
+
+Question
+
+What tests should be considered for adults with suspected thyroid
+dysfunction?
+
+Source
+
+Guideline NG145 Section 1.2.8-1.2.11
+
+Answer
+
+For adults with suspected thyroid dysfunction, consider the following tests:
+• measuring thyroid-stimulating hormone (TSH) alone when secondary
+thyroid dysfunction (pituitary disease) is not suspected
+– if TSH is above the reference range, measure free thyroxine
+(FT4) in the same sample
+– if TSH is below the reference range, measure FT4 and free
+tri-iodothyronine (FT3) in the same sample
+• measuring both TSH and FT4 when secondary thyroid dysfunction
+(pituitary disease) is suspected
+– if TSH is below the reference range, measure FT3 in the same
+sample
+• repeating the above tests if symptoms worsen or new symptoms
+develop (but no sooner than 6 weeks from the most recent test)
+• asking about biotin intake, because high-dose biotin supplements may
+lead to falsely high or low thyroid function test results
+
+Original
+Faithfulness Score
+
+0.857
+
+RAGAs Reasoning
+
+The context states that for children and young people, if TSH is below the
+reference range, measure FT3 in the same sample; however, it does not
+explicitly say to measure FT3 if TSH is below the reference range and
+secondary thyroid dysfunction is suspected in adults. The statement
+incorrectly combines conditions not directly supported by the context.
+
+Legend
+
+Red: Penalised sentence in the system’s answer.
+
+Table 12: Analysis of Worst O4-Mini Faithfulness Score
+of the system ability to reject queries with no suitable guideline information was not conducted. To
+ensure the safety of a future system, this must be addressed in future work.
+Additionally, the discrepancy between RAGAs results and human evaluation results for safety was
+due to RAGAs’ lack of metric to measure completeness. While the faithfulness metric will detect if
+generated information is incorrect, it will not detect a lack of required information. This is due to the
+design of the metric instead of an inherent limitation in LLMs. Therefore further work must be done
+in designing more comprehensive metrics before LLM-as-a-judge frameworks can fully replace human
+evaluators, in particular for the medical domain.
+Another area for development is the exploration of open-source models. The Qwen3-Embedding0.6B model, while outperformed by some of its closed-source counterparts, could potentially achieve
+competitive performance if fine-tuned on the specific medical terminology and structure of the NICE
+guidelines. Additionally, the use of larger open-source counterparts would likely improve results. Furthermore, using open-source models would create a more transparent system which could be hosted
+on-premises within clinical settings, addressing key data privacy concerns.
+Beyond its technical performance, the proposed system offers practical strengths in terms of implementation cost-effectiveness and long-term maintainability. At approximately $0.015 per query, using
+the highest-performance model combination (Voyage-3-Large, Reranker-2, and O4-Mini), the system
+is financially viable for deployment. Crucially, its knowledge base supports efficient, incremental updates; new or revised guidelines can be integrated into the vector database without requiring complete,
+xx
+
+resource-intensive retraining of the entire system.
+Finally, the transition from a research prototype to a live clinical tool requires careful consideration
+of risks. The system’s integrity is dependent on the accuracy of its source material. The RAG architecture prevents the model from inventing information, but it cannot verify the facts it retrieves. If
+a NICE guideline contains an error, the system will faithfully present that incorrect information to
+the user. This vulnerability necessitates a robust process for continuous validation of the underlying
+knowledge base to ensure safety.
+
+5
+
+Ethical Considerations:
+
+Since the system’s knowledge base was constructed exclusively from publicly accessible guidelines,
+meaning no patient data was used, a formal ethical review was not required. However, key ethical
+considerations must nevertheless be addressed.
+Firstly, the system’s architecture, which leverages external third-party LLM APIs, presents a potential
+privacy problem. While their use is acceptable for non-sensitive public data, it presents a critical risk
+for clinical deployment. Should a user input sensitive patient information, transmitting such data to
+external servers would violate data protection frameworks like the GDPR and HIPAA, unless cloud
+providers have signed compliance agreements. Therefore, an essential mitigation strategy for any transition to a live clinical environment is architectural modification. The recommended approach would
+therefore be the on-premises hosting of open-source models within a clinical network.
+Finally, algorithmic accountability, specifically model hallucination, was a central ethical consideration
+in this paper. While the system’s high faithfulness metrics confirm the success of RAG at minimising
+hallucination, a non-zero risk of generating content that deviates from the source context persists.
+This risk mandates that the system must function strictly as an adjunctive clinical tool. The ethical and safe implementation of such a system would rely on human-in-the-loop oversight, where the
+clinical judgement of a healthcare professional remains the final arbiter in any decision-making process.
+
+6
+
+Conclusion:
+
+This project successfully developed and evaluated a RAG system designed to make the UK’s NICE
+guidelines more accessible using LLMs. By addressing the significant challenge of navigating these
+extensive and complex documents, the system provides a tool for healthcare professionals to obtain
+rapid, evidence-based answers to clinical questions while offering a flexible, modular framework that
+can be adapted to any clinical guideline corpus.
+The evaluation demonstrated the system’s high performance at every stage. The retrieval architecture
+proved exceptionally effective, achieving a Mean Reciprocal Rank (MRR) of 0.814 and a near-perfect
+Recall@10 of 99.1%, ensuring that relevant information was consistently identified from the vast knowledge base of guidelines. The most critical contribution, however, was observed in the generation phase,
+where the RAG methodology dramatically enhanced the reliability of the LLM outputs. The system
+achieved a Faithfulness score of 0.995 and a perfect Context Precision score of 1.0, confirming its
+ability to generate answers that are strictly grounded in the source material. This stands in stark contrast to non-RAG models, which exhibited a high propensity for hallucination, scoring as low as 0.348
+on the same Faithfulness metric. This was further validated by clinical experts, where the GPT-4.1
+model achieved a 98.7% accuracy score, though the persistence of unsafe outputs reinforces the need
+for human oversight.
+
+xxi
+
+In conclusion, this research validates RAG as a robust, scalable, and effective strategy for deploying
+LLMs safely within a clinical information setting. By successfully mitigating the risk of information
+fabrication, this work presents a significant step toward the responsible integration of generative AI
+into healthcare. The developed system offers a practical and cost-effective solution that can reduce
+the time required to access critical guidance, thereby supporting busy clinicians and enhancing patient care. Future work should build on these findings, moving towards human-centric evaluations to
+prepare the system for deployment in a real-world clinical environment.
+
+7
+
+Acknowledgment:
+
+The authors gratefully acknowledge the support provided by Iain Moir and Angus Leitch at the
+National Institute of Health and Care Excellence (NICE) during the course of this project.
+
+8
+
+Data Availability
+
+The clinical guidelines analysed in this study are publicly available via the NICE API. The specific
+subset of guidelines used in this study was acquired on July 16, 2025. The synthetic query datasets
+generated during the study are available at github.com/matthewlewis123/A-NICE-RAG.
+
+9
+
+Code Availability
+
+The code used for the Retrieval-Augmented Generation system, including the pre-processing pipeline
+and evaluation framework, is available at github.com/matthewlewis123/A-NICE-RAG.
+
+xxii
+
+References
+Anthropic (2025), System card: Claude opus 4 & claude sonnet 4, Technical report, Anthropic.
+URL: https://www-cdn.anthropic.com/07b2a3f9902ee19fe39a36ca638e5ae987bc64dd.pdf
+Chen, Z., Cano, A. H., Romanou, A., Bonnet, A., Matoba, K., Salvi, F., Pagliardini, M., Fan,
+S., Köpf, A., Mohtashami, A. et al. (2023), ‘Meditron-70b: Scaling medical pretraining for large
+language models’, arXiv preprint arXiv:2311.16079 .
+Colby, K. M., Weber, S. and Hilf, F. D. (1971), ‘Artificial paranoia’, Artificial intelligence 2(1), 1–25.
+Cormack, G. V., Clarke, C. L. and Buettcher, S. (2009), Reciprocal rank fusion outperforms condorcet
+and individual rank learning methods, in ‘Proceedings of the 32nd international ACM SIGIR conference on Research and development in information retrieval’, pp. 758–759.
+Devlin, J., Chang, M.-W., Lee, K. and Toutanova, K. (2019), Bert: Pre-training of deep bidirectional
+transformers for language understanding, in ‘Proceedings of the 2019 conference of the North American chapter of the association for computational linguistics: human language technologies, volume
+1 (long and short papers)’, pp. 4171–4186.
+Dubey, A., Jauhri, A., Pandey, A., Kadian, A., Al-Dahle, A., Letman, A., Mathur, A., Schelten, A.,
+Yang, A., Fan, A. et al. (2024), ‘The llama 3 herd of models’, arXiv e-prints pp. arXiv–2407.
+Enevoldsen, K., Chung, I., Kerboua, I., Kardos, M., Mathur, A., Stap, D., Gala, J., Siblini, W.,
+Krzemiński, D., Winata, G. I., Sturua, S., Utpala, S., Ciancone, M., Schaeffer, M., Sequeira, G.,
+Misra, D., Dhakal, S., Rystrøm, J., Solomatin, R., Ömer Çağatan, Kundu, A., Bernstorff, M., Xiao,
+S., Sukhlecha, A., Pahwa, B., Poświata, R., GV, K. K., Ashraf, S., Auras, D., Plüster, B., Harries,
+J. P., Magne, L., Mohr, I., Hendriksen, M., Zhu, D., Gisserot-Boukhlef, H., Aarsen, T., Kostkan, J.,
+Wojtasik, K., Lee, T., Šuppa, M., Zhang, C., Rocca, R., Hamdy, M., Michail, A., Yang, J., Faysse,
+M., Vatolin, A., Thakur, N., Dey, M., Vasani, D., Chitale, P., Tedeschi, S., Tai, N., Snegirev, A.,
+Günther, M., Xia, M., Shi, W., Lù, X. H., Clive, J., Krishnakumar, G., Maksimova, A., Wehrli, S.,
+Tikhonova, M., Panchal, H., Abramov, A., Ostendorff, M., Liu, Z., Clematide, S., Miranda, L. J.,
+Fenogenova, A., Song, G., Safi, R. B., Li, W.-D., Borghini, A., Cassano, F., Su, H., Lin, J., Yen, H.,
+Hansen, L., Hooker, S., Xiao, C., Adlakha, V., Weller, O., Reddy, S. and Muennighoff, N. (2025),
+‘Mmteb: Massive multilingual text embedding benchmark’, arXiv preprint arXiv:2502.13595 .
+URL: https://arxiv.org/abs/2502.13595
+Es, S., James, J., Anke, L. E. and Schockaert, S. (2024), Ragas: Automated evaluation of retrieval
+augmented generation, in ‘Proceedings of the 18th Conference of the European Chapter of the
+Association for Computational Linguistics: System Demonstrations’, pp. 150–158.
+Ferber, D., Wiest, I. C., Wölflein, G., Ebert, M. P., Beutel, G., Eckardt, J.-N., Truhn, D., Springfeld,
+C., Jäger, D. and Kather, J. N. (2024), ‘Gpt-4 for information retrieval and comparison of medical
+oncology guidelines’, Nejm Ai 1(6), AIcs2300235.
+Ive, J., Jozsa, F., Jackson, N., Bondaronek, P., Hill, C. S. and Dobson, R. (2025), ‘Clean & clear:
+Feasibility of safe llm clinical guidance’, arXiv preprint arXiv:2503.20953 .
+Jackson, R. and Feder, G. (1998), ‘Guidelines for clinical guidelines: a simple, pragmatic strategy for
+guideline development’.
+Korom, R., Kiptinness, S., Adan, N., Said, K., Ithuli, C., Rotich, O., Kimani, B., King’ori, I., Kamau,
+S., Atemba, E. et al. (2025), ‘Ai-based clinical decision support for primary care: A real-world
+study’, arXiv preprint arXiv:2507.16947 .
+Kresevic, S., Giuffrè, M., Ajcevic, M., Accardo, A., Crocè, L. S. and Shung, D. L. (2024), ‘Optimization
+of hepatological clinical guidelines interpretation by large language models: a retrieval augmented
+generation-based framework’, NPJ digital medicine 7(1), 102.
+xxiii
+
+Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Küttler, H., Lewis, M., Yih,
+W.-t., Rocktäschel, T. et al. (2020), ‘Retrieval-augmented generation for knowledge-intensive nlp
+tasks’, Advances in neural information processing systems 33, 9459–9474.
+Macia, G., Liddell, A. and Doyle, V. (2024), ‘Conversational ai with large language models to increase
+the uptake of clinical guidance’, Clinical eHealth 7, 147–152.
+NICE (2021), ‘Nice strategy 2021 to 2026: Dynamic, collaborative, excellent’.
+URL:
+https://www.nice.org.uk/Media/Default/Get-involved/Meetings-In-Public/Public-boardmeetings/Mar-24-pbm-NICE-strategy-2021-2026.pdf
+NICE (2022), ‘Annual report and accounts 2021/22’.
+URL: https://assets.publishing.service.gov.uk/media/62d923828fa8f50c03918872/NICE-AnnualReport-2021-2022-print-ready.pdf
+NICE (2025), ‘About us’. Accessed: August 6, 2025.
+URL: https://www.nice.org.uk/about
+Nogueira, R. and Cho, K. (2019), ‘Passage re-ranking with bert’, arXiv preprint arXiv:1901.04085 .
+OpenAI (2024), ‘New embedding models and api updates’.
+URL: https://openai.com/index/new-embedding-models-and-api-updates/
+OpenAI (2025a), ‘Introducing gpt-4.1 in the api’, https://openai.com/index/gpt-4-1/. Accessed:
+2025-08-09.
+OpenAI (2025b), ‘Openai o3 and o4-mini system card’,
+system-card-o3-o4-mini. Accessed: 2025-08-09.
+
+https://openai.com/research/
+
+Robertson, S. E., Walker, S., Jones, S., Hancock-Beaulieu, M. M. and Gatford, M. (1995), ‘Okapi at
+trec-3’, Nist Special Publication Sp 109, 109.
+Rosa, G., Bonifacio, L., Jeronymo, V., Abonizio, H., Fadaee, M., Lotufo, R. and Nogueira, R. (2022),
+‘In defense of cross-encoders for zero-shot retrieval’, arXiv preprint arXiv:2212.06121 .
+Saab, K., Tu, T., Weng, W.-H., Tanno, R., Stutz, D., Wulczyn, E., Zhang, F., Strother, T.,
+Park, C., Vedadi, E. et al. (2024), ‘Capabilities of gemini models in medicine’, arXiv preprint
+arXiv:2404.18416 .
+Sallinen, A., Solergibert, A.-J., Zhang, M., Boyé, G., Dupont-Roc, M., Theimer-Lienhard, X., Boisson,
+E., Bernath, B., Hadhri, H., Tran, A. et al. (2025), Llama-3-meditron: An open-weight suite of
+medical llms based on llama-3.1, in ‘Workshop on Large Language Models and Generative AI for
+Health at AAAI 2025’.
+Sellergren, A., Kazemzadeh, S., Jaroensri, T., Kiraly, A., Traverse, M., Kohlberger, T., Xu, S., Jamil,
+F., Hughes, C., Lau, C. et al. (2025), ‘Medgemma technical report’, arXiv preprint arXiv:2507.05201
+.
+Singhal, K., Azizi, S., Tu, T., Mahdavi, S. S., Wei, J., Chung, H. W., Scales, N., Tanwani, A., ColeLewis, H., Pfohl, S. et al. (2022), ‘Large language models encode clinical knowledge’, arXiv preprint
+arXiv:2212.13138 .
+Singhal, K., Tu, T., Gottweis, J., Sayres, R., Wulczyn, E., Amin, M., Hou, L., Clark, K., Pfohl, S. R.,
+Cole-Lewis, H. et al. (2025), ‘Toward expert-level medical question answering with large language
+models’, Nature Medicine 31(3), 943–950.
+Sparck Jones, K. (1972), ‘A statistical interpretation of term specificity and its application in retrieval’,
+Journal of documentation 28(1), 11–21.
+
+xxiv
+
+Turing, A. M. (1950), Computing machinery and intelligence, in ‘Parsing the Turing test: Philosophical
+and methodological issues in the quest for the thinking computer’, Springer, pp. 23–65.
+Voyage AI (2025), ‘voyage-3-large: the new state-of-the-art general-purpose embedding model’. Voyage
+AI Blog.
+URL: https://blog.voyageai.com/2025/01/07/voyage-3-large/
+Wang, T., Tan, J.-Y. B., Liu, X.-L. and Zhao, I. (2023), ‘Barriers and enablers to implementing clinical
+practice guidelines in primary care: an overview of systematic reviews’, BMJ open 13(1), e062158.
+Weizenbaum, J. (1966), ‘Eliza—a computer program for the study of natural language communication
+between man and machine’, Communications of the ACM 9(1), 36–45.
+Zakka, C., Shad, R., Chaurasia, A., Dalal, A. R., Kim, J. L., Moor, M., Fong, R., Phillips, C.,
+Alexander, K. and Ashley, E. (2024), ‘Almanac—retrieval-augmented language models for clinical
+medicine’, Nejm ai 1(2), AIoa2300068.
+Zhang, Y., Li, M., Long, D., Zhang, X., Lin, H., Yang, B., Xie, P., Yang, A., Liu, D., Lin, J. et al.
+(2025), ‘Qwen3 embedding: Advancing text embedding and reranking through foundation models’,
+arXiv preprint arXiv:2506.05176 .
+
+xxv
+
+Appendix
+A
+
+Excluded Sections for Query Generation
+
+The following sections were excluded during the query generation process:
+• About this quality standard
+• Appendix
+• Appraisal committee members
+• Committee members
+• Diagnostics advisory committee members and NICE project team
+• Endorsing organisation
+• Evaluation committee members and NICE project team
+• Finding more information and committee details
+• Putting this guideline into practice
+• Sources of evidence
+• Supporting organisations
+• Update information
+
+B
+
+BM25 Hyperparameters
+Hyperparameter
+Tokenization
+k1
+b
+ϵ
+
+Value
+Lemmatised
+1.7
+0.83
+0.05
+
+Table 13: Hyperparameters for BM25 Indexing
+
+C
+
+Hybrid-Search Hyperparameters
+
+Model Combination
+Voyage-3-Large + BM25
+Voyage-3-Large + Text-Embedding-3-Large
+
+Component 1
+Weight (w1 )
+5
+2
+
+Component 2
+Weight (w2 )
+1
+1
+
+Constant (k)
+
+Table 14: WRRF Weight Values for Retrieval Stage Model Combinations
+
+xxvi
+
+40
+40
+
+D
+
+Theoretical Cost Calculation
+Component
+
+Token Calculation Details
+
+Embedding
+Reranking
+
+Query
+15 chunks * (100 Query Tokens +
+500 Chunk Tokens)
+650 (System and User Prompt) +
+100 (Query) + 10 * 500 (Context)
+Assumed answer length
+
+LLM Input
+LLM Output
+Total
+
+100
+9,000
+
+Price per 1M
+Tokens ($)
+0.18
+0.05
+
+5,750
+
+2.00
+
+0.0115
+
+500
+15,350
+
+8.00
+-
+
+0.004
+0.015968
+
+Tokens
+
+Cost ($)
+0.000018
+0.00045
+
+Table 15: Theoretical Cost Calculation for a Single Query
+
+E
+
+RAGAs Faithfulness Failures O4-Mini
+Component
+
+Content
+
+Question
+
+What are the recommended treatment options for neurogenic stress urinary
+incontinence?
+
+Source
+
+Guideline CG148 Section 1.4
+
+Answer
+
+Recommended treatment options for neurogenic stress urinary incontinence include:
+• Pelvic floor muscle training for people with neurogenic lower urinary tract
+dysfunction where voluntary pelvic floor contraction is preserved. Consider
+combining this with
+– biofeedback
+– electrical stimulation of the pelvic floor
+• Autologous fascial sling surgery
+• Artificial urinary sphincter insertion for people in whom an autologous
+fascial sling is less likely to control incontinence. Before insertion:
+– discuss the risks, need for possible repeat operations and alternative
+procedures
+– ensure the bladder has adequate low-pressure storage capacity
+– plan for upper urinary tract monitoring (for example, annual
+ultrasound scans)
+
+Original Faithfulness
+Score
+
+0.875
+
+RAGAs Reasoning
+
+The context states to monitor the upper urinary tract after artificial urinary
+sphincter surgery, for example using annual ultrasound scans, but does not specify
+planning this before insertion.
+
+Legend
+
+Red: Penalised sentence in the system’s answer.
+
+Table 16: Analysis of Second Worst O4-Mini Faithfulness Score
+
+xxvii
+
+Figure 4: Extract of CG148
+
+Component
+
+Content
+
+Question
+
+When and how should mirror therapy be used as part of stroke rehabilitation for
+people with upper limb weakness?
+
+Source
+
+Guideline NG236 Section 1.13.30–1.13.31
+
+Answer
+
+According to NICE guideline NG236 (recommendations 1.13.30–1.13.31), mirror
+therapy for upper limb weakness after stroke should be used as follows:
+Consideration
+
+– Consider mirror therapy as an adjunct to the person’s existing
+rehabilitation programme.
+– Offer it to people with upper (or lower) limb muscle weakness after
+stroke.
+
+Timing
+
+– Start mirror therapy within the first 6 months after stroke (ideally
+within 1 month).
+
+Session parameters
+Supervision
+
+– Sessions should be around 30 minutes long.
+– Hold sessions at least 5 times per week for 4 weeks.
+– Initially supervise mirror therapy (for example, by a physiotherapist or
+occupational therapist), focusing on how it works and what to expect.
+– Continue supervision as needed (for example, for people with cognitive
+difficulties).
+– Once trained, many people can continue therapy unsupervised in
+hospital or at home (with a loaned mirror).
+
+For details of the evidence and committee discussion, see the evidence review Q:
+mirror therapy.
+Original Faithfulness
+Score
+
+0.9
+
+RAGAs Reasoning
+
+The context uses the term ‘consider mirror therapy’ rather than ‘offer’, so it does
+not directly support that mirror therapy should be offered to all such people.
+
+Legend
+
+Red: Penalised sentence in the system’s answer.
+
+Table 17: Analysis of Third Worst O4-Mini Faithfulness Score
+
+xxviii
+
+Figure 5: Extract of NG236
+
+F
+
+Changes to RAGAs System Prompts
+
+This appendix details the modifications made to the default system prompts of the RAGAs framework
+metrics. The prompts were tailored to enhance their performance and relevance within the medical
+domain, specifically for querying NICE clinical guidelines. Each table below presents a side-by-side
+comparison of the original prompt and the modified version used in this study, followed by tables
+containing the full original and modified examples.
+
+F.1
+
+Faithfulness Metric
+
+Table 18: Modifications to the faithfulness Metric Prompts
+Original Prompt
+
+Modified Prompt
+Prompt 1: Statement Generation
+
+Given a question and an answer, analyze the
+complexity of each sentence in the answer.
+Break down each sentence into one or more
+fully understandable statements. Ensure that
+no pronouns are used in any statement. Format the outputs in JSON.
+
+Given a medical question and an answer,
+break down the answer into fully understandable statements relevant to clinical guidelines.
+Ensure that no pronouns are used in any statement. Format the outputs in JSON.
+
+Prompt 2: Statement Verification
+Your task is to judge the faithfulness of a series
+of statements based on a given context. For
+each statement you must return verdict as 1
+if the statement can be directly inferred based
+on the context or 0 if the statement can not
+be directly inferred based on the context.
+
+Your task is to judge the faithfulness of a series of statements based on a given medical
+context. For each statement, return verdict
+as 1 if the statement can be directly inferred
+from the context or 0 if the statement cannot
+be directly inferred from the context. Output
+JSON with reasoning.
+
+Table 19: Original Examples for faithfulness Metric
+Statement Generation Example
+Input:
+question: “Who was Albert Einstein and what is he best known for?”
+
+xxix
+
+answer: “He was a German-born theoretical physicist, widely acknowledged to be one of the greatest
+and most influential physicists of all time. He was best known for developing the theory of relativity,
+he also made important contributions to the development of the theory of quantum mechanics.”
+Output:
+statements: [ “Albert Einstein was a German-born theoretical physicist.”, “Albert Einstein is recognized as one of the greatest and most influential physicists of all time.”, “Albert Einstein was best
+known for developing the theory of relativity.”, “Albert Einstein also made important contributions
+to the development of the theory of quantum mechanics.” ]
+
+Statement Verification Example
+Input:
+context: “John is a student at XYZ University. He is pursuing a degree in Computer Science. He is
+enrolled in several courses this semester, including Data Structures, Algorithms, and Database Management. John is a diligent student and spends a significant amount of time studying and completing
+assignments. He often stays late in the library to work on his projects.”
+statements: [ “John is majoring in Biology.”, “John is taking a course on Artificial Intelligence.”,
+“John is a dedicated student.”, “John has a part-time job.” ]
+Output:
+statements: [
+{ “statement”: “John is majoring in Biology.”, “reason”: “John’s major is explicitly mentioned as
+Computer Science. There is no information suggesting he is majoring in Biology.”, “verdict”: 0 },
+{ “statement”: “John is a dedicated student.”, “reason”: “The context states that he spends a
+significant amount of time studying and completing assignments. Additionally, it mentions that he
+often stays late in the library to work on his projects, which implies dedication.”, “verdict”: 1 } ]
+
+Table 20: Modified Examples for faithfulness Metric
+Statement Generation Example
+Input:
+question: “What are risk factors for ADHD?”
+answer: “Children born preterm are at significantly higher risk for developing attention deficit hyperactivity disorder (ADHD) compared to those born at term. Girls may be under-recognised for ADHD
+due to differences in symptom presentation and referral patterns. Family history, especially having a
+close relative diagnosed with ADHD, is considered a major risk factor for developing the disorder.”
+Output:
+statements: [ “Children born preterm are at higher risk for ADHD.”, “Girls may be under-recognised
+for ADHD.”, “Family history is a major risk factor for ADHD.” ]
+
+xxx
+
+Statement Verification Example
+Input:
+context: “Consider antihypertensive drug treatment in addition to lifestyle advice for people aged
+over 80 with stage 1 hypertension if their clinic blood pressure is over 150/90 mmHg. Use clinical
+judgement for people with frailty or multimorbidity.”
+statements: [ “Antihypertensive drug treatment should be considered for people aged over 80 with
+stage 1 hypertension if their clinic blood pressure is over 150/90 mmHg.”, “Antihypertensive drug
+treatment should be considered for people aged over 80 with stage 1 hypertension regardless of blood
+pressure.” ]
+Output:
+statements: [
+{ “statement”: “Antihypertensive drug treatment should be considered for people aged over 80 with
+stage 1 hypertension if their clinic blood pressure is over 150/90 mmHg.”, “reason”: “This statement
+is directly supported by the context.”, “verdict”: 1 },
+{ “statement”: “Antihypertensive drug treatment should be considered for people aged over 80 with
+stage 1 hypertension regardless of blood pressure.”, “reason”: “The context specifies that treatment
+should be considered only if clinic blood pressure is over 150/90 mmHg.”, “verdict”: 0 } ]
+
+F.2
+
+Answer Relevancy Metric
+
+Table 21: Modification to the answer relevancy Metric Prompt
+Original Prompt
+
+Modified Prompt
+
+Generate a question for the given answer and
+Identify if answer is noncommittal. Give noncommittal as 1 if the answer is noncommittal
+and 0 if the answer is committal. A noncommittal answer is one that is evasive, vague, or
+ambiguous. For example, “I don’t know” or
+“I’m not sure” are noncommittal answers.
+
+Given an answer based on NICE clinical
+guidelines, generate a relevant question that
+this answer addresses. Also, identify if the
+answer is noncommittal. Set ‘noncommittal’
+to 1 if the answer is vague, evasive, or ambiguous (e.g., “No relevant NICE guidelines were
+found”), and 0 if the answer is committal.
+
+xxxi
+
+Table 22: Original Examples for answer relevancy Metric
+Example 1 Input:
+response: “Albert Einstein was born in Germany.”
+Example 1 Output:
+question: “Where was Albert Einstein born?”
+noncommittal: 0
+Example 2 Input:
+response: “I don’t know about the groundbreaking feature of the smartphone invented in 2023 as am
+unaware of information beyond 2022.”
+Example 2 Output:
+question: “What was the groundbreaking feature of the smartphone invented in 2023?”
+noncommittal: 1
+
+Table 23: Modified Examples for answer relevancy Metric
+Example 1 Input:
+response: “Offer methylphenidate (either short or long acting) as the first line pharmacological
+treatment for children aged 5 years and over and young people with ADHD.”
+Example 1 Output:
+question: “What is the first-line pharmacological treatment for children aged 5 years and over with
+ADHD?”
+noncommittal: 0
+Example 2 Input:
+response: “No relevant NICE guidelines were found to answer your question.”
+Example 2 Output:
+question: “What is the first-line treatment for hypertension?”
+noncommittal: 1
+
+xxxii
+
+F.3
+
+Context Precision Metric
+
+Table 24: Modification to the context precision Metric Prompt
+Original Prompt
+
+Modified Prompt
+
+Given question, answer and context verify if
+the context was useful in arriving at the given
+answer. Give verdict as “1” if useful and “0”
+if not with json output.
+
+Given question, answer and context verify if
+the context was useful in arriving at the given
+answer. Give verdict as “1” if useful and “0”
+if not with json output.
+
+Table 25: Original Examples for context precision Metric
+Example 1 Input:
+question: “What can you tell me about Albert Einstein?”
+context: “Albert Einstein (14 March 1879 – 18 April 1955) was a German-born theoretical physicist,
+widely held to be one of the greatest and most influential scientists of all time...”
+answer: “Albert Einstein, born on 14 March 1879, was a German-born theoretical physicist, widely
+held to be one of the greatest and most influential scientists of all time. He received the 1921 Nobel
+Prize in Physics for his services to theoretical physics.”
+Example 1 Output:
+reason: “The provided context was indeed useful in arriving at the given answer. The context includes
+key information about Albert Einstein’s life and contributions, which are reflected in the answer.”
+verdict: 1
+Example 2 Input:
+question: “What is the tallest mountain in the world?”
+context: “The Andes is the longest continental mountain range in the world, located in South America...”
+answer: “Mount Everest.”
+Example 2 Output:
+reason: “the provided context discusses the Andes mountain range, which, while impressive, does not
+include Mount Everest or directly relate to the question about the world’s tallest mountain.”
+verdict: 0
+
+Table 26: Modified Examples for context precision Metric
+Example 1 Input:
+question: “How often should children with type 1 diabetes be screened for thyroid disease?”
+
+xxxiii
+
+context: “Offer children and young people with type 1 diabetes monitoring for: • thyroid disease, at
+diagnosis and then annually until transfer to adult services...”
+answer: “Thyroid disease should be screened at diagnosis and then annually until transfer to adult
+services.”
+Example 1 Output:
+reason: “The context directly states the recommended screening frequency for thyroid disease, which
+matches the frequency in the response provided.”
+verdict: 1
+Example 2 Input:
+question: “Is atomoxetine recommended as the first line pharmacological treatment for children aged
+5 years and over with ADHD?”
+context: “Offer methylphenidate (either short or long acting) as the first line pharmacological treatment for children aged 5 years and over and young people with ADHD...”
+answer: “Atomoxetine is recommended as the first line pharmacological treatment for children aged
+5 years and over with ADHD.”
+Example 2 Output:
+reason: “The context recommends methylphenidate as the first line treatment for children aged 5
+years and over with ADHD, not atomoxetine. Therefore, the context does not support the answer
+provided.”
+verdict: 0
+
+xxxiv
+
+F.4
+
+Context Recall Metric
+
+Table 27: Modification to the context recall Metric Prompt
+Original Prompt
+
+Modified Prompt
+
+Given a context, and an answer, analyze each
+sentence in the answer and classify if the sentence can be attributed to the given context or
+not. Use only ‘Yes’ (1) or ‘No’ (0) as a binary
+classification. Output json with reason.
+
+Given a context, and an answer, analyze each
+sentence in the answer and classify if the sentence can be attributed to the given context or
+not. Use only ‘Yes’ (1) or ‘No’ (0) as a binary
+classification. Output json with reason.
+
+Table 28: Original Examples for context recall Metric
+Input:
+question: “What can you tell me about Albert Einstein?”
+context: “Albert Einstein (14 March 1879 - 18 April 1955) was a German-born theoretical physicist...”
+answer: “Albert Einstein born in 14 March 1879 was German-born theoretical physicist, widely held
+to be one of the greatest and most influential scientists of all time. He received the 1921 Nobel Prize
+in Physics for his services to theoretical physics. He published 4 papers in 1905. Einstein moved to
+Switzerland in 1895”
+Output:
+classifications: [
+{ “statement”: “Albert Einstein, born on 14 March 1879, was a German-born theoretical physicist,
+widely held to be one of the greatest and most influential scientists of all time.”, “reason”: “The date
+of birth of Einstein is mentioned clearly in the context.”, “attributed”: 1 },
+{ “statement”: “He published 4 papers in 1905.”, “reason”: “There is no mention about papers he
+wrote in the given context.”, “attributed”: 0 } ]
+
+Table 29: Modified Examples for context recall Metric
+Input:
+question: “What are risk factors for ADHD?”
+context: “People born preterm may have increased prevalence of ADHD compared with the general
+population. ADHD is thought to be under-recognised in girls and women. Universal screening for
+ADHD should not be undertaken in schools.”
+answer: “Children born preterm are at higher risk for ADHD. Girls may be under-recognised for
+ADHD. Family history is a major risk factor for ADHD.”
+Output:
+classifications: [
+
+xxxv
+
+{ “statement”: “Children born preterm are at higher risk for ADHD.”, “reason”: “This statement
+directly matches the first sentence.”, “attributed”: 1 },
+{ “statement”: “Family history is a major risk factor for ADHD.”, “reason”: “There is no mention of
+family history as a risk factor in any sentence in the context.”, “attributed”: 0 } ]
+
+xxxvi
+
+

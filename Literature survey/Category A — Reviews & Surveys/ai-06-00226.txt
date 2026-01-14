@@ -1,0 +1,1616 @@
+             AI
+
+Systematic Review
+
+Retrieval-Augmented Generation (RAG) in Healthcare:
+A Comprehensive Review
+Fnu Neha 1, * , Deepshikha Bhati 1                  and Deepak Kumar Shukla 2
+
+                                         1   Department of Computer Science, Kent State University, Kent, OH 44242, USA; dbhati@kent.edu
+                                         2   Rutgers Business School, Rutgers University, Newark, NJ 07102, USA; ds1640@scarletmail.rutgers.edu
+                                         *   Correspondence: neha@kent.edu
+
+
+                                         Abstract
+                                         Retrieval-Augmented Generation (RAG) enhances large language models (LLMs) by inte-
+                                         grating external knowledge retrieval to improve factual consistency and reduce halluci-
+                                         nations. Despite growing interest, its use in healthcare remains fragmented. This paper
+                                         presents a Systematic Literature Review (SLR) following PRISMA guidelines, synthesiz-
+                                         ing 30 peer-reviewed studies on RAG in clinical domains, focusing on three of its most
+                                         prevalent and promising applications in diagnostic support, electronic health record (EHR)
+                                         summarization, and medical question answering. We synthesize the existing architec-
+                                         tural variants (naïve, advanced, and modular) and examine their deployment across these
+                                         applications. Persistent challenges are identified, including retrieval noise (irrelevant or
+                                         low-quality retrieved information), domain shift (performance degradation when models
+                                         are applied to data distributions different from their training set), generation latency, and
+                                         limited explainability. Evaluation strategies are compared using both standard metrics
+                                         and clinical-specific metrics, FactScore, RadGraph-F1, and MED-F1, which are particularly
+                                         critical for ensuring factual accuracy, medical validity, and clinical relevance. This synthesis
+                                         offers a domain-focused perspective to guide researchers, healthcare providers, and policy-
+                                         makers in developing reliable, interpretable, and clinically aligned AI systems, laying the
+                                         groundwork for future innovation in RAG-based healthcare solutions.
+
+                                         Keywords: Retrieval-Augmented Generation (RAG); large language models (LLMs);
+                                         biomedical natural language processing (NLP); artificial intelligence (AI); medical question
+                                         answering; domain-specific language models; healthcare AI
+Academic Editor: Juraj Gregáň
+
+Received: 11 August 2025
+Revised: 4 September 2025
+Accepted: 9 September 2025
+Published: 11 September 2025
+                                         1. Introduction
+Citation: Neha, F.; Bhati, D.; Shukla,
+                                              Artificial intelligence (AI) plays an increasingly important role in healthcare, support-
+D.K. Retrieval-Augmented Generation      ing tasks such as diagnosis, treatment planning, patient safety, risk prediction, medical
+(RAG) in Healthcare: A Comprehensive     imaging, triage, and clinical documentation. However, as electronic health records (EHRs)
+Review. AI 2025, 6, 226. https://        continue to grow in scale and clinical knowledge expands rapidly, accessing accurate and
+doi.org/10.3390/ai6090226
+                                         up-to-date information at the point of care remains a significant challenge.
+Copyright: © 2025 by the authors.             Recent advances in large language models (LLMs), such as OpenAI’s GPT-4.0, Claude
+Licensee MDPI, Basel, Switzerland.       3, Large Language Model Meta AI (LLaMA) 3, Qwen 2.5, and Gemini 2.0 [1], show im-
+This article is an open access article
+                                         proved reasoning, reduced latency, and multimodal capabilities. While these general-
+distributed under the terms and
+                                         purpose models perform well on standard benchmarks, hallucinations and misalignment
+conditions of the Creative Commons
+Attribution (CC BY) license
+                                         with clinical knowledge remain significant concerns when deployed without domain-
+(https://creativecommons.org/            specific grounding.
+licenses/by/4.0/).
+
+
+
+
+AI 2025, 6, 226                                                                                                   https://doi.org/10.3390/ai6090226
+AI 2025, 6, 226                                                                                            2 of 29
+
+
+
+                        To address these challenges, medical domain-specific LLMs such as Medical Path-
+                  ways Language Model (Med-PaLM) [2] and Biomedical Generative Pretrained Transformer
+                  (BioGPT) [3] have shown improved performance across various clinical natural language
+                  processing (NLP) tasks, including question answering, summarization, entity recogni-
+                  tion, relation extraction, document classification, and literature mining. However, despite
+                  their domain specialization, these models are trained on static datasets and lack access
+                  to real-time or external knowledge sources, which can lead to hallucinations and out-
+                  dated responses [4]. This limitation raises concerns about factual accuracy, reliability, and
+                  traceability in high-stakes clinical applications.
+                        Many LLMs have been fine-tuned on biomedical corpora to enhance domain-specific
+                  comprehension. Variants of Bidirectional Encoder Representations from Transformers
+                  (BERT) [5], such as Biomedical BERT (BioBERT) [6] and ClinicalBERT [7], improve the
+                  contextual understanding of medical terminology. However, these models cannot incor-
+                  porate continuously evolving clinical knowledge, limiting their adaptability in dynamic
+                  healthcare environments.
+                        Introduced in 2020, Retrieval-Augmented Generation (RAG) mitigates these limita-
+                  tions by combining a retriever which accesses external sources such as clinical guidelines
+                  or EHRs with a generator that conditions responses on both the query and retrieved
+                  content [8]. This architecture enables the integration of up-to-date information, enhances
+                  transparency, reduces hallucinations, and produces evidence-grounded outputs, making
+                  RAG well-suited for medical applications.
+                        Despite its advantages, deploying RAG in clinical settings presents challenges, includ-
+                  ing retrieval noise (e.g., surfacing generic content instead of condition-specific guidelines),
+                  domain shift (e.g., mismatched terminology between EHRs and biomedical literature),
+                  inference latency (e.g., delays in generating responses during emergencies), and limited
+                  interpretability (e.g., unclear how retrieved text shapes treatment suggestions) [9]. Addi-
+                  tionally, ethical concerns such as privacy, data security, bias, and regulatory compliance are
+                  also needed to be addressed, alongside continuous validation, governance, and feedback
+                  mechanisms for trustworthy deployment.
+                        While interest in RAG continues to grow, most prior work has focused either on
+                  architectural innovations [10] or on isolated components such as retriever and generator
+                  design [11]. A comprehensive, domain-specific review that integrates both architectural
+                  methodologies and clinical implementations remains lacking. Thus, this paper fills this
+                  gap by providing a Systematic Literature Review (SLR) of RAG techniques applied in
+                  the medical domain. It examines architectural variants, evaluation strategies, practical
+                  deployments, and integration challenges, highlighting their implications for AI-driven
+                  healthcare. The paper concludes with a synthesis of open problems and future directions
+                  for safe, scalable, and effective RAG in the clinical domain. The key contributions of this
+                  paper are as follows:
+                  1.   An overview of the RAG architecture and its advantages over standalone language models.
+                  2.   A survey of RAG applications in healthcare across tasks such as question answering,
+                       summarization, and evidence retrieval.
+                  3.   A review of domain-specific and standard evaluation metrics.
+                  4.   A detailed discussion of challenges, including retrieval instability, generation latency,
+                       domain shift, and limited transparency.
+                  5.   A synthesis of emerging directions such as multimodal retrieval, continual learning,
+                       federated architectures, and clinically aligned evaluation strategies.
+AI 2025, 6, 226                                                                                         3 of 29
+
+
+
+                       The remainder of this paper is structured as follows: Section 2 outlines the research
+                  methodology. Section 3 provides background on NLP, LLMs, and RAG. Section 4 explores
+                  related work. Section 5 discusses RAG-based healthcare applications. Section 6 discusses
+                  evaluation metrics and benchmarks. Section 7 addresses challenges and limitations. Section 8
+                  discusses future research directions, and Section 9 concludes the paper.
+
+                  2. Research Methodology
+                       This review follows a structured methodology to examine the use of RAG in health-
+                  care. It includes searches across databases, the application of inclusion and exclusion
+                  criteria, article screening, and taxonomy-based classification. A comprehensive search
+                  was performed in PubMed, IEEE Xplore, Scopus, Web of Science, Google Scholar, and
+                  ACM Digital Library, covering publications from 2022 to 2025. The search query com-
+                  bined the terms (“Retrieval-Augmented Generation” OR “RAG”) AND (“healthcare”
+                  OR “clinical applications”) AND (“language models” OR “LLMs”) AND ("question
+                  answering” OR “summarization” OR “knowledge grounding”).
+
+                  2.1. Inclusion and Exclusion Criteria
+                       Inclusion:
+                  •    Studies applying RAG or retrieval-augmented LLMs within healthcare domains.
+                  •    Peer-reviewed journal articles, conference proceedings, or high-quality preprints
+                       published in English.
+                  •    Publications presenting empirical results or detailed implementation frameworks.
+                       Exclusion:
+                  •    Studies unrelated to healthcare or not utilizing RAG-based models.
+                  •    Editorials, opinion articles, or conceptual papers lacking experimental validation.
+                  •    Publications limited to abstracts or summaries were excluded, as they lacked sufficient
+                       methodological and experimental detail to allow for a meaningful evaluation of rigor,
+                       reproducibility, and applicability. The exclusion was not due to access restrictions
+                       but because such works were not comprehensive or relevant enough to meet the
+                       established inclusion standards.
+                  •    Publications written in languages other than English.
+
+                  2.2. Data Retrieval and Screening
+                        The initial search yielded 123 records. After removing 46 duplicates, 77 were screened
+                  by title and abstract; 47 were excluded. The remaining 30 underwent full-text review. All 30
+                  were included, as two reviewers independently screened full texts, with conflicts resolved
+                  by consensus. This review was conducted in accordance with the Preferred Reporting Items
+                  for Systematic Reviews and Meta-Analyses (PRISMA) 2020 guidelines. Figure 1 shows the
+                  PRISMA-based selection flow. This review is prospectively registered in the Open Science
+                  Framework (OSF) registries under the identifier: https://doi.org/10.17605/OSF.IO/DXK6F
+                  (accessed on 10 August 2025).
+AI 2025, 6, 226                                                                                                      4 of 29
+
+
+
+
+                  Figure 1. PRISMA-style flow diagram of study selection process.
+
+                  2.3. Taxonomy Development
+                      A taxonomy was constructed to categorize the selected studies by their primary
+                  application domains as shown in Table 1.
+
+                  Table 1. Taxonomy of RAG applications in healthcare.
+
+                   No.   Category                                        Description
+
+                                                                         Broad applications of RAG for tasks like clinical
+                    1    General Clinical Applications of RAG
+                                                                         summarization, decision support, and guidelines.
+
+                                                                         Conversational agents enhanced by retrieval for
+                    2    RAG Chatbots for Patient Interaction
+                                                                         providing personalized medical advice.
+
+                                                                         RAG frameworks tailored for domains such as
+                    3    Specialty-Focused RAG Models                    cardiology, nephrology, or oncology using
+                                                                         specialty-specific knowledge bases.
+
+                                                                         Integration of RAG with biosignals like ECG,
+                    4    RAG for Signal and Time-Series Tasks            EEG, or wearable data for diagnostic
+                                                                         interpretation.
+
+                                                                         Use of structured clinical ontologies or
+                         Graph-Based and Ontology-Aware
+                    5                                                    knowledge graphs for enhanced retrieval and
+                         RAG Frameworks
+                                                                         explainability.
+
+                                                                         Incorporation of privacy-preserving,
+                    6    RAG with Blockchain and Secure Architectures    decentralized data retrieval using
+                                                                         blockchain-enhanced architectures.
+
+                                                                         RAG systems designed for image-report
+                    7    Radiology-Specific Retrieval-Augmented QA       alignment, report generation, and visual question
+                                                                         answering in radiology.
+AI 2025, 6, 226                                                                                           5 of 29
+
+
+
+                  2.4. Research Objectives (RO)
+                       This review is guided by the following objectives:
+                  •    RO1: To assess the effectiveness of RAG in supporting clinical workflows and enhanc-
+                       ing interpretability.
+                  •    RO2: To identify key gaps in current literature and propose directions for future RAG
+                       research that align with clinical needs, safety, and explainability.
+
+                  3. Background and Fundamentals
+                        Early NLP systems in healthcare were rule based, relying on symbolic logic, pattern
+                  matching, and expert-defined ontologies for tasks such as symptom triage, medical coding,
+                  and information extraction [12]. Although effective in narrow, controlled environments,
+                  these systems struggled with ambiguous or context-dependent language and were highly
+                  sensitive to variations in clinical documentation. Moreover, these lacked scalability across
+                  institutions and medical specialties.
+                        The advent of machine learning (ML) introduced statistical models that improved
+                  adaptability and performance. However, these models required structured inputs and exten-
+                  sive manual feature engineering to extract meaningful signals from clinical text [13]. Deep
+                  learning further advanced the field by enabling end-to-end processing of unstructured data,
+                  with early implementations using recurrent neural networks (RNNs) and Long Short-Term
+                  Memory (LSTM) networks [14]. Despite these improvements, these architectures struggled
+                  with long-range dependencies and parallel computation.
+                        Transformers, introduced by Vaswani et al. in the 2017 paper “Attention is All You
+                  Need” [15], addressed the limitations of earlier architectures by introducing a self-attention
+                  (SA) mechanism capable of modeling both local and global dependencies within a sequence.
+                  SA enables the model to weigh the relevance of each token relative to others, allowing
+                  it to focus on contextually important information regardless of position. To enhance
+                  representational capacity, Transformers employ multi-head attention, which runs multiple
+                  attention operations in parallel. Each head captures different relationships or dependencies,
+                  and the outputs are concatenated and linearly transformed. This parallel structure improves
+                  scalability, enables efficient parallel computation, and strengthens the model’s ability to
+                  capture long-range context.
+                        LLMs are built on transformer architectures and pretrained using self-supervised
+                  objectives such as masked language modeling (MLM) or causal language modeling
+                  (CLM) [16]. MLM (used in BERT-like models) involves masking random tokens in the
+                  input and training the model to predict them based on the surrounding context. In contrast,
+                  CLM (used in GPT-like models) trains the model to predict the next token in a sequence,
+                  relying on prior context in an autoregressive manner.
+                        When pretrained on large-scale biomedical corpora such as the medical information
+                  mart for intensive care (MIMIC)-III clinical data [17] or medical literature, LLMs acquire
+                  domain-specific language understanding. Biomedical models like BioGPT, optimized
+                  for literature-based question answering, and ClinicalT5 [18], pretrained on discharge
+                  summaries, have shown strong performance on tasks including named entity recognition,
+                  question answering, document classification, and summarization.
+                        Despite their capabilities, LLMs encode knowledge implicitly within their parameters,
+                  making it difficult to update or verify information post-training.
+
+                  3.1. Retrieval-Augmented Generation: Foundations
+                       Retrieval-Augmented Generation (RAG) mitigates key limitations of standalone LLMs
+                  by integrating non-parametric external memory through a retriever module for enhancing
+                  factual grounding. It improves knowledge coverage and enables the dynamic integration
+AI 2025, 6, 226                                                                                            6 of 29
+
+
+
+                  of evolving clinical content. A RAG system consists of two main components: a retriever R
+                  that identifies relevant documents from a corpus D , and a generator G that conditions on
+                  both the input query and the retrieved context to produce the output.
+                       Given a query x, the retriever selects the top-k documents {d1 , . . . , dk } ⊂ D using a
+                  similarity function, defined as
+
+                                                    sim( x, di ) = f q ( x )⊤ f d (di )                       (1)
+
+                  where f q and f d are neural encoders for the query and documents, respectively. Similarity
+                  is computed using the dot product or cosine similarity in a shared embedding space.
+                       The generator produces output y by estimating the conditional probability over possi-
+                  ble responses:
+                                                                k
+                                              P(y | x ) = ∑ P(di | x ) · P(y | x, di )                        (2)
+                                                            i =1
+
+                       Here, P(di | x ) can be derived from normalized similarity scores or treated uniformly
+                  in top-k retrieval. The final output can be generated either by marginalizing across retrieved
+                  documents or by concatenating them as a single input:
+
+                                               y = arg max P(y′ | x, {d1 , . . . , dk })                      (3)
+                                                           y′
+
+
+                       RAG retriever operates in one of two modes:
+                  •    Sparse Retrieval: This approach relies on lexical overlap between the query and doc-
+                       uments. Common methods include Term Frequency-Inverse Document Frequency
+                       (TF-IDF) [19] and BM25 [20]. TF-IDF assigns higher importance to terms that appear
+                       frequently in a document but rarely across the corpus, while BM25 improves upon
+                       TF-IDF by incorporating term frequency saturation and document length normaliza-
+                       tion. Sparse retrievers are fast, interpretable, and require no training. However, they
+                       struggle to capture semantic similarity and are sensitive to lexical variations. It is
+                       an important limitation in the medical domain, where abbreviations, synonyms, and
+                       varied terminology are frequent.
+                  •    Dense Retrieval: Unlike sparse retrieval, dense retrievers use neural encoders to map
+                       both queries and documents into a shared embedding space, enabling semantic simi-
+                       larity matching. These models are typically trained on large datasets using contrastive
+                       learning objectives, allowing them to capture meaning beyond exact word overlap.
+                       Popular dense retrievers include dense passage retrieval (DPR) [21]. In clinical set-
+                       tings, dense retrieval is useful for handling synonyms, abbreviations, and contextually
+                       rich queries. However, dense retrievers are more computationally expensive, require
+                       training data, and can be less interpretable than their sparse counterparts.
+                       The comparative characteristics of sparse and dense retrieval methods are summarized
+                  in Table 2, which highlights trade-offs in efficiency, scalability, and contextual sensitivity.
+                       As shown in Table 2, sparse retrieval methods such as TF-IDF and BM25 are computa-
+                  tionally efficient and interpretable, making them suitable for structured queries. However,
+                  their reliance on lexical overlap limits performance in healthcare, where abbreviations and
+                  synonyms are common. Dense retrieval, though resource intensive, enables context-aware
+                  matching, which is particularly valuable in clinical decision support.
+                       To further differentiate retrieval approaches, Table 3 contrasts sparse retrieval with
+                  dense retrieval, emphasizing their implications for healthcare text where semantic similarity
+                  and terminological variation are critical.
+                       Table 3 underscores that dense retrieval provides superior semantic alignment, while
+                  sparse methods remain advantageous for speed and interpretability. This suggests hy-
+AI 2025, 6, 226                                                                                                    7 of 29
+
+
+
+                        brid retrieval as a practical compromise in medical contexts, balancing accuracy with
+                        latency constraints.
+
+                        Table 2. Comparison of Retrieval Strategies.
+
+ Key Points              TF-IDF                           BM25                            DPR
+ Type                    Sparse (lexical)                 Sparse (lexical)                Dense (neural)
+                                                          Probabilistic scoring with      Bi-encoder with
+ Retrieval Method        Term frequency weighting
+                                                          term normalization              semantic embeddings
+                                                                                          Dot product or
+ Similarity Metric       Cosine similarity                BM25 score
+                                                                                          cosine similarity
+ Training Requirement    None                             None                            Supervised (Q-A pairs)
+ Context Sensitivity     Low                              Moderate                        High
+ Efficiency              Fast                             Fast                            Moderate (GPU preferred)
+ Scalability             High                             High                            Moderate
+ Memory Usage            Low                              Low                             High
+                                                          Improved over TF-IDF            Context-aware
+ Output Quality          Lexical match only
+                                                          via ranking                     semantic relevance
+ Typical Use Cases       Baseline IR, filtering           Search engines, ranking tasks   RAG, QA, chatbots
+ Dependencies            Bag-of-words model               Bag-of-words + heuristics       Pretrained LLMs (e.g., BERT)
+
+
+                             Generator models such as Text-to-Text Transfer Transformer (T5) [22], GPT, and
+                        BioGPT are adapted to receive both the input x and retrieved documents di through
+                        input concatenation or cross-attention mechanisms within the transformer decoder. These
+                        models are trained using maximum likelihood estimation (MLE) to predict the next to-
+                        ken given the input and context, or via reinforcement learning with human feedback
+                        (RLHF) to optimize for attributes such as factuality, readability, or clinical alignment. RAG
+                        frameworks enable grounded generation by aligning internal parametric knowledge with
+                        external, dynamically retrieved evidence.
+
+                        Table 3. Comparison of sparse vs. dense retrieval.
+
+                         Key Points                       Sparse Retrieval                Dense Retrieval
+                         Retrieval Mechanism              Lexical token overlap           Learned embedding similarity
+                                                                                          Neural embeddings
+                         Input Representation             Bag-of-Words (BoW) vectors
+                                                                                          (contextual)
+                                                                                          Dot product or
+                         Similarity Metric                BM25, TF-IDF (exact match)
+                                                                                          cosine similarity
+                         Training Requirement             No training needed              Requires supervised training
+                                                                                          Slower (approximate nearest
+                         Speed                            Fast (index lookup)
+                                                                                          neighbor search)
+                                                          Low (sensitive to               High (captures
+                         Semantic Matching
+                                                          term variation)                 semantic context)
+                                                                                          High (due to large
+                         Memory Usage                     Low (compact index)
+                                                                                          vector storage)
+                                                          High (term-level match
+                         Interpretability                                                 Low (black-box embeddings)
+                                                          explanation)
+                         Common Tools                     BM25, TF-IDF, Elasticsearch     DPR
+                                                          Useful for structured queries   Effective for unstructured
+                         Suitability for Healthcare
+                                                          and known terminology           clinical text and synonyms
+AI 2025, 6, 226                                                                                            8 of 29
+
+
+
+                  3.2. RAG Variants
+                        Several variants of RAG have advanced to balance the trade-offs between training
+                  complexity, adaptability, and retrieval quality. These variants differ in how the retriever and
+                  generator interact, whether learning is coupled or decoupled, and how external knowledge
+                  is integrated into the generative process. The three major RAG variants considered in this
+                  review are naïve, advanced, and modular RAG.
+                        Naïve RAG employs a fixed, non-trainable retriever based on sparse methods (like
+                  TF-IDF or BM25) and a frozen LLM [10]. As illustrated in Figure 2, the pipeline begins with
+                  a user query, which is used to retrieve relevant documents from a pre-indexed corpus. The
+                  top-k retrieved passages are concatenated with the query to form an input prompt, which is
+                  passed to the frozen LLM. The model generates a response without receiving any feedback
+                  to improve the retriever, making the system static and suboptimal.
+                        This approach is simple but suffers from limitations at multiple stages. It retrieves
+                  irrelevant or redundant content, struggles to synthesize fragmented information across
+                  documents, and generates responses that are unverified by the retrieved evidence due to a
+                  lack of explicit alignment between retrieval and generation.
+
+
+                           User Query                     Documents
+
+
+
+
+                  Retrieval (TF-IDF or BM25)               Indexing
+
+
+
+
+                     Prompt → Frozen LLM                     Output
+
+
+                  Figure 2. Naive RAG architecture.
+
+                        Advanced RAG (as illustrated in Figure 3) addresses the limitations of naïve RAG
+                  through a three-stage pipeline: pre-retrieval, retrieval, and post-retrieval enhancements [10].
+                  The process begins with a user query and an indexed document corpus. During the pre-
+                  retrieval phase, query routing, rewriting, and expansion techniques improve the retrieval
+                  quality by refining the input.
+                        In the retrieval phase, semantically encoded queries are matched with indexed doc-
+                  ument chunks using fine-tuned embedding models and task-aligned similarity metrics
+                  (e.g., cosine similarity and dot product). Advanced strategies like hybrid retrieval (com-
+                  bining sparse and dense approaches) and prompt-adaptive conditioning further improve
+                  relevance.
+                        Following retrieval, the post-retrieval module filters, reranks, and compresses the re-
+                  trieved chunks. Redundant or noisy results are removed using reranking or summarization
+                  techniques, ensuring only the most pertinent context reaches the frozen LLM for response
+                  generation. Despite no backpropagation to the retriever, this architecture significantly
+                  enhances factuality, semantic alignment, and clinical reliability over naïve approaches.
+                        Modular RAG extends the capabilities of advanced RAG by decomposing the archi-
+                  tecture into independently configurable modules [23]. Unlike Naïve or Advanced RAG,
+                  Modular RAG separates the training of the retriever and generator. The retriever, a dense
+                  dual encoder, is trained using contrastive loss, and the generator is fine-tuned indepen-
+AI 2025, 6, 226                                                                                             9 of 29
+
+
+
+                  dently on top-k retrieved documents using maximum likelihood estimation. Although this
+                  improves modularity and flexibility, it limits retrieval adaptation during generation.
+
+
+                           User Query                        Documents
+
+
+
+                   Pre-Retrieval
+                   • Query Routing                             Indexing
+                   • Query Rewriting
+                   • Query Expansion
+
+
+
+
+                            Retrieval
+
+
+
+                   Post-Retrieval
+                   • Rerank
+                   • Summary
+                   • Fusion
+
+
+
+                   Prompt → Frozen LLM                            Output
+
+                  Figure 3. Advanced RAG architecture.
+
+                        The architecture (see Figure 4) supports a variety of modules that can be selectively
+                  included or reconfigured to suit task-specific needs. These include the following: (1) a
+                  Search module that supplements retrieval with additional sources like web results or
+                  structured knowledge graphs; (2) a Memory module that maintains context from prior
+                  interactions, facilitating continuity in dialogue or multi-turn applications; and (3) Routing,
+                  which directs queries to the most suitable operations such as summarization or entity
+                  extraction. Modules like Rewrite refine queries before retrieval, while Rerank ensures
+                  relevant results are prioritized, and Fusion combines outputs from multiple retrieval
+                  pathways to improve contextual alignment and reduce noise.
+                        By enabling fine-grained control and extensibility, Modular RAG supports experi-
+                  mentation with novel retrieval strategies, integration of domain-specific knowledge, and
+                  adaptation of architectures for clinical, scientific, and enterprise use cases. It provides a
+                  unifying paradigm under which designs such as Naïve RAG, Advanced RAG, and iterative
+                  retrieval-generation loops can be interpreted as specialized module configurations.
+                        While all three RAG architectures (naïve, advanced, and modular) offer unique ben-
+                  efits, their suitability for clinical deployment differs. Naïve RAG, though simple and
+                  efficient, lacks robustness against retrieval noise and is unsuitable for high-stakes scenarios.
+                  Advanced RAG shows promise in diagnostic support and EHR summarization due to
+                  hybrid retrieval and reranking strategies, striking a balance between factual grounding
+                  and latency. However, its complexity hinders deployment in resource-constrained settings.
+                  Modular RAG provides the most flexibility and transparency, allowing the fine-grained
+AI 2025, 6, 226                                                                                                                 10 of 29
+
+
+
+                               customization and integration of clinical ontologies or knowledge graphs, but its mod-
+                               ular training and higher computational costs remain barriers to near-term deployment.
+                               Based on the current literature, Advanced RAG appears most ready for pilot clinical use,
+                               while Modular RAG holds long-term potential for scalable and production-grade systems,
+                               particularly once infrastructure and continual learning pipelines mature.
+
+
+                                                                          Memory
+
+                                                                            Read
+                                Modules
+
+
+
+                                             Fusion        Re-rank          RAG             Re-write Demonstrate
+
+                                                                          Retrieve
+
+                                             Predict                       Search                          Routing
+
+
+
+
+                                            Retrieve          Re-write           Demonstrate            Retrieve
+                                Patterns
+
+
+
+
+                                              Read            Retrieve                Search               Read
+
+
+
+                                                              Re-rank                Predict            Retrieve
+
+
+
+                                                                Read                                       Read
+
+                               Figure 4. Modular RAG Architecture.
+
+                                           Table 4 provides a comparison of naïve, advanced, and modular RAG architectures.
+
+                               Table 4. Comparison of naïve, advanced, and modular RAG architectures
+
+ Keypoints                 Naïve RAG                            Advanced RAG                       Modular RAG
+                                                                Three-stage pipeline:
+                           Simple two-stage pipeline:                                              Fully decomposed pipeline with
+ Architecture                                                   pre-retrieval, retrieval,
+                           retrieval + generation                                                  plug-and-play components
+                                                                post-retrieval
+                                                                Query rewriting, expansion, or     Modular query handling with
+ Query Processing          Uses raw user query
+                                                                routing applied before retrieval   flexible preprocessing units
+                                                                Hybrid retrievers combining        Modular and replaceable
+ Retriever Type            Dense retrievers (e.g., DPR)         dense + sparse                     retrievers (dense, sparse,
+                                                                (e.g., BM25 + dense)               hybrid, trainable)
+                                                                                                   Dedicated modules for
+                                                                Reranking, summarization, and
+ Post-Retrieval Handling   No reranking or filtering                                               reranking, deduplication,
+                                                                filtering of retrieved chunks
+                                                                                                   and compression
+AI 2025, 6, 226                                                                                                             11 of 29
+
+
+
+                                  Table 4. Cont.
+
+ Keypoints               Naïve RAG                          Advanced RAG                       Modular RAG
+                                                            Frozen LLM with
+                         Frozen LLM processes retrieved                                        Swappable LLM head (frozen,
+ LLM Role                                                   prompt-adaptive
+                         documents directly                                                    fine-tuned, adapter-based)
+                                                            input conditioning
+                                                                                               Independent or joint training of
+                         No training of retriever           Retriever may be fine-tuned;
+ Training Flexibility                                                                          all modules (retriever,
+                         or generator                       generator remains frozen
+                                                                                               reranker, generator)
+                         Low interpretability;              Some transparency with             High transparency; traceable
+ Transparency            retrieval-to-generation is         reranking scores                   intermediate outputs for
+                         a black box                        or summarization                   each module
+                                                                                               Production-ready systems,
+                         Basic Q&A and document             High-stakes applications like
+ Use Case Suitability                                                                          customizable deployments, and
+                         retrieval tasks                    medical QA, EHR summarization
+                                                                                               MLOps integration
+                                                            Moderate to high depending on      Configurable latency depending
+ Latency                 Low due to fewer stages
+                                                            pre/post-processing complexity     on module choices
+                                                            Moderate                           Full customization at
+ Customization           Minimal
+                                                            pipeline-level customization       component level
+
+
+                                       Furthermore, RAG systems can also be classified based on their scope: (1) open-domain
+                                  RAG and (2) domain-specific RAG.
+                                       Open-domain RAG retrieves information from broad, general-purpose corpora such
+                                  as Wikipedia or web-scale datasets. Foundational architectures, including REALM [24],
+                                  Atlas [25], and RETRO [26], fall into this category. These models differ in how retrieval
+                                  is integrated: REALM emphasizes retriever pretraining with latent supervision; Atlas
+                                  updates the retriever during fine-tuning; and RETRO performs chunk-level retrieval with
+                                  local memory compression. While open-domain RAG enables wide coverage and strong
+                                  generalization, it lacks the precision and factual reliability required in specialized domains
+                                  such as healthcare.
+                                       Domain-specific RAG, by contrast, restricts retrieval to curated biomedical sources,
+                                  enhancing factual grounding, terminological accuracy, and trustworthiness. Models such as
+                                  MedRAG [27], BioRAG [28], and ClinicalGPT [29] exemplify this approach. These systems
+                                  use biomedical embeddings (e.g., BioBERT, PubMedBERT [30]), specialized corpora (e.g.,
+                                  PubMed abstracts and clinical notes), and domain-specific knowledge bases (e.g., unified
+                                  medical language system (UMLS), MIMIC). By customizing retrieval and generation to
+                                  medical language, they enable reliable performance in tasks such as diagnostic decision
+                                  support, clinical report summarization, patient-specific question answering, and medical
+                                  dialogue generation.
+                                       A comparative overview of RAG variants is provided in Table 5.
+
+                                  Table 5. Comparison of RAG variants.
+
+ RAG Variant      Training Strategy                     Retriever Type                       Advantages/Limitations
+                                                                                             Simple; fast; no task alignment;
+ Naïve            No training; static retrieval         Sparse (e.g., TF-IDF)
+                                                                                             poor factual grounding
+                                                                                             Modular, scalable; lacks feedback
+ Modular          Independent training of R and G       Dense dual encoders (e.g., DPR)
+                                                                                             from generator
+                                                        Hybrid (dense + sparse),             Factual, dynamic, and adaptable;
+ Advanced         Joint + feedback loops
+                                                        knowledge-enhanced                   complex to implement
+AI 2025, 6, 226                                                                                                       12 of 29
+
+
+
+                              Table 5. Cont.
+
+ RAG Variant       Training Strategy                  Retriever Type                     Advantages/Limitations
+                                                                                         Broad scope; risks hallucination
+ Open-domain       Pretrained on general corpora      Generic (e.g., Wikipedia)
+                                                                                         and low domain relevance
+                                                                                         High clinical accuracy; limited
+ Domain-specific   Tuned on medical corpora           Biomedical (e.g., PubMed, MIMIC)
+                                                                                         generalization outside domain
+
+
+                              4. Related Work
+                                   In recent years, research on the application of RAG-based LLMs in healthcare has
+                              grown substantially. To provide a structured understanding, this section organizes the
+                              related work into seven thematic areas: (1) general clinical support systems, (2) chatbots
+                              for patient interaction, (3) specialty-specific implementations, (4) signal and time-series
+                              analysis, (5) graph and ontology-enhanced RAG architectures, (6) privacy-preserving
+                              and secure RAG systems, and (7) radiology-focused RAG applications. Each subsec-
+                              tion synthesizes representative studies, highlighting methodologies, key findings, and
+                              identified limitations.
+
+                              4.1. General Clinical Applications of RAG
+                                    RAG-enhanced LLMs have been applied to general medical reasoning, discharge
+                              planning, and infectious disease support. These systems show effectiveness in outpatient
+                              care, triage, and nursing workflows by delivering accurate, context-aware responses that
+                              reduce clinician burden.
+                                    Kirubakaran et al. propose a RAG-based medical assistant for infectious disease
+                              support, integrating quantized LLMs, knowledge graphs, and speech synthesis [31]. The
+                              system utilizes graph databases for efficient context retrieval, XTTS (an open-source cross-
+                              lingual text-to-speech engine) for multilingual voice cloning, and combines naïve RAG,
+                              auto-merging, and ensemble retrievers to generate accurate responses. While effective in
+                              delivering COVID-19-related support, the system faces challenges related to multilingual
+                              scalability, real-time knowledge updates, and generating empathetic feedback.
+                                    Upadhyay et al. introduce a three-stage RAG-based model for health information
+                              retrieval that integrates PubMed-based passage extraction, LLM-generated text (GenText),
+                              and a dual scoring mechanism based on topical relevance (BM25) and factual accuracy (via
+                              stance detection and semantic similarity) [32]. The model outperforms existing baselines,
+                              particularly when using LLaMA, and improves explainability through citation-rich outputs
+                              that help users trace sources. However, limitations include dependence on general-purpose
+                              LLMs, approximate factuality assessment, and the risk of automation bias.
+                                    Yang et al. propose a lightweight RAG-based personalized discharge care system en-
+                              hanced with a memory mechanism to support neurological patients post-hospitalization [33].
+                              The system integrates long-term, short-term, and dynamic memory modules to personalize
+                              responses and employs prompt engineering alongside a custom vector database for efficient
+                              retrieval. Both GPT-4 and LLaMA 3 models were evaluated, with GPT-4 demonstrating
+                              superior performance; however, both benefited from memory-augmented RAG integration.
+                              The system is designed for scalability through vector and non-relational database architec-
+                              tures. However, limitations include evaluation bias, small-scale testing, lack of real-time
+                              clinical deployment, and the absence of robust alerting functionality.
+                                    Hammane et al. introduce a medical reasoning framework that enhances RAG
+                              with a self-evaluation mechanism to improve answer accuracy and clinical trustworthi-
+                              ness [34]. The system integrates external medical knowledge via retrieval, employs a policy
+                              model to generate candidate responses, and applies a reward model for automatic scoring
+AI 2025, 6, 226                                                                                         13 of 29
+
+
+
+                  and reranking. The key strengths include automated feedback and support for multi-stage
+                  reasoning. However, limitations remain in clinical validation, dependence on synthetic
+                  reward signals, and restricted evaluation beyond multiple-choice datasets.
+                       Xu et al. evaluate a RAG-enhanced GPT system for breast cancer nursing care, show-
+                  ing improved response accuracy and nurse satisfaction compared to direct GPT outputs,
+                  while maintaining an empathetic tone [35]. Using 15 randomized questions, senior nurses
+                  assessed responses across key qualitative metrics. However, the study is limited by the
+                  absence of patient validation, narrow data scope, lack of real-world deployment, and
+                  insufficient theoretical grounding for the observed performance gains.
+                       Hsu et al. present a two-stage RAG-based system combining LLMs with clinical
+                  guidelines [36]. Unlike single-pass models, it first generates assessments from subjective
+                  and objective inputs, then produces personalized treatment plans using patient history and
+                  cross-patient data. Evaluation on real EHR data shows improved accuracy and relevance
+                  over baselines. However, the model’s hospital-specific training limits generalizability, and
+                  it remains susceptible to LLM biases.
+                       Aminan et al. introduce a glaucoma-specific RAG system using GPT-4.5 and a custom
+                  retrieval-response framework for diagnostic support [37]. It is built on curated clinical
+                  sources, and it outperforms GPT-4.5 and DeepSeek-R1 [1] in accuracy and relevance.
+                  However, its limitations include a lack of image input, retrieval noise, and a static knowl-
+                  edge base.
+                       Thompson et al. propose a zero-shot phenotyping method using LLMs with retrieval-
+                  augmented generation (RAG) and MapReduce, which handles the large number of clinical
+                  text snippets retrieved via regular expressions, to identify diseases such as pulmonary
+                  hypertension from clinical notes [38]. Regular expression-based retrieval extracts relevant
+                  snippets, which are processed in parallel by an LLM, and the results are aggregated using
+                  max voting or prompting. The model outperforms rule-based baselines and generalizes
+                  across diverse note types. Its strengths include scalability and reduced manual effort, while
+                  limitations involve reliance on handcrafted regex rules, the use of a single LLM, and the
+                  lack of integration with structured EHR data.
+                       Benfenati et al. propose a RAG-based question-answering (QA) framework for nu-
+                  trigenetics that combines general-purpose text embeddings, a vector database, and LLMs
+                  to enhance answer relevance without requiring model retraining [39]. The system uses
+                  curated abstracts for retrieval based on cosine similarity and augments prompts to improve
+                  accuracy and specificity. Evaluated on domain-specific questions, the RAG approach out-
+                  performs standard LLMs in terms of relevance, depth, and evidence support. However,
+                  limitations include dependence on abstracts, the use of static context, and lack of support
+                  for multimodal data.
+                       Ziletti et al. present a retrieval-augmented text-to-SQL framework for epidemiological
+                  QA using EHR and claims data [40]. It integrates medical coding and domain-specific RAG
+                  to improve SQL generation accuracy. Evaluated on a curated dataset across multiple LLMs,
+                  the method outperforms static prompting, with GPT-4 leading. While effective, limitations
+                  include a small dataset size, narrow focus, and modest overall performance, indicating a
+                  need for broader datasets and more robust models.
+                       Pyae et al. present a RAG-based system for personalized fitness and dietary guid-
+                  ance using wearable data and a curated knowledge base [41]. It integrates LLMs with
+                  voice and text interfaces. The system performs well in relevance and memory but lags in
+                  faithfulness due to hallucinations and limited data scope. Key gaps include weak voice
+                  recognition in noisy settings, lack of dynamic knowledge updates, and retrieval inaccuracy
+                  for complex queries.
+AI 2025, 6, 226                                                                                          14 of 29
+
+
+
+                       Cheetirala et al. propose a RAG-based method for classifying surgical complications
+                  by selecting the most relevant 4000 tokens from clinical notes, reducing computational
+                  cost without compromising accuracy [42]. The study compares standalone LLMs using
+                  RAG-based retrieval versus full-text ingestion, reporting comparable evaluation scores.
+                  Notably, token usage and inference costs were reduced by over 90% with RAG. While the
+                  approach is effective and scalable, limitations include static retrieval, a narrow task focus,
+                  and the absence of advanced retrieval techniques.
+
+                  4.2. RAG Chatbots for Patient Interaction
+                        RAG-based chatbots offer scalable solutions for patient self-management, pre-consult
+                  triage, and mental health screening, especially beneficial in telemedicine, rural care, and
+                  low-resource settings where clinician availability is limited.
+                        Kulshreshtha et al. propose a RAG-based medical chatbot using standalone LLMs
+                  (LLaMa, LangChain, and BERT) to improve healthcare accessibility [43]. It uses context-
+                  aware embeddings, Faiss for retrieval, and LLM guard for Health Insurance Portability and
+                  Accountability Act (HIPAA) / general data protection regulation (GDPR) compliance. The
+                  methodology includes tokenization, retrieval, beam search, and post-processing for accu-
+                  rate, private responses. While effective in clinical support, there are gaps in multilingual
+                  support, bias reduction, and speech integration.
+                        Shafi et al. present LLM-Therapist, a multimodal healthcare assistant combining RAG
+                  and real-time function calling for personalized behavioral support [44]. It uses patient data,
+                  vector-based semantic search, and GPT-3.5 with ChromaDB (open-source vector database)
+                  to generate context-aware responses. The key strengths include its hybrid architecture, use
+                  of function calling for real-time data, and domain-specific fine-tuning. However, it lacks
+                  large-scale clinical validation, benchmarking with other systems, and analysis of privacy,
+                  security, and deployment scalability.
+                        Sree et al. introduce a RAG-based LLM chatbot for physical and mental healthcare,
+                  integrating external data sources to enhance diagnostic support and personalization [45]. It
+                  employs agents and modular tools for domain-specific retrieval and semantic understand-
+                  ing, using indexing and embedding-based search to generate real-time, relevant outputs.
+                  Evaluation shows improved latency, token efficiency, and user satisfaction. However, it
+                  lacks clinical validation, deployment benchmarks, error analysis, and considerations of
+                  privacy, data governance, and ethics, limiting practical applicability.
+                        Sinha et al. propose a RAG-based chatbot for medical triage that integrates LLMs with
+                  vector embeddings and a retrieval system to generate efficient, context-aware responses [46].
+                  The system achieves an average response time of 28 s and shows moderate performance
+                  on standard language generation metrics. It improves upon traditional chatbots through
+                  dynamic learning, voice input, and context retention. However, it lacks multi-turn robust-
+                  ness and has not been benchmarked against commercial or baseline systems, limiting its
+                  real-world applicability.
+                        Nayinzira et al. introduce a mental health chatbot combining RAG and sentiment
+                  analysis [47]. Using a public counseling dataset, it evaluates Naive RAG, Multi-query RAG,
+                  and document embeddings with LLMs (GPT and Mistral). Results show sentiment analysis
+                  improves performance, especially with Multi-query RAG and Mistral but increases latency
+                  and token use. Its key limitations are token limits and a lack of clinical data.
+                        Shin et al. present a RAG-based chatbot for thyroid disease management that integrates
+                  ChatGPT-4o with a vector database built from guidelines and textbooks [48]. It produced
+                  more accurate, safe, and clinically applicable responses to patient-specific queries with
+                  fewer hallucinations as compared to standalone LLMs. However, its limitations include a
+                  small evaluator group and the absence of an ablation study.
+AI 2025, 6, 226                                                                                         15 of 29
+
+
+
+                  4.3. Specialty-Focused RAG Models
+                       RAG-based models show promise in specialty decision support, patient-specific edu-
+                  cation, and knowledge reinforcement in clinical subspecialties, making them suitable for
+                  many healthcare departmental deployment cases.
+                       Miao et al. explores integrating RAG with LLMs to improve accuracy in nephrol-
+                  ogy [49]. It shows how a GPT-4-based system, aligned with KDIGO (Kidney Disease:
+                  Improving Global Outcomes) guidelines, outperforms standard GPT-4 by reducing halluci-
+                  nations and enhancing clinical relevance. The methodology involves building a chronic
+                  kidney disease specific knowledge base, API integration, and fine-tuning. Applications in-
+                  clude decision support, medical education, and multidisciplinary care. However, the work
+                  is conceptual, lacks clinical validation, and depends on data quality and retrieval accuracy.
+                       Ge et al. developed a liver disease-specific LLM using RAG within a Protected Health
+                  Information (PHI)-compliant system [50]. They embedded 30 guidelines from the American
+                  Association for the Study of Liver Diseases (AASLD) using a text-embedding model and
+                  stored them in a vector database. User queries were embedded in real time, matched to the
+                  database, and processed by GPT-based LLMs. The model provided more specific answers
+                  than ChatGPT and correctly answered all benchmark questions, though some justifications
+                  were incomplete due to limited sources and contextual bias.
+                       Long et al. present a domain-specific LLM designed for otolaryngology–head and
+                  neck surgery using Retrieval-Augmented Language Modeling [51]. By building a curated
+                  knowledge base and applying text-embedding for semantic search, the system augments
+                  queries with relevant domain content before passing them to ChatGPT. Evaluated on
+                  Canadian and US board-style questions, the model outperformed ChatGPT in validity,
+                  safety, and competency. However, gaps remain in coverage for areas like pediatrics and
+                  basic science.
+
+                  4.4. RAG for Signal and Time-Series Tasks
+                        RAG models using time-series data enhance diagnostic accuracy by integrating struc-
+                  tured physiological signals into prompts. These systems support cardiology and pain
+                  management settings by aligning patient-generated data with clinical guidelines, enabling
+                  more personalized and guideline-consistent care.
+                        Yu et al. propose a zero-shot retrieval-augmented LLM framework for ECG diagnosis,
+                  using domain-specific databases to guide prompt construction and inference [52]. Applied
+                  to arrhythmia and sleep apnea tasks, the method transforms ECG features into structured
+                  prompts enriched with expert knowledge. Evaluated using standalone LLMs (LLaMA2,
+                  GPT-3.5), the approach outperforms few-shot baselines and achieves performance compara-
+                  ble to supervised deep learning models. The key limitations include reliance on handcrafted
+                  features and susceptibility to signal noise.
+                        Chen et al. introduce a clinical decision-support system for chronic low back pain
+                  that combines LLMs, RAG, and least-to-most prompting [53]. By integrating patient
+                  data and retrieving up-to-date clinical knowledge, it enhances accuracy and personal-
+                  ization. Compared to standalone LLMs, it scores highest in accuracy, relevance, clarity,
+                  benefit, and completeness. Strengths include dynamic knowledge grounding, the incor-
+                  poration of psychosocial factors, and prompt engineering for improved interpretability.
+                  However, limitations include the absence of long-term outcome validation and real-time
+                  knowledge updating.
+AI 2025, 6, 226                                                                                          16 of 29
+
+
+
+                  4.5. Graph-Based and Ontology-Aware RAG Frameworks
+                       Graph-enhanced RAG improves explainability and trust, making it particularly useful
+                  in patient education tools, informed consent generation, and clinical decision support
+                  where provenance and logic tracing are essential.
+                       Rani et al. propose a graph-based RAG framework for diabetes care, addressing
+                  hallucination, explainability, and source traceability in LLMs [54]. It integrates keyword,
+                  vector, and graph retrieval with a validated knowledge graph using topic-based chunking
+                  and semantic matching. The model requires improvement in long-answer summarization
+                  and broader applicability across medical domains.
+                       Wu et al. introduce a graph-based RAG method for medical question answering [55].
+                  It improves reliability by linking user data to trusted medical sources using Triple Graph
+                  Construction and retrieves answers through a two-step U-Retrieval process. Tested on
+                  benchmarks, it outperforms standard RAG, GraphRAG [56], and fine-tuned medical LLMs.
+                  However, challenges remain in adapting to live data, complex patient queries, and main-
+                  taining explainability.
+                       Sophaken et al. present a Graph-RAG pipeline for dentistry that integrates named
+                  entity recognition (NER), Resource Description Framework (RDF) triples, and RAG to
+                  support clinical decision-making [57]. Multimodal data is processed using LLMs to extract
+                  entities and relations, structured as RDF triples and embedded into a dental ontology.
+                  This enables both vector and graph-based retrieval. Experimental results show improved
+                  precision and recall through reranking, with triple store RAG enhancing diagnostic accuracy.
+                  However, the system depends on complete ontologies, is computationally intensive, and is
+                  currently limited in clinical scope.
+                       Shi et al. introduce a retrieval-augmented LLM for shared decision-making in adoles-
+                  cent idiopathic scoliosis (AIS), combining ChatGPT with a structured AIS-specific knowl-
+                  edge base and dense retrieval using MPNet (Masked and Permuted Pretraining for Lan-
+                  guage Understanding) to enhance response accuracy, relevance, and transparency [58].
+                  Evaluations through usability tests, knowledge assessments, and expert reviews show
+                  improved patient understanding and superior performance over ChatGPT. The model
+                  reduces hallucinations through source-grounded reasoning enabled by ReAct (Reasoning
+                  and Acting) prompting. The limitations include a static, keyword-filtered knowledge base,
+                  a lack of multimodal inputs, and limited clinical validation.
+
+                  4.6. RAG with Blockchain and Secure Architectures
+                        RAG models have also been extended with blockchain and smart contract mechanisms
+                  to ensure secure retrieval and auditability in sensitive domains such as pediatrics and
+                  Internet of Medical Things (IoMT). These efforts aim to enhance trustworthiness and
+                  decentralize data governance.
+                        Su et al. propose a Hybrid RAG-based Multimodal LLM framework for secure IoMT
+                  data management, integrating RAG with a diffusion-based smart contract for explainable
+                  and trustworthy retrieval [59]. It combines semantic search, multimodal inputs, and
+                  blockchain to ensure secure, contextually relevant access to medical data. This approach
+                  lacks scalability evaluation and comparative analysis with other contract methods.
+                        Jabarulla et al. present a blockchain-enabled RAG system for pediatric clinical decision
+                  support, combining semantic search over guideline PDFs with LLMs to generate responses,
+                  which clinicians evaluate and store via smart contracts on a permissioned blockchain [60]. It
+                  ensures secure, auditable feedback for model refinement but lacks large-scale deployment,
+                  diverse validation, real-world hospital integration, and automated fine-tuning, limiting
+                  clinical scalability.
+AI 2025, 6, 226                                                                                            17 of 29
+
+
+
+                  4.7. Radiology-Specific Retrieval-Augmented QA
+                        RAG-based tools can be integrated into radiologists’ workstations to assist with second
+                  opinions, structured reporting, and continuous medical education, particularly in complex
+                  imaging cases.
+                        Arasteh et al. propose a RAG system for radiology QA that retrieves context from
+                  Radiopaedia [61]. Unlike static RAG setups, it dynamically fetches relevant articles, em-
+                  beds them, and uses them to guide LLMs. Tested on benchmark datasets, RadioRAG gives
+                  improved accuracy for open-source models, while reducing hallucinations and improving
+                  factuality. However, gains vary by model, and strict reliance on retrieved context occasion-
+                  ally leads to errors. Limitations include dependence on a single source, a small external
+                  dataset, and slower response times.
+
+                  5. Applications
+                        This section outlines the key applications of RAG in healthcare, emphasizing clinical
+                  utility, factual consistency, and reliability.
+
+                  5.1. Diagnostic Assistance
+                        RAG enhances diagnostic decision-making by retrieving similar patient cases or rel-
+                  evant clinical guidelines from structured databases and unstructured literature [62]. In
+                  radiology and pathology, image captions or structured reports are used to query reposito-
+                  ries, enabling the generation of differential diagnoses or evidence-backed recommendations.
+                  This retrieval-grounded approach improves factual accuracy and reduces dependence on
+                  parametric memory.
+
+                  5.2. Summarization of EHRs and Discharge Notes
+                       RAG supports clinical summarization by integrating longitudinal patient data [63].
+                  The retriever identifies pertinent clinical history such as medications, lab trends, and prior
+                  admissions from EHRs, allowing the generator to produce concise discharge summaries
+                  or progress notes. Both extractive and abstractive outputs benefit from evidence-based
+                  contextualization, minimizing omissions and clinical inaccuracies. Dense retrievers us-
+                  ing domain-tuned embeddings (e.g., BioBERT) yield superior semantic alignment over
+                  sparse methods.
+
+                  5.3. Medical Question Answering
+                        RAG-based QA systems address complex clinical queries by retrieving content from
+                  curated biomedical corpora (e.g., PubMedQA). By anchoring answers in peer-reviewed
+                  literature or structured medical knowledge, these systems reduce the hallucinations often
+                  seen in standalone LLMs [64]. Indexing strategies like BM25 ensure relevance in long-form
+                  or open-ended queries, improving both reliability and transparency.
+
+                  5.4. Patient Education and Conversational Agents
+                       RAG-powered conversational agents enhance patient engagement by retrieving vali-
+                  dated educational material and tailoring responses to user profiles [65]. This ensures that
+                  medical concepts are accurately translated into layperson language without compromising
+                  factual integrity. Retrieval from authoritative sources reduces misinformation risks, making
+                  RAG suitable for triage assistants and post-discharge counseling tools.
+
+                  5.5. Clinical Trial Matching
+                        RAG enables precise clinical trial matching by aligning patient profiles with the eligi-
+                  bility criteria extracted from trial registries [66]. The retriever identifies suitable protocols
+AI 2025, 6, 226                                                                                               18 of 29
+
+
+
+                  based on demographics, comorbidities, and biomarkers, while the generator summarizes
+                  the inclusion/exclusion criteria in natural language. This improves trial enrollment and
+                  expands therapeutic access, particularly in rare or refractory cases.
+
+                  5.6. Biomedical Literature Synthesis
+                       RAG facilitates dynamic literature review by retrieving and summarizing recent, domain-
+                  relevant publications in response to specific clinical or research queries [67]. Instead of manually
+                  scanning large corpora, clinicians and researchers receive context-aware summaries grounded
+                  in high-quality sources (e.g., PubMed and PMC). This streamlines evidence-based practice and
+                  reduces cognitive burden during decision-making or guideline development.
+
+                  6. Evaluation Framework: Metrics and Benchmarks
+                        The evaluation of RAG models in healthcare requires a multidimensional ap-
+                  proach, focusing on generation quality, retrieval effectiveness, factual consistency, and
+                  clinical validity.
+
+                  6.1. Domain-Specific Metrics for Clinical Validation
+                  •    FactScore assesses factual alignment between generated outputs and reference data,
+                       particularly for medical summaries and treatment plans [68].
+                  •    RadGraph-F1 measures the overlap between generated and reference entity-relation
+                       graphs in radiology reports, ensuring structural and factual correctness [69].
+                  •    MED-F1 quantifies the alignment of extracted entities with standard clinical termi-
+                       nology and is frequently applied to tasks like medical named entity recognition,
+                       particularly in datasets such as CheXpert [70].
+                       These metrics are used in medical contexts, capturing domain-specific vocabulary,
+                  reasoning patterns, and structured knowledge representations that generic metrics fail
+                  to address.
+
+                  6.2. Generation Quality Metrics
+                       Several standard natural language generation (NLG) metrics are employed to assess
+                  the textual quality of model outputs, including the following:
+                  •    BLEU (Bilingual Evaluation Understudy) measures the degree of n-gram overlap be-
+                       tween the generated and reference text. It is defined as
+                                                                                       !
+                                                                          N
+                                                    BLEU = BP · exp      ∑ wn log pn
+                                                                         n =1
+
+                       where pn denotes modified n-gram precision, wn are weights (commonly uniform),
+                       and BP is the brevity penalty to discourage overly short outputs.
+                  •    ROUGE (Recall-Oriented Understudy for Gisting Evaluation), particularly ROUGE-
+                       L, evaluates the longest common subsequence between generated and reference texts,
+                       and is frequently used in summarization tasks involving clinical documents.
+                  •    F1 Score is the harmonic mean of precision and recall, particularly relevant for span-
+                       based extraction and classification tasks.
+                  •    BERTScore compares the contextual token embeddings between candidate and ref-
+                       erence texts using models such as BioBERT, offering semantic alignment beyond
+                       surface-level matching.
+                      While general NLP metrics such as BLEU, ROUGE, and BERTScore remain useful for
+                  measuring fluency, coherence, and lexical similarity, they are insufficient in medical contexts
+                  where factuality and safety are paramount. For instance, a discharge summary may achieve
+AI 2025, 6, 226                                                                                          19 of 29
+
+
+
+                  a high ROUGE score due to surface word overlap yet still omit critical diagnoses or include
+                  incorrect medication information. In contrast, healthcare-focused metrics directly evaluate
+                  clinical reliability: FactScore measures factual alignment between generated text and evi-
+                  dence sources, RadGraph-F1 evaluates the accuracy of clinical entity-relation structures
+                  in radiology reports, and MED-F1 quantifies alignment with standardized medical termi-
+                  nology. By contrasting these two classes of metrics, it becomes clear why domain-specific
+                  measures are essential in healthcare—ensuring that outputs are not only linguistically
+                  fluent but also clinically valid, interpretable, and trustworthy.
+
+                  6.3. Retrieval Relevance Metrics
+                      The retrieval component in RAG systems is assessed by evaluating the relevance and
+                  ranking of retrieved documents. Common metrics include the following:
+                  •    Recall@k measures the fraction of relevant documents retrieved within the top-
+                       k results:
+                                                        |Relevant ∩ Retrieved@k|
+                                            Recall@k =
+                                                               |Relevant|
+                  •    Mean Reciprocal Rank (MRR) evaluates the average inverse rank of the first relevant
+                       document:
+                                                                 | Q|
+                                                              1        1
+                                                   MRR =         ∑
+                                                            | Q| i=1 ranki
+
+                  •    Normalized Discounted Cumulative Gain (nDCG@k) considers both the relevance
+                       and position of retrieved documents:
+
+                                                                                   k
+                                                     DCG@k                                 reli
+                                     nDCG@k =               ,   where DCG@k = ∑
+                                                     IDCG@k                       i =1
+                                                                                       log2 (i + 1)
+
+                      These metrics ensure that relevant clinical evidence is retrieved and appropriately
+                  ranked, directly impacting the reliability of the generated outputs.
+
+                  6.4. Factual Consistency Metrics
+                       Ensuring factual alignment between generated outputs and source data is critical in
+                  healthcare applications:
+                  •    FEVER Score quantifies the correctness of generated claims against retrieved evidence.
+                       It has been adapted from open-domain fact-checking to biomedical domains.
+                  •    Faithfulness Metrics evaluate the consistency of generated responses with retrieved
+                       or reference content, using either entailment-based models or domain-specific
+                       factuality checkers.
+                       Standard metrics such as BLEU, ROUGE, and BERTScore primarily focus on lexical
+                  or semantic similarity but are insufficient for validating factual correctness in high-stakes
+                  medical contexts.
+                       Additional practical metrics include the following:
+                  •    Response Time (Latency): Critical for real-time applications such as triage or bedside
+                       decision support, where generation delay can impact clinical workflow.
+                  •    Source Traceability: Refers to the model’s ability to link generated content back to
+                       specific retrieved sources, thereby enhancing transparency, auditability, and user trust.
+
+                  6.5. Benchmark Datasets
+                       The following datasets are widely utilized for evaluating RAG systems in health-
+                  care contexts:
+AI 2025, 6, 226                                                                                                                  20 of 29
+
+
+
+                                •       MedQA (USMLE): A multiple-choice question dataset derived from medical licensing
+                                        exams, focused on clinical knowledge assessment [71].
+                                •       PubMedQA: Consists of biomedical abstracts paired with yes/no/maybe questions,
+                                        requiring grounded reasoning and evidence-based answers [72].
+                                •       MIMIC-IV: A comprehensive, de-identified EHR dataset supporting tasks such as
+                                        summarization, question answering, and document retrieval [17].
+                                •       MedDialog: A multilingual dataset of doctor–patient conversations, suitable for train-
+                                        ing and evaluating medical dialogue systems [73].
+                                    These benchmarks collectively support a comprehensive and reproducible evaluation
+                                of RAG models deployed in medical domains.
+
+                                7. Challenges and Limitations
+                                     Despite its promise, RAG faces several technical and practical challenges in health-
+                                care applications. The key issues include retrieval accuracy, generation latency, limited
+                                explainability, and data privacy concerns.
+                                     Table 6 summarizes the key challenges in deploying RAG systems in healthcare,
+                                outlining their underlying causes, consequences, and potential mitigation strategies.
+
+                                Table 6. Challenges in RAG deployment in healthcare.
+
+ Challenge                          Cause                            Consequence                      Mitigation
+                                    Heterogeneous EHR styles,                                         Domain-adaptive retrievers,
+ Domain Shift and                                                    Retrieval mismatch, irrelevant
+                                    outdated or                                                       curated clinical corpus,
+ Retrieval Noise                                                     or unsafe generations
+                                    mixed-quality sources                                             context filters
+                                                                                                      Lightweight retrievers,
+                                    Sequential retrieval and         Delayed responses in
+ Latency                                                                                              caching, on-device or
+                                    generation over large corpora    real-time clinical scenarios
+                                                                                                      edge retrieval
+                                                                                                      Source highlighting,
+                                    No attribution linking sources   Low clinician trust,
+ Lack of Explainability                                                                               rationale extraction,
+                                    to generated content             limited transparency
+                                                                                                      evidence traceability
+                                    Inadequate de-identification,
+                                                                     Legal violations,                Secure indexing, redaction,
+ Privacy and Compliance Risks       unrestricted protected health
+                                                                     re-identification risk           audit trails, access control
+                                    information access
+                                                                                                      Biomedical retrievers (e.g.,
+                                    General retrievers overlook      Missed context,
+ Weak Clinical Retrieval                                                                              BioBERT), ontology-guided
+                                    domain-specific semantics        hallucinated content
+                                                                                                      search (UMLS)
+                                    Abbreviations, typos,                                             Preprocessing pipelines,
+ Noisy and Unstructured                                              Imprecise embeddings,
+                                    incomplete or                                                     clinical QA models, structured
+ Clinical Text                                                       factual drift
+                                    inconsistent notes                                                input templates
+                                                                                                      Domain-specific metrics
+                                    Generic NLP metrics, lack of     Poor assessment of safety,
+ Evaluation Limitations                                                                               (FactScore, MED-F1),
+                                    clinical gold standards          factuality, and utility
+                                                                                                      expert-in-the-loop evaluations
+                                                                                                      Multimodal encoders,
+                                    Text-only retrieval ignores      Incomplete or narrow
+ Multimodal Limitations                                                                               joint indexing,
+                                    imaging, labs, genomics          decision support
+                                                                                                      cross-modal retrieval
+                                 High storage/compute                                                 Model compression, retriever
+                                                                     Limited feasibility in
+ Infrastructure Constraints      requirements,                                                        distillation, offline
+                                                                     low-resource settings
+                                 poor connectivity                                                    retrieval setups
+                                                                                                      Continual learning, live
+                                    Static models and outdated       Obsolete or harmful
+ Knowledge Drift                                                                                      corpus updates,
+                                    retrieval indices                recommendations
+                                                                                                      dynamic retrievers
+AI 2025, 6, 226                                                                                                        21 of 29
+
+
+
+                           Table 6. Cont.
+
+ Challenge                  Cause                            Consequence                     Mitigation
+                                                                                             Feedback interfaces,
+                            Fully automated pipelines        Errors propagate unchecked,
+ Lack of Human Oversight                                                                     clinician-in-the-loop retrieval
+                            without expert feedback          especially in diagnosis
+                                                                                             and validation
+                                                                                             Diverse data curation,
+                            Skewed training corpora,         Health disparities, biased or
+ Bias and Fairness                                                                           fairness evaluation,
+                            underrepresented populations     unsafe outputs
+                                                                                             inclusive retriever tuning
+
+
+                           7.1. Retrieval Challenges in Clinical Contexts
+                                 Healthcare data is highly heterogeneous, varying across institutions, patient popula-
+                           tions, documentation styles, and EHR systems. This heterogeneity introduces domain shift,
+                           where the data distribution during inference diverges from the training or retrieval corpus.
+                           Such shifts impair retriever performance and hinder the generator’s capacity to produce
+                           clinically valid outputs. Mismatches stem from divergent medical terminologies, regional
+                           practices, or coding standards.
+                                 Additionally, clinical corpora blend curated medical literature with layperson articles,
+                           outdated sources, or non-standard documents. This introduces retrieval noise, increasing
+                           the risk of injecting factually incorrect or irrelevant context into model outputs. Further
+                           compounding the problem, generic retrievers struggle to capture biomedical semantics,
+                           failing to align domain-specific synonymy (e.g., “myocardial infarction” vs. “heart attack”)
+                           and hierarchical medical taxonomies. Without fine-tuning on clinical corpora or integration
+                           with ontologies such as UMLS, retrieval results are frequently semantically misaligned.
+                                 Moreover, clinical text with shorthand, incomplete sentences, and non-standard ab-
+                           breviations further degrades retriever performance. Such unstructured documentation
+                           confuses embedding models and leads to context mismatch, factual drift, and loss of
+                           temporal or causal nuance in generation. Effective retrieval in healthcare requires domain-
+                           adaptive retrievers, curated corpora, and preprocessing strategies to clean, normalize, and
+                           structure clinical text.
+
+                           7.2. Latency and Real-Time Applicability
+                                RAG pipelines operate in sequential stages such as retrieval, encoding, and generation,
+                           each introducing latency. In high-acuity environments like emergency rooms or intensive
+                           care units, even minimal delays compromise clinical usability. Latency is exacerbated by
+                           large corpora, complex embedding models, and non-optimized infrastructure. Network
+                           dependencies, inefficient input/output, and the absence of caching strategies further hinder
+                           responsiveness. Real-time applicability demands latency-aware optimizations such as on-
+                           device retrieval, approximate search, or lightweight retrievers.
+
+                           7.3. Explainability and Source Attribution
+                                 While RAG improves factuality through retrieval, the generation process remains
+                           opaque. It lacks explicit attribution or source-linked rationales, making it difficult for clini-
+                           cians to trace the origin of recommendations or validate generated insights. This lack of
+                           transparency undermines trust, especially in clinical decision-making. Enhancing explain-
+                           ability requires source highlighting, rationale extraction, and citation tracing mechanisms
+                           to ensure traceability and support informed clinical oversight.
+
+                           7.4. Privacy, Compliance, and Governance
+                                RAG models operating over clinical data must comply with stringent privacy regula-
+                           tions (e.g., HIPAA and GDPR) and institutional review protocols. Even minimal leakage
+AI 2025, 6, 226                                                                                            22 of 29
+
+
+
+                  through metadata, misidentified information, or inference, can pose re-identification risks.
+                  Dense retrievers lacking proper access control may inadvertently surface protected informa-
+                  tion. Challenges compound in cross-institutional deployments involving federated corpora,
+                  consent management, and audit logging. Ensuring secure indexing, retrieval, filtering, and
+                  context redaction is essential for ethically responsible deployment.
+
+                  7.5. Evaluation Bottlenecks in Clinical Contexts
+                       Traditional NLP metrics (e.g., BLEU, ROUGE, and BERTScore) emphasize surface
+                  similarity and fail to capture clinical correctness, safety, or reasoning quality. They overlook
+                  hallucinations, omissions, and domain-specific inaccuracies. Domain-aligned metrics like
+                  FactScore and RadGraph-F1 offer partial improvements but still lack the granularity needed
+                  to assess clinical reasoning or contextual fidelity. Human expert evaluations remain the
+                  gold standard but are expensive, non-scalable, and difficult to reproduce. The absence
+                  of robust, scalable, and clinically meaningful benchmarks is a critical barrier to reliable
+                  RAG evaluation.
+
+                  7.6. Multimodal Limitations
+                        Healthcare decision-making relies on diverse modalities, including radiology images,
+                  lab values, pathology reports, and genomics. Current RAG systems, primarily text-centric,
+                  cannot natively process multimodal inputs. Cross-modal retrieval and embedding frame-
+                  works remain underdeveloped, and the lack of joint indexing and fusion strategies restricts
+                  comprehensive clinical insight generation. Advancing RAG in healthcare necessitates
+                  foundational research in multimodal alignment, cross-attention mechanisms, and unified
+                  retrieval architectures.
+
+                  7.7. Infrastructure and Scalability Constraints
+                       RAG deployment in resource-constrained settings such as rural hospitals or low-
+                  income regions is challenged by hardware limitations (e.g., limited GPUs), large storage
+                  demands for vector indices, and unstable internet connectivity. The compute-heavy nature
+                  of dense retrievers and large LLMs restricts feasibility. Techniques like retrieval compres-
+                  sion, knowledge distillation, and edge deployment remain underexplored but are essential
+                  to scale RAG equitably across healthcare systems.
+
+                  7.8. Continual Learning and Knowledge Drift
+                      Static RAG systems quickly become outdated as medical knowledge evolves. Without
+                  automated mechanisms for incorporating new research findings, clinical guidelines, or
+                  drug approvals, these systems risk perpetuating obsolete or harmful recommendations.
+                  Manual updates are slow and error prone. Incorporating continual learning via retriever re-
+                  indexing, incremental fine-tuning, or streaming updates—is crucial to maintain relevance
+                  and clinical reliability over time.
+
+                  7.9. Lack of Human-in-the-Loop
+                       Most RAG models operate autonomously without clinician oversight. This limits ac-
+                  countability, especially in high-stakes scenarios such as differential diagnosis or treatment
+                  recommendation. Without human validation, errors can propagate unchecked, compromis-
+                  ing patient safety. Incorporating mechanisms for clinician feedback, correction, and control
+                  during retrieval and generation phases is essential to ensure transparency, foster trust, and
+                  align outputs with real-world clinical judgment.
+AI 2025, 6, 226                                                                                         23 of 29
+
+
+
+                  7.10. Bias and Fairness Concerns
+                      RAG systems trained on biased corpora or skewed demographic distributions risk
+                  perpetuating disparities in care. Under-representation of minority populations in training
+                  data can lead to diagnostic inaccuracies, exclusion from clinical recommendations, or
+                  harmful stereotypes. Biases in retrieval can amplify these effects by selectively surfacing
+                  unbalanced or inappropriate content. Ensuring fairness requires curated, diverse corpora
+                  and bias-mitigation strategies during both the retrieval and generation phases.
+
+                  8. Discussion and Future Directions
+                       Advancing RAG for healthcare requires focused research on technical innovations, the
+                  integration of structured medical knowledge, and improvements in safety, scalability, and
+                  usability. This section outlines key future directions to enhance the clinical applicability
+                  and reliability of RAG systems.
+
+                  8.1. RAG with Knowledge Graphs
+                       Incorporating structured biomedical knowledge into RAG systems, as exemplified by
+                  GraphRAG, enhances retrieval precision and factual grounding through semantic align-
+                  ment between queries and domain-specific entities. Knowledge graphs enable relation
+                  inference and filtering of irrelevant content, improving clinical relevance. However, most
+                  existing systems rely on static graphs and lack support for temporal, hierarchical, or causal
+                  reasoning. Future directions include dynamic graph construction, the integration of diverse
+                  medical ontologies, and the use of graph neural networks to support real-time, scalable,
+                  and context-aware retrieval. Evaluating their impact on safety, hallucination mitigation,
+                  and interpretability remains essential for clinical deployment.
+
+                  8.2. Continual Learning and Dynamic Retrieval
+                       Static RAG systems fail to reflect evolving medical guidelines and discoveries. Updat-
+                  ing retrieval indices regularly and fine-tuning models on new clinical data can maintain
+                  relevance and reduce factual drift over time. Incorporating streaming data pipelines, active
+                  learning loops, and low-overhead reindexing mechanisms enables timely adaptation to
+                  emerging clinical knowledge. Dynamic retrievers that adjust based on usage patterns or
+                  expert feedback further enhance reliability in changing clinical contexts.
+
+                  8.3. Multimodal Integration
+                       Clinical decisions rely on more than just text. Extending RAG systems to jointly process
+                  radiology images, pathology slides, lab reports, and structured EHRs can improve accuracy
+                  and expand use cases beyond text-based diagnosis. Multimodal RAG architectures can
+                  align features from different data types using cross-modal encoders or fusion techniques,
+                  enabling retrieval conditioned on both visual and textual cues. This supports tasks like
+                  image–report generation, pathology classification, and integrated decision support, where
+                  isolated text-based reasoning is insufficient.
+
+                  8.4. Federated and Privacy-Preserving RAG
+                       Future RAG frameworks must support federated training, differential privacy, and
+                  encrypted retrieval to protect patient data. This allows knowledge sharing across institu-
+                  tions without compromising data confidentiality. Federated RAG enables retriever and
+                  generator updates across decentralized datasets without central aggregation. Techniques
+                  like homomorphic encryption and secure multiparty computation ensure that sensitive
+                  information is never exposed during training or retrieval. Differential privacy mechanisms
+AI 2025, 6, 226                                                                                            24 of 29
+
+
+
+                  can further limit data leakage by adding noise, preserving utility while ensuring compliance
+                  with HIPAA, GDPR, and other regulations.
+
+                  8.5. Task-Specific Evaluation Frameworks
+                       General NLP metrics do not capture clinical correctness or safety. Domain-specific
+                  benchmarks, simulated patient scenarios, and expert-reviewed datasets are needed to
+                  evaluate medical RAG systems reliably. Evaluation must consider factual consistency,
+                  clinical validity, and potential harm. Metrics should assess alignment with guidelines,
+                  completeness of retrieved context, and appropriateness of generated responses. Develop-
+                  ing standardized datasets with expert annotations and failure cases can help benchmark
+                  performance across specialties. Automated clinical validators and utility scoring models
+                  can further streamline scalable, safety-aware evaluation.
+
+                  8.6. Human-in-the-Loop RAG Systems
+                        Including clinicians in the retrieval and response validation loop enhances output qual-
+                  ity and supports trust. Interactive interfaces can allow the refinement of queries, re-ranking
+                  of evidence, and correction of generation errors. Such systems facilitate collaborative
+                  decision-making by enabling domain experts to validate retrieved context, flag hallucina-
+                  tions, and provide corrective feedback. Real-time user input can be logged for adaptive
+                  retriever tuning or future audits. Incorporating human oversight reduces automation bias,
+                  improves accountability, and ensures that generated responses align with clinical intent.
+
+                  8.7. RAG for Low-Resource Settings
+                       In many regions, clinical infrastructure is limited. Developing lightweight RAG
+                  models that work offline or with minimal compute, using localized or compressed medical
+                  corpora, can expand access to AI-based support. Optimization techniques such as model
+                  quantization, knowledge distillation, and efficient retrieval algorithms can reduce hardware
+                  demands. Offline-compatible RAG systems, preloaded with region-specific content, ensure
+                  continuity of care in areas with unreliable internet. Additionally, tailoring language models
+                  to local clinical terminology and cultural contexts improves usability and relevance.
+
+                  8.8. Explainable RAG Pipelines
+                       Traceability from the generated output back to retrieved sources is critical in healthcare.
+                  Visualizing evidence contributions and highlighting decision paths can improve clinician
+                  confidence and support audits. Methods such as token-level attribution, retrieval relevance
+                  scoring, and citation-style references help clarify the link between retrieved chunks and
+                  generated responses. Embedding this transparency within clinical decision tools promotes
+                  accountability and facilitates regulatory compliance.
+
+                  8.9. Clinical Workflow Integration
+                        Standalone RAG tools are unlikely to be adopted. Embedding RAG into existing EHR
+                  interfaces and decision support dashboards with minimal disruption to clinical routines is
+                  essential for real-world use. Seamless integration ensures clinical relevance, reduces user
+                  friction, and aligns with existing workflows. APIs and middleware can enable real-time
+                  retrieval and generation within clinician-facing software, while maintaining compatibility
+                  with institutional IT infrastructure and compliance standards.
+
+                  8.10. Bias Mitigation and Fairness Audits
+                      Biases in training data or retrieval corpora can lead to uneven care recommendations.
+                  Ongoing audits and the inclusion of diverse patient data during development can help
+                  ensure equitable performance across demographics. Techniques such as bias detection,
+AI 2025, 6, 226                                                                                                  25 of 29
+
+
+
+                  reweighting, and fairness-aware retrieval can mitigate disparities, while evaluation across
+                  sub-populations ensures clinical safety and inclusivity.
+
+                  9. Conclusions
+                        RAG represents a significant advancement in aligning LLMs with clinical knowledge
+                  needs by enabling dynamic retrieval, improving factual accuracy, and enhancing decision
+                  support. This review synthesized 30 peer-reviewed studies, categorizing RAG architectures,
+                  examining their deployment across diagnostic support, EHR summarization, and medical
+                  question answering, comparing evaluation metrics, and identifying persistent challenges
+                  in healthcare contexts.
+                        Several limitations of this review must be acknowledged. The evolving terminology
+                  surrounding RAG may have led to the exclusion of some studies. The analysis relied solely
+                  on reported findings rather than raw experimental data and was constrained by a narrow
+                  publication window, which may limit completeness and generalizability.
+                        Although this review follows PRISMA guidelines, multiple validity threats remain.
+                  Internal validity may be affected by the selection bias arising from limiting inclusion to
+                  peer-reviewed, English-language studies. External validity is constrained by the emerging
+                  nature of RAG in healthcare, which reduces the generalizability of results across specialties
+                  and geographic regions. Construct validity is challenged by heterogeneous evaluation
+                  metrics, varying reporting standards, and inconsistent definitions of hallucination. To
+                  mitigate these threats, we applied consensus-based screening, transparent inclusion criteria,
+                  and cross-verification of extracted data. However, residual risks remain and should be
+                  considered when interpreting the results.
+                        Critical challenges also persist for real-world deployment, including institutional
+                  resistance to AI adoption, regulatory alignment, interoperability with EHR systems, perfor-
+                  mance drift, and establishing clinician trust. Future research should emphasize continual
+                  learning, multimodal integration, standardized evaluation, and human-in-the-loop designs
+                  to advance scalable, interpretable, and trustworthy RAG systems.
+                        While focused on healthcare, the methodological framework of systematic search,
+                  taxonomy-driven classification, and metric-based synthesis has broader applicability. In
+                  education, such a framework can be applied to identify domain-specific pedagogical
+                  challenges and evaluation metrics. In finance, it can uncover issues of privacy, compliance,
+                  and fairness in retrieval-augmented AI. In law, it can help surface biases, traceability
+                  concerns, and fairness challenges in decision support. Thus, the methodology is adaptable
+                  for mapping domain-specific risks, opportunities, and best practices across diverse fields.
+                        In doing so, this review successfully addressed its research objectives: RO1 was
+                  achieved by synthesizing evidence on how RAG supports clinical workflows and enhances
+                  interpretability, while RO2 was met by identifying key gaps in the literature and outlining
+                  future directions aligned with clinical needs, safety, and explainability.
+                        Finally, perspectives from the healthcare community emphasize that while RAG-
+                  driven systems hold strong potential for reducing clinician workload and enhancing
+                  evidence-based decision support, their adoption will depend on trust, explainability, and
+                  seamless workflow integration. Transparent metrics and clinically aligned evaluations will
+                  be crucial for broad acceptance by practitioners and policymakers.
+
+                  Author Contributions: Conceptualization, F.N., D.B. and D.K.S.; Methodology, F.N., D.B. and D.K.S.;
+                  validation, F.N., D.B. and D.K.S.; formal analysis, F.N., D.B. and D.K.S.; resources, F.N., D.B. and
+                  D.K.S.; Writing—original draft, F.N., D.B. and D.K.S.; Writing—review & editing, F.N., D.B. and
+                  D.K.S.; supervision, F.N., D.B. and D.K.S.; Funding acquisition, F.N., D.B. and D.K.S. All authors have
+                  read and agreed to the published version of the manuscript.
+AI 2025, 6, 226                                                                                                                    26 of 29
+
+
+
+                                  Funding: This work was partly supported by Kent State University’s Open Access APC Support Fund.
+
+                                  Institutional Review Board Statement: Not applicable.
+
+                                  Informed Consent Statement: Not applicable.
+
+                                  Data Availability Statement: All data were presented in main text.
+
+                                  Conflicts of Interest: The authors declare no conflict of interest.
+
+References
+1.    Neha, F.; Bhati, D. A Survey of DeepSeek Models. TechRxiv 2025, authorea preprints. [CrossRef]
+2.    Singhal, K.; Tu, T.; Gottweis, J.; Sayres, R.; Wulczyn, E.; Amin, M.; Hou, L.; Clark, K.; Pfohl, S.R.; Cole-Lewis, H.; et al. Toward
+      expert-level medical question answering with large language models. Nat. Med. 2025, 31, 943–950. [CrossRef] [PubMed]
+3.    Luo, R.; Sun, L.; Xia, Y.; Qin, T.; Zhang, S.; Poon, H.; Liu, T.Y. BioGPT: generative pre-trained transformer for biomedical text
+      generation and mining. Briefings Bioinform. 2022, 23, bbac409. [CrossRef] [PubMed]
+4.    Chow, J.C.; Li, K. Large Language Models in Medical Chatbots: Opportunities, Challenges, and the Need to Address AI Risks.
+      Information 2025, 16, 549. [CrossRef]
+5.    Devlin, J.; Chang, M.W.; Lee, K.; Toutanova, K. Bert: Pre-training of deep bidirectional transformers for language understanding.
+      In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human
+      Language Technologies, Minneapolis, MN, USA, 2–7 June 2019; Volume 1, pp. 4171–4186.
+6.    Lee, J.; Yoon, W.; Kim, S.; Kim, D.; Kim, S.; So, C.H.; Kang, J. BioBERT: A pre-trained biomedical language representation model
+      for biomedical text mining. Bioinformatics 2020, 36, 1234–1240. [CrossRef]
+7.    Huang, K.; Altosaar, J.; Ranganath, R. ClinicalBert: Modeling Clinical Notes and Predicting Hospital Readmission. arXiv 2019,
+      arXiv:1904.05342.
+8.    Lewis, P.; Perez, E.; Piktus, A.; Petroni, F.; Karpukhin, V.; Goyal, N.; Küttler, H.; Lewis, M.; Yih, W.T.; Rocktäschel, T.; et al.
+      Retrieval-augmented generation for knowledge-intensive nlp tasks. Adv. Neural Inf. Process. Syst. 2020, 33, 9459–9474.
+9.    Ng, K.K.Y.; Matsuba, I.; Zhang, P.C. RAG in health care: a novel framework for improving communication and decision-making
+      by addressing LLM limitations. NEJM AI 2025, 2, AIra2400380. [CrossRef]
+10.   Gao, Y.; Xiong, Y.; Gao, X.; Jia, K.; Pan, J.; Bi, Y.; Dai, Y.; Sun, J.; Wang, H.; Wang, H. Retrieval-augmented generation for large
+      language models: A survey. arXiv 2023, arXiv:2312.10997.
+11.   Zhao, P.; Zhang, H.; Yu, Q.; Wang, Z.; Geng, Y.; Fu, F.; Yang, L.; Zhang, W.; Jiang, J.; Cui, B. Retrieval-Augmented Generation for
+      AI-Generated Content: A Survey. arXiv 2024, arXiv:2402.19473.
+12.   Gaur, M. Knowledge-Infused Learning. Ph.D. Thesis, University of South Carolina, Columbia, SC, USA, 2022.
+13.   Spasic, I.; Nenadic, G. Clinical text data in machine learning: Systematic review. JMIR Med. Inform. 2020, 8, e17984. [CrossRef]
+14.   Sherstinsky, A. Fundamentals of recurrent neural network (RNN) and long short-term memory (LSTM) network. Phys. D
+      Nonlinear Phenom. 2020, 404, 132306. [CrossRef]
+15.   Vaswani, A.; Shazeer, N.; Parmar, N.; Uszkoreit, J.; Jones, L.; Gomez, A.N.; Kaiser, Ł.; Polosukhin, I. Attention is all you need. In
+      Advances in Neural Information Processing Systems, Proceedings of the 31st Conference on Neural Information Processing Systems (NIPS
+      2017), Long Beach, CA, USA, 4–9 December 2017; MIT Press: Cambridge, MA, USA, 2017; Volume 30.
+16.   Kotei, E.; Thirunavukarasu, R. A systematic review of transformer-based pre-trained language models through self-supervised
+      learning. Information 2023, 14, 187. [CrossRef]
+17.   Johnson, A.E.; Bulgarelli, L.; Shen, L.; Gayles, A.; Shammout, A.; Horng, S.; Pollard, T.J.; Hao, S.; Moody, B.; Gow, B.; et al.
+      MIMIC-IV, a freely accessible electronic health record dataset. Sci. Data 2023, 10, 1. [CrossRef]
+18.   Lu, Q.; Dou, D.; Nguyen, T. ClinicalT5: A generative language model for clinical text. In Proceedings of the Findings of the
+      Association for Computational Linguistics: EMNLP 2022, Abu Dhabi, United Arab Emirates, 7–11 December 2022; pp. 5436–5443.
+19.   Bafna, P.; Pramod, D.; Vaidya, A. Document clustering: TF-IDF approach. In Proceedings of the 2016 International Conference on
+      Electrical, Electronics, and Optimization Techniques (ICEEOT), Chennai, India, 3–5 March 2016; IEEE: Piscataway, NJ, USA, 2016;
+      pp. 61–66.
+20.   Amati, G. BM25. In Encyclopedia of Database Systems; Springer: Cham, Switzealand, 2009; pp. 257–260.
+21.   Karpukhin, V.; Oguz, B.; Min, S.; Lewis, P.S.; Wu, L.; Edunov, S.; Chen, D.; Yih, W.t. Dense Passage Retrieval for Open-Domain
+      Question Answering. In Proceedings of the EMNLP (1), Virtual, 16–20 November 2020; pp. 6769–6781.
+22.   Raffel, C.; Shazeer, N.; Roberts, A.; Lee, K.; Narang, S.; Matena, M.; Zhou, Y.; Li, W.; Liu, P.J. Exploring the limits of transfer
+      learning with a unified text-to-text transformer. J. Mach. Learn. Res. 2020, 21, 5485–5551.
+23.   Gao, Y.; Xiong, Y.; Wang, M.; Wang, H. Modular rag: Transforming rag systems into lego-like reconfigurable frameworks. arXiv
+      2024, arXiv:2407.21059.
+AI 2025, 6, 226                                                                                                                  27 of 29
+
+
+
+24.   Zhu, Y.; Ren, C.; Xie, S.; Liu, S.; Ji, H.; Wang, Z.; Sun, T.; He, L.; Li, Z.; Zhu, X.; et al. Realm: Rag-driven enhancement of
+      multimodal electronic health records analysis via large language models. arXiv 2024, arXiv:2402.07016. [CrossRef]
+25.   Izacard, G.; Lewis, P.; Lomeli, M.; Hosseini, L.; Petroni, F.; Schick, T.; Dwivedi-Yu, J.; Joulin, A.; Riedel, S.; Grave, E. Atlas:
+      Few-shot learning with retrieval augmented language models. J. Mach. Learn. Res. 2023, 24, 1–43.
+26.   Borgeaud, S.; Mensch, A.; Hoffmann, J.; Cai, T.; Rutherford, E.; Millican, K.; Van Den Driessche, G.B.; Lespiau, J.B.; Damoc, B.;
+      Clark, A.; et al. Improving language models by retrieving from trillions of tokens. In Proceedings of the 39th International
+      Conference on Machine Learning PMLR, Baltimore, MD, USA, 17–23 July 2022; pp. 2206–2240.
+27.   Zhao, X.; Liu, S.; Yang, S.Y.; Miao, C. Medrag: Enhancing retrieval-augmented generation with knowledge graph-elicited reason-
+      ing for healthcare copilot. In Proceedings of the ACM on Web Conference 2025, Sydney, NSW, Australia, 25 April–28 May 2025;
+      pp. 4442–4457.
+28.   Wang, C.; Long, Q.; Xiao, M.; Cai, X.; Wu, C.; Meng, Z.; Wang, X.; Zhou, Y. Biorag: A rag-llm framework for biological question
+      reasoning. arXiv 2024, arXiv:2408.01107.
+29.   Wang, G.; Yang, G.; Du, Z.; Fan, L.; Li, X. ClinicalGPT: large language models finetuned with diverse medical data and
+      comprehensive evaluation. arXiv 2023, arXiv:2306.09968. [CrossRef]
+30.   Gu, Y.; Tinn, R.; Cheng, H.; Lucas, M.; Usuyama, N.; Liu, X.; Naumann, T.; Gao, J.; Poon, H. Domain-specific language model
+      pretraining for biomedical natural language processing. ACM Trans. Comput. Healthc. (HEALTH) 2021, 3, 1–23. [CrossRef]
+31.   Kirubakaran, S.S.; Kathrine, J.W.G.; Kanaga, G.M.; Raja, M.J.; Singh, R.G.; Yuvaraajan, E. A RAG-based Medical Assistant
+      Especially for Infectious Diseases. In Proceedings of the 2024 International Conference on Inventive Computation Technologies
+      (ICICT), Lalitpur, Nepal, 24–26 April 2024; pp. 1128–1133. [CrossRef]
+32.   Upadhyay, R.; Viviani, M. Enhancing Health Information Retrieval with RAG by prioritizing topical relevance and factual
+      accuracy. Discov. Comput. 2025, 28, 27. [CrossRef]
+33.   Yang, Y.; Xu, C.; Guo, J.; Feng, T.; Ruan, C. Improving the RAG-based personalized discharge care system by introducing the
+      memory mechanism. In Proceedings of the 2025 IEEE 17th International Conference on Computer Research and Development
+      (ICCRD), Shangrao, China, 17–19 January 2025; IEEE: Piscataway, NJ, USA, 2025; pp. 316–322.
+34.   Hammane, Z.; Ben-Bouazza, F.E.; Fennan, A. SelfRewardRAG: enhancing medical reasoning with retrieval-augmented generation
+      and self-evaluation in large language models. In Proceedings of the 2024 International Conference on Intelligent Systems and
+      Computer Vision (ISCV), Fez, Morocco, 8–10 May 2024; IEEE: Piscataway, NJ, USA, 2024; pp. 1–8.
+35.   Xu, R.; Hong, Y.; Zhang, F.; Xu, H. Evaluation of the integration of retrieval-augmented generation in large language model for
+      breast cancer nursing care responses. Sci. Rep. 2024, 14, 30794. [CrossRef] [PubMed]
+36.   Hsu, H.L.; Dao, C.T.; Wang, L.; Shuai, Z.; Phan, T.N.M.; Ding, J.E.; Liao, C.C.; Hu, P.; Han, X.; Hsu, C.H.; et al. MEDPLAN:
+      A Two-Stage RAG-Based System for Personalized Medical Plan Generation. arXiv 2025, arXiv:2503.17900.
+37.   Aminan, M.I.; Darnell, S.S.; Delsoz, M.; Nabavi, S.A.; Wright, C.; Kanner, E.; Jerkins, B.; Yousefi, S. GlaucoRAG: A Retrieval-
+      Augmented Large Language Model for Expert-Level Glaucoma Assessment. medRxiv 2025, 2025.07.03.25330805. [CrossRef]
+38.   Thompson, W.E.; Vidmar, D.M.; Freitas, J.K.D.; Pfeifer, J.M.; Fornwalt, B.K.; Chen, R.; Altay, G.; Manghnani, K.; Nelsen, A.C.;
+      Morland, K.; et al. Large Language Models with Retrieval-Augmented Generation for Zero-Shot Disease Phenotyping. arXiv
+      2023, arXiv: 2312.06457.
+39.   Benfenati, D.; De Filippis, G.M.; Rinaldi, A.M.; Russo, C.; Tommasino, C. A retrieval-augmented generation application for
+      question-answering in nutrigenetics domain. Procedia Comput. Sci. 2024, 246, 586–595. [CrossRef]
+40.   Ziletti, A.; DAmbrosi, L. Retrieval augmented text-to-SQL generation for epidemiological question answering using electronic
+      health records. In Proceedings of the 6th Clinical Natural Language Processing Workshop, Mexico City, Mexico, 20–21 June 2024;
+      Naumann, T., Ben Abacha, A., Bethard, S., Roberts, K., Bitterman, D., Eds.; Association for Computational Linguistics: Mexico
+      City, Mexico, 2024; pp. 47–53. [CrossRef]
+41.   Pyae, M.S.; Phyo, S.S.; Kyaw, S.T.M.M.; Lin, T.S.; Chondamrongkul, N. Developing a RAG Agent for Personalized Fitness and
+      Dietary Guidance. In Proceedings of the 2025 Joint International Conference on Digital Arts, Media and Technology with ECTI
+      Northern Section Conference on Electrical, Electronics, Computer and Telecommunications Engineering (ECTI DAMT & NCON),
+      Nan, Thailand, 29 January–1 February 2025; IEEE: Piscataway, NJ, USA, 2025; pp. 600–605.
+42.   Cheetirala, S.N.; Raut, G.; Patel, D.; Sanatana, F.; Freeman, R.; Levin, M.A.; Nadkarni, G.N.; Dawkins, O.; Miller, R.; Steinhagen,
+      R.M.; et al. Less Context, Same Performance: A RAG Framework for Resource-Efficient LLM-Based Clinical NLP. arXiv 2025,
+      arXiv:2505.20320.
+43.   Kulshreshtha, A.; Choudhary, A.; Taneja, T.; Verma, S. Enhancing Healthcare Accessibility: A RAG-Based Medical Chatbot Using
+      Transformer Models. In Proceedings of the 2024 International Conference on IT Innovation and Knowledge Discovery (ITIKD),
+      Manama, Bahrain, 13–15 April 2025; IEEE: Piscataway, NJ, USA, 2025; pp. 1–4.
+44.   Shafi, F.R.; Hossain, M.A. Llm-therapist: A rag-based multimodal behavioral therapist as healthcare assistant. In Proceedings of
+      the GLOBECOM 2024—2024 IEEE Global Communications Conference, Cape Town, South Africa, 8–12 December 2024; IEEE:
+      Piscataway, NJ, USA, 2024; pp. 2129–2134.
+AI 2025, 6, 226                                                                                                                     28 of 29
+
+
+
+45.   Sree, Y.B.; Sathvik, A.; Akshit, D.S.H.; Kumar, O.; Rao, B.S.P. Retrieval-augmented generation based large language model chatbot
+      for improving diagnosis for physical and mental health. In Proceedings of the 2024 6th International Conference on Electrical,
+      Control and Instrumentation Engineering (ICECIE), Pattaya, Thailand, 23 November 2024; IEEE: Piscataway, NJ, USA, 2024;
+      pp. 1–8.
+46.   Sinha, K.; Singh, V.; Vishnoi, A.; Madan, P.; Shukla, Y. Healthcare Diagnostic RAG-Based Chatbot Triage Enabled by BioMistral-7B.
+      In Proceedings of the 2024 International Conference on Emerging Technologies and Innovation for Sustainability (EmergIN),
+      Greater Noida, India, 20–21 December 2024; IEEE: Piscataway, NJ, USA, 2024; pp. 333–338.
+47.   Nayinzira, J.P.; Adda, M. SentimentCareBot: Retrieval-augmented generation chatbot for mental health support with sentiment
+      analysis. Procedia Comput. Sci. 2024, 251, 334–341. [CrossRef]
+48.   Shin, M.; Song, J.; Kim, M.G.; Yu, H.W.; Choe, E.K.; Chai, Y.J. Thyro-GenAI: A Chatbot Using Retrieval-Augmented Generative
+      Models for Personalized Thyroid Disease Management. J. Clin. Med. 2025, 14, 2450. [CrossRef]
+49.   Miao, J.; Thongprayoon, C.; Suppadungsuk, S.; Garcia Valencia, O.A.; Cheungpasitporn, W. Integrating retrieval-augmented
+      generation with large language models in nephrology: advancing practical applications. Medicina 2024, 60, 445. [CrossRef]
+      [PubMed]
+50.   Ge, J.; Sun, S.; Owens, J.; Galvez, V.; Gologorskaya, O.; Lai, J.C.; Pletcher, M.J.; Lai, K. Development of a liver disease–specific
+      large language model chat interface using retrieval-augmented generation. Hepatology 2024, 80, 1158–1168. [CrossRef]
+51.   Long, C.; Subburam, D.; Lowe, K.; Santos, A.; Zhang, J.; Hwang, S.; Saduka, N.; Horev, Y.; Su, T.; Cote, D.; et al. ChatENT:
+      Augmented Large Language Model for Expert Knowledge Retrieval in Otolaryngology-Head and Neck Surgery. medRxiv 2024,
+      171, 1042–1051. [CrossRef] [PubMed]
+52.   Yu, H.; Guo, P.; Sano, A. Zero-Shot ECG Diagnosis with Large Language Models and Retrieval-Augmented Generation.
+      In Proceedings of the 3rd Machine Learning for Health Symposium, PMLR, Orleans, LA, USA, 10 December 2023; Volume 225,
+      pp. 650–663.
+53.   Chen, R.; Zhang, S.; Zheng, Y.; Yu, Q.; Wang, C. Enhancing treatment decision-making for low back pain: a novel framework
+      integrating large language models with retrieval-augmented generation technology. Front. Med. 2025, 12, 1599241. [CrossRef]
+54.   Rani, M.; Mishra, B.K.; Thakker, D.; Khan, M.N. To Enhance Graph-Based Retrieval-Augmented Generation (RAG) with Robust
+      Retrieval Techniques. In Proceedings of the 2024 18th International Conference on Open Source Systems and Technologies
+      (ICOSST), Lahore, Pakistan, 26–27 December 2024; IEEE: Piscataway, NJ, USA, 2024; pp. 1–6.
+55.   Wu, J.; Zhu, J.; Qi, Y.; Chen, J.; Xu, M.; Menolascina, F.; Grau, V. Medical graph rag: Towards safe medical large language model
+      via graph retrieval-augmented generation. arXiv 2024, arXiv:2408.04187. [CrossRef]
+56.   Edge, D.; Trinh, H.; Cheng, N.; Bradley, J.; Chao, A.; Mody, A.; Truitt, S.; Metropolitansky, D.; Ness, R.O.; Larson, J. From local to
+      global: A graph rag approach to query-focused summarization. arXiv 2024, arXiv:2404.16130. [CrossRef]
+57.   Sophaken, C.; Vongpanich, K.; Intaphan, W.; Utasri, T.; Deepho, C.; Takhom, A. Leveraging Graph-RAG for Enhanced Diagnostic
+      and Treatment Strategies in Dentistry. In Proceedings of the 2024 8th International Conference on Information Technology (InCIT),
+      Chonburi, Thailand, 14–15 November 2024; IEEE: Piscataway, NJ, USA, 2024; pp. 606–611.
+58.   Shi, W.; Zhuang, Y.; Zhu, Y.; Iwinski, H.; Wattenbarger, M.; Wang, M.D. Retrieval-augmented large language models for
+      adolescent idiopathic scoliosis patients in shared decision-making. In Proceedings of the 14th ACM International Conference on
+      Bioinformatics, Computational Biology, and Health Informatics, Houston, TX, USA, 3–6 September 2023; pp. 1–10.
+59.   Su, C.; Wen, J.; Kang, J.; Wang, Y.; Su, Y.; Pan, H.; Zhong, Z.; Hossain, M.S. Hybrid RAG-empowered multi-modal LLM for
+      secure data management in Internet of Medical Things: A diffusion-based contract approach. IEEE Internet Things J. 2024,
+      12, 13428–13440. [CrossRef]
+60.   Jabarulla, M.Y.; Oeltze-Jafra, S.; Beerbaum, P.; Uden, T. MedBlock-Bot: A Blockchain-Enabled RAG System for Providing
+      Feedback to Large Language Models Accessing Pediatric Clinical Guidelines. In Proceedings of the 2025 IEEE 38th International
+      Symposium on Computer-Based Medical Systems (CBMS), Madrid, Spain, 18–20 June 2025; IEEE: Piscataway, NJ, USA, 2025;
+      pp. 845–850.
+61.   Tayebi Arasteh, S.; Lotfinia, M.; Bressem, K.; Siepmann, R.; Adams, L.; Ferber, D.; Kuhl, C.; Kather, J.N.; Nebelung, S.; Truhn,
+      D. RadioRAG: Online Retrieval-augmented Generation for Radiology Question Answering. Radiol. Artif. Intell. 2025, e240476.
+      [CrossRef]
+62.   Papageorgiou, P.S.; Christodoulou, R.C.; Pitsillos, R.; Petrou, V.; Vamvouras, G.; Kormentza, E.V.; Papagelopoulos, P.J.; Georgiou,
+      M.F. The Role of Large Language Models in Improving Diagnostic-Related Groups Assignment and Clinical Decision Support in
+      Healthcare Systems: An Example from Radiology and Nuclear Medicine. Appl. Sci. 2025, 15, 9005. [CrossRef]
+63.   Alkhalaf, M.; Yu, P.; Yin, M.; Deng, C. Applying generative AI with retrieval augmented generation to summarize and extract key
+      clinical information from electronic health records. J. Biomed. Inform. 2024, 156, 104662. [CrossRef]
+64.   Asgari, E.; Montaña-Brown, N.; Dubois, M.; Khalil, S.; Balloch, J.; Yeung, J.A.; Pimenta, D. A framework to assess clinical safety
+      and hallucination rates of LLMs for medical text summarisation. NPJ Digit. Med. 2025, 8, 274. [CrossRef] [PubMed]
+AI 2025, 6, 226                                                                                                                  29 of 29
+
+
+
+65.   Abbasian, M.; Azimi, I.; Rahmani, A.M.; Jain, R. Conversational health agents: a personalized large language model-powered
+      agent framework. JAMIA Open 2025, 8, ooaf067. [CrossRef]
+66.   Zarfati, M.; Soffer, S.; Nadkarni, G.N.; Klang, E. Retrieval-Augmented Generation: Advancing personalized care and research in
+      oncology. Eur. J. Cancer 2025, 220, 115341. [CrossRef] [PubMed]
+67.   Han, B.; Susnjak, T.; Mathrani, A. Automating systematic literature reviews with retrieval-augmented generation: a comprehen-
+      sive overview. Appl. Sci. 2024, 14, 9103. [CrossRef]
+68.   Min, S.; Krishna, K.; Lyu, X.; Lewis, M.; Yih, W.t.; Koh, P.W.; Iyyer, M.; Zettlemoyer, L.; Hajishirzi, H. Factscore: Fine-grained
+      atomic evaluation of factual precision in long form text generation. arXiv 2023, arXiv:2305.14251.
+69.   Jain, S.; Agrawal, A.; Saporta, A.; Truong, S.Q.; Duong, D.N.; Bui, T.; Chambon, P.; Zhang, Y.; Lungren, M.P.; Ng, A.Y.; et al.
+      Radgraph: Extracting clinical entities and relations from radiology reports. arXiv 2021, arXiv:2106.14463. [CrossRef]
+70.   Irvin, J.; Rajpurkar, P.; Ko, M.; Yu, Y.; Ciurea-Ilcus, S.; Chute, C.; Marklund, H.; Haghgoo, B.; Ball, R.; Shpanskaya, K.; et al.
+      Chexpert: A large chest radiograph dataset with uncertainty labels and expert comparison. Proc. AAAI Conf. Artif. Intell. 2019,
+      33, 590–597. [CrossRef]
+71.   Jin, D.; Pan, E.; Oufattole, N.; Weng, W.H.; Fang, H.; Szolovits, P. What disease does this patient have? A large-scale open domain
+      question answering dataset from medical exams. Appl. Sci. 2021, 11, 6421. [CrossRef]
+72.   Jin, Q.; Dhingra, B.; Liu, Z.; Cohen, W.W.; Lu, X. Pubmedqa: A dataset for biomedical research question answering. arXiv 2019,
+      arXiv:1909.06146.
+73.   He, X.; Chen, S.; Ju, Z.; Dong, X.; Fang, H.; Wang, S.; Yang, Y.; Zeng, J.; Zhang, R.; Zhang, R.; et al. MedDialog: Two Large-scale
+      Medical Dialogue Datasets. arXiv 2020, arXiv:2004.03329.
+
+Disclaimer/Publisher’s Note: The statements, opinions and data contained in all publications are solely those of the individual
+author(s) and contributor(s) and not of MDPI and/or the editor(s). MDPI and/or the editor(s) disclaim responsibility for any injury to
+people or property resulting from any ideas, methods, instructions or products referred to in the content.
+
