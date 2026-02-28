@@ -12,6 +12,7 @@ def build_rag_prompt(
     history: Optional[list[dict[str, str]]] = None,
     summary: Optional[str] = None,
     patient_context: Optional[str] = None,
+    style_instruction: str = "",
 ) -> str:
     """Build RAG prompt with context chunks, patient data, and optional conversation history."""
     # Format chunks as JSONL
@@ -41,12 +42,8 @@ def build_rag_prompt(
 
     summary_block = summary or ""
 
-    prompt = f"""SYSTEM:
-You are a Clinical Decision Support Assistant.
-You must cite sources (Guidelines, Journals) and never invent medical facts.
-
-PATIENT DATA / CONTEXT:
-{patient_context if patient_context else "No specific patient data provided."}
+    prompt = f"""PATIENT DATA / CONTEXT:
+{patient_context if patient_context else ""}
 
 KNOWLEDGE BASE CONTEXT:
 {ctx_block}
@@ -61,13 +58,25 @@ USER QUESTION:
 {user_query}
 
 ASSISTANT INSTRUCTIONS:
-- Use the provided KNOWLEDGE BASE CONTEXT to answer the question.
-- If the question refers to the PATIENT DATA, prioritize that information for the specific case details, but use KNOWLEDGE BASE for medical reasoning/guidelines.
-- If the KNOWLEDGE BASE does not allow for a verifiable answer, say: "I don't have verifiable information in the clinical knowledge base for that query."
+- You MUST strictly answer the specific USER QUESTION. If the retrieved KNOWLEDGE BASE contains broader, tangential information (e.g., treatment lists when only a definition is asked), ignore it. Do not over-answer or summarize everything retrieved.
+- Interpret the clinical context and provide reasoning *before* making recommendations.
+- Integrate citations subtly and professionally into the natural flow of your explanation (e.g., "According to the provided guidelines [1]..."). DO NOT append a manual "References" or "Sources" section at the bottom.
+- Highlight risk stratification, red flags, and contraindications where clinically relevant.
+- Provide actionable next steps suitable for real-world clinical decision-making.
+- Use the provided KNOWLEDGE BASE CONTEXT for all medical reasoning and guidelines.
+- If the question refers to PATIENT DATA, prioritize that information for specifics, but ground the approach in the KNOWLEDGE BASE.
+- If no PATIENT DATA / CONTEXT is provided, frame uncertainty professionally mid-sentence (e.g., "In the absence of additional clinical details..." or "Assuming an otherwise healthy adult..."). DO NOT use boilerplate defensive disclaimers complaining about missing data.
+- If the KNOWLEDGE BASE lacks verifiable information, state: "I don't have verifiable information in the clinical knowledge base for that query."
 - DO NOT hallucinate.
+- Tone: Professional, confident, and helpful for a practicing physician. Do not sound like a machine.
+- Writing Style: Use shorter, sharper sentences. Present a clear clinically prioritized narrative. Prioritize common causes first before rare associations. Use bullet points sparingly and only when necessary for readability. Do not repeat citations excessively.
 - Respond in GitHub-Flavored Markdown (GFM).
-- **MANDATORY DISCLAIMER**: "This is a decision support output based on available guidelines. It is not a substitute for professional clinical judgment."
+
+REQUIRED RESPONSE STYLE AND SCOPE ENFORCEMENT:
+{style_instruction}
 """
+
+    return prompt
 
     return prompt
 

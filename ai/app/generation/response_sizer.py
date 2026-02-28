@@ -67,10 +67,9 @@ def classify_query(query: str) -> dict:
             max_tokens=1500,
             top_n=6,
             style_instruction=(
-                "Provide a comprehensive clinical response. "
-                "Structure: **Clinical Assessment**, **Differential Diagnosis** (if applicable), "
-                "**Management/Treatment approach**, and **Key Guidelines**. "
-                "Cite guidelines extensively."
+                "Tier 4 Response - Complex Case Strategy. Write a flowing consultant's note. DO NOT use rigid bold headers. "
+                "Start with clinical interpretation, stratify risk and probabilities, explicitly highlight red flags naturally in the text, "
+                "and conclude with clear, actionable management steps and monitoring guidance."
             ),
         )
         return {"type": "clinical_scenario", "response_mode": "detailed", "policy": policy}
@@ -82,9 +81,9 @@ def classify_query(query: str) -> dict:
             max_tokens=1200,
             top_n=5,
             style_instruction=(
-                "Provide structured clinical guidance. "
-                "Use sections: **Overview**, **Recommendations**, **Evidence**, and **Considerations**. "
-                "Use bullet points for clarity."
+                "Tier 3 Response - Structured Clinical Breakdown. Write a fluid consultant's note. DO NOT use rigid bold headers. "
+                "Provide clinical context, prioritize common considerations first, mention contraindications where relevant, "
+                "and offer practical, evidence-based management guidance."
             ),
         )
         return {"type": "clinical_guidance", "response_mode": "detailed", "policy": policy}
@@ -97,9 +96,9 @@ def classify_query(query: str) -> dict:
             max_tokens=300,
             top_n=3,
             style_instruction=(
-                "Provide a concise, direct answer. "
-                "State the key fact, dose, or definition clearly in 2-4 sentences. "
-                "Avoid unnecessary headers or long explanations."
+                "Tier 1 Response - Simple Fact. Provide a concise, clear, clinically useful explanation in a few sentences. "
+                "Answer EXACTLY what is asked and nothing more. DO NOT summarize tangential context (e.g., treatments, complications) if not explicitly requested. "
+                "DO NOT over-medicalize or introduce rare disease associations. DO NOT use rigid headers."
             ),
         )
         return {"type": "short_answer", "response_mode": "short", "policy": policy}
@@ -110,9 +109,9 @@ def classify_query(query: str) -> dict:
         max_tokens=800,
         top_n=4,
         style_instruction=(
-            "Provide a balanced explanation. "
-            "Use clear paragraphs and one level of bullet points if needed. "
-            "Highlight key clinical relevance."
+            "Tier 2 Response - Management/Guidance. Write a flowing clinical explanation. DO NOT use rigid bold headers. "
+            "Bridge pathophysiological or guideline theory with practical bedside application. "
+            "Suggest investigations rationally and sound confident and precise."
         ),
     )
     return {"type": "medium_explanation", "response_mode": "medium", "policy": policy}

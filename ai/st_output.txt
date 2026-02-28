@@ -1,0 +1,21 @@
+Starting
+Patched getproxies
+Traceback (most recent call last):
+  File "/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/test_st.py", line 7, in <module>
+    from sentence_transformers import SentenceTransformer
+  File "/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/.venv/lib/python3.14/site-packages/sentence_transformers/__init__.py", line 10, in <module>
+  File "/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/.venv/lib/python3.14/site-packages/sentence_transformers/backend/__init__.py", line 3, in <module>
+  File "/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/.venv/lib/python3.14/site-packages/sentence_transformers/backend/load.py", line 7, in <module>
+  File "/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/.venv/lib/python3.14/site-packages/transformers/__init__.py", line 27, in <module>
+  File "/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/.venv/lib/python3.14/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
+  File "/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/.venv/lib/python3.14/site-packages/transformers/utils/__init__.py", line 24, in <module>
+  File "/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/.venv/lib/python3.14/site-packages/transformers/utils/auto_docstring.py", line 30, in <module>
+  File "/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/.venv/lib/python3.14/site-packages/transformers/utils/generic.py", line 51, in <module>
+  File "/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/.venv/lib/python3.14/site-packages/torch/__init__.py", line 2236, in <module>
+  File "<frozen importlib._bootstrap>", line 1371, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1342, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 938, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 758, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 895, in get_code
+  File "<frozen importlib._bootstrap_external>", line 953, in get_data
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/shaikmohammedjabirhussain/Desktop/AI-CDSS/ai/.venv/lib/python3.14/site-packages/torch/signal/__init__.py'

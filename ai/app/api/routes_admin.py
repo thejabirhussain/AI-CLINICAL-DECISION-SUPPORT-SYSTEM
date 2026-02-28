@@ -106,3 +106,29 @@ async def trigger_ingest(
             detail="Internal server error",
         )
 
+@router.post("/ingest_parquet")
+async def ingest_parquet(
+    x_api_key: str = Header(..., alias="X-API-Key"),
+):
+    """Trigger ingestion pipeline from parquet file."""
+    try:
+        # Verify API key
+        await verify_api_key(x_api_key)
+
+        import app.scripts.ingest_parquet as ingest_script
+        ingest_script.main()
+
+        return {
+            "status": "success",
+            "message": "Ingestion completed successfully",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error triggering ingest_parquet: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+

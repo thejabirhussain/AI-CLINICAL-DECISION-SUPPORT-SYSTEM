@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, AnyUrl, HttpUrl
 
 
 class ChatMessage(BaseModel):
@@ -33,7 +33,7 @@ class ChatRequest(BaseModel):
 class Source(BaseModel):
     """Source citation schema."""
 
-    url: HttpUrl
+    url: AnyUrl
     title: str
     section: Optional[str] = None
     snippet: str

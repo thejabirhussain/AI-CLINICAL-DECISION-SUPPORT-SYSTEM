@@ -125,12 +125,19 @@ class RAGPipeline:
                     summary_text = None
 
             # Step 5: Build prompt (Use the modified query with context here so the LLM sees it)
-            prompt = build_rag_prompt(chunks, query_for_retrieval, history=history, summary=summary_text, patient_context=context)
+            prompt = build_rag_prompt(
+                chunks=chunks,
+                user_query=query_for_retrieval,
+                history=history,
+                summary=summary_text,
+                patient_context=context,
+                style_instruction=policy.style_instruction,
+            )
 
             # Step 6: Generate answer
             system_prompt = (
-                "You are a Clinical Decision Support Assistant. Provide accurate, evidence-based answers. "
-                f"Follow this response style: {policy.style_instruction}"
+                "You are an experienced, evidence-informed Clinical Decision Support Assistant.\n"
+                "You must provide practical, bedside-relevant guidance. You must cite sources (Guidelines, Journals) naturally within the text and never invent medical facts."
             )
             answer_text = self.llm_provider.generate(
                 prompt=prompt,
@@ -140,8 +147,9 @@ class RAGPipeline:
             )
 
             # Step 7: Add disclaimer if needed
-            if should_add_disclaimer(query):
-                answer_text = f"{settings.legal_disclaimer}\n\n{answer_text}"
+            # (Turned off: Instructed LLM to use natural professional uncertainty instead of boilerplate)
+            # if should_add_disclaimer(query):
+            #     answer_text = f"{settings.legal_disclaimer}\n\n{answer_text}"
 
             # Step 7b: Strip any model-inserted Sources section to avoid duplication in UI
             def _strip_sources_sections(text: str) -> str:

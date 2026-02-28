@@ -4,7 +4,6 @@ import logging
 from typing import Any
 
 import numpy as np
-from openai import OpenAI
 from sentence_transformers import SentenceTransformer
 
 from app.core.config import settings
@@ -33,6 +32,7 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
 
     def __init__(self):
         super().__init__()
+        from openai import OpenAI
         self.client = OpenAI(api_key=settings.openai_api_key)
         self.model_name = settings.openai_embed_model
 
