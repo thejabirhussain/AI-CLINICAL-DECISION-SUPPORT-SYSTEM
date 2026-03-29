@@ -62,8 +62,19 @@ cd ai
 cp .env.example .env
 # Edit .env with your specific API keys, QDRANT_URL, etc., if needed.
 
-# Start FastAPI server
-# Note: Ensure your virtual environment is activated and dependencies are installed.
+# 1. Create a virtual environment
+python3 -m venv venv
+
+# 2. Activate the virtual environment
+# On macOS and Linux:
+source venv/bin/activate
+# On Windows:
+# venv\Scripts\activate
+
+# 3. Install the required dependencies
+pip install -e .
+
+# 4. Start FastAPI server
 uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 The API will be available at `http://localhost:8000`. API Documentation (Swagger) is at `http://localhost:8000/docs`.

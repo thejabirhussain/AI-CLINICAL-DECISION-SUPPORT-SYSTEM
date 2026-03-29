@@ -1,0 +1,47 @@
+[MOCK DISCHARGE SUMMARY]
+
+PATIENT: John Doe
+AGE: 68
+GENDER: Male
+ADMISSION DATE: 05/10/2026
+DISCHARGE DATE: 05/15/2026
+
+CHIEF COMPLAINT:
+Shortness of breath and chest pain starting 3 hours prior to admission.
+
+HISTORY OF PRESENT ILLNESS:
+The patient is a 68-year-old male with a history of Type 2 Diabetes, Hypertension, and unprovoked DVT (2020) who presented to the ED with acute onset, crushing retrosternal chest pain radiating to the left arm. Initial EKG showed ST-segment elevation in leads V1-V4. 
+
+HOSPITAL COURSE:
+Patient was taken emergently to the cath lab where an acute 100% occlusion of the proximal LAD was identified and stented (1 x DES). Post-procedure, the patient developed mild acute kidney injury, likely secondary to contrast and transient hypotension. Peak troponin was 15.4. Echocardiogram showed EF of 40% with anterior wall hypokinesis.
+
+ACTIVE PROBLEMS ON DISCHARGE:
+1. Acute Anterior STEMI - s/p PCI to LAD
+2. Heart Failure with mildly reduced ejection fraction (HFmrEF)
+3. Acute Kidney Injury (improving)
+4. Type 2 Diabetes Mellitus
+5. Essential Hypertension
+
+ALLERGIES:
+Lisinopril (Causes severe angioedema)
+
+DISCHARGE MEDICATIONS:
+1. Aspirin 81mg PO Daily
+2. Ticagrelor 90mg PO BID
+3. Metoprolol Succinate 25mg PO Daily
+4. Atorvastatin 80mg PO Daily
+5. Metformin 1000mg PO BID
+6. Apixaban 5mg PO BID (Restarted for history of DVT)
+
+DISCHARGE LABS (05/15/2026):
+Sodium: 138
+Potassium: 4.2
+BUN: 32
+Creatinine: 1.5 (Baseline 0.9)
+Glucose: 210
+Hemoglobin: 11.2
+WBC: 8.5
+Troponin T: 0.12 (Trending down)
+
+PLAN:
+Follow up with cardiology in 1 week. Hold ACE inhibitors due to allergy. Need close monitoring of renal function on dual antiplatelet therapy plus apixaban (triple therapy risk).

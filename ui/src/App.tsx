@@ -43,7 +43,7 @@ function App() {
   ]);
   const [reasoningStep, setReasoningStep] = useState<ReasoningStep>('idle');
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [patientContext, setPatientContext] = useState<string>("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -80,7 +80,7 @@ function App() {
         if (!res.ok) throw new Error("Upload failed");
 
         const data = await res.json();
-        setPatientContext(prev => prev + "\n" + data.extracted_text);
+        setSessionId(data.session_id);
 
         setMessages(prev => {
           const newMsgs = [...prev];
@@ -116,18 +116,29 @@ function App() {
       await new Promise(r => setTimeout(r, 1200));
       setReasoningStep('retrieving');
 
-      const history = messages.map(m => ({ role: m.role, content: m.content }));
+      let resPromise;
 
-      const resPromise = fetch('http://localhost:8000/v1/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: userMsg.content,
-          history: history,
-          context: patientContext,
-          json: true
-        }),
-      });
+      if (sessionId) {
+        resPromise = fetch('http://localhost:8000/patient/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: userMsg.content,
+            session_id: sessionId
+          }),
+        });
+      } else {
+        const history = messages.map(m => ({ role: m.role, content: m.content }));
+        resPromise = fetch('http://localhost:8000/v1/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: userMsg.content,
+            history: history,
+            context: ""
+          }),
+        });
+      }
 
       await new Promise(r => setTimeout(r, 1500));
       setReasoningStep('generating');
@@ -135,10 +146,14 @@ function App() {
       const res = await resPromise;
       const data = await res.json();
 
+      setReasoningStep('idle');
+
+      if (!res.ok) {
+        throw new Error(data.detail || "Server error occurred.");
+      }
+
       const aiContent = data.answer_text || data.answer || "No response generated.";
       const sources = data.sources || [];
-
-      setReasoningStep('idle');
 
       setMessages(prev => [...prev, {
         role: 'assistant',
@@ -147,11 +162,11 @@ function App() {
         timestamp: new Date()
       }]);
 
-    } catch (error) {
+    } catch (error: any) {
       setReasoningStep('idle');
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: "Detailed clinical analysis unavailable at this moment. Please check system connection.",
+        content: error.message || "Detailed clinical analysis unavailable at this moment. Please check system connection.",
         timestamp: new Date()
       }]);
     }
@@ -269,7 +284,10 @@ function App() {
                         <div className="text-[9px] text-slate-400">{(file.size / 1024).toFixed(1)} KB</div>
                       </div>
                       <button className="text-slate-300 hover:text-rose-500 transition-colors">
-                        <X className="w-3.5 h-3.5" onClick={() => setFiles(prev => prev.filter(f => f.name !== file.name))} />
+                        <X className="w-3.5 h-3.5" onClick={() => {
+                          setFiles(prev => prev.filter(f => f.name !== file.name));
+                          setSessionId(null);
+                        }} />
                       </button>
                     </div>
                   ))}
@@ -326,7 +344,7 @@ function App() {
                   : 'bg-white text-slate-800 rounded-tl-sm border border-slate-200/60 shadow-slate-100'
                 }
               `}>
-                <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''} prose-p:my-1 prose-headings:font-bold prose-a:underline prose-a:underline-offset-2`}>
+                <div className={`prose max-w-none text-[15px] leading-relaxed ${msg.role === 'user' ? 'prose-invert text-white prose-p:text-white' : 'prose-slate text-slate-800'} prose-p:my-1.5 prose-headings:font-bold prose-h3:text-base prose-h3:text-slate-800 prose-h3:mt-5 prose-h3:mb-2 prose-h3:flex prose-h3:items-center prose-h3:gap-2 prose-strong:text-slate-800 prose-ul:my-2 prose-li:my-0.5 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline`}>
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                 </div>
               </div>
