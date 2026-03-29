@@ -92,6 +92,7 @@ class RAGPipeline:
                     "sources": [],
                     "confidence": "low",
                     "query_embedding_similarity": [],
+                    "follow_up_questions": [],
                     "response_level": policy.level,
                     "response_policy": {"max_tokens": policy.max_tokens, "top_n": policy.top_n},
                     "classification_type": cls.get("type"),
@@ -132,6 +133,7 @@ class RAGPipeline:
                 summary=summary_text,
                 patient_context=context,
                 style_instruction=policy.style_instruction,
+                response_mode=cls.get("response_mode", "detailed"),
             )
 
             # Step 6: Generate answer
@@ -247,6 +249,34 @@ class RAGPipeline:
                 "response_level": "simple",
                 "response_policy": {"max_tokens": 250, "top_n": 2},
             }
+
+    async def run(
+        self,
+        user_query: str,
+        history: Optional[list[dict[str, str]]] = None,
+        patient_context: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """Async wrapper for answer to use in API routes."""
+        import asyncio
+        loop = asyncio.get_running_loop()
+        
+        # We run the synchronous answer method in a thread pool to not block
+        result = await loop.run_in_executor(
+            None,
+            lambda: self.answer(
+                query=user_query,
+                history=history,
+                context=patient_context
+            )
+        )
+        
+        # Restructure to match expected output dictionary
+        return {
+            "answer": result["answer_text"],
+            "sources": result["sources"],
+            "confidence": result["confidence"],
+            "follow_up_questions": result.get("follow_up_questions", [])
+        }
 
 
 def get_rag_pipeline() -> RAGPipeline:

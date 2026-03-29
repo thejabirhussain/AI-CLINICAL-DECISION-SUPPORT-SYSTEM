@@ -101,6 +101,9 @@ def chunk_by_sliding_window(
     """Chunk text using sliding window with overlap."""
     chunks = []
     text_length = len(text)
+    
+    if text_length == 0:
+        return []
 
     if text_length <= max_chunk:
         return [(0, text_length, None)]
