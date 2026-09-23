@@ -1,6 +1,7 @@
 """Optimized cross-encoder reranking with parallel batch processing."""
 
 import logging
+import math
 from typing import Any, List
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import torch
@@ -132,7 +133,7 @@ class ParallelCrossEncoderReranker:
             # Attach scores to chunks
             for chunk, score in zip(batch, scores):
                 chunk["rerank_score"] = float(score)
-                chunk["score"] = float(score)  # Replace original score
+                chunk["score"] = 1.0 / (1.0 + math.exp(-float(score)))  # logit -> 0-1 relevance
             
             logger.debug(f"Batch {batch_idx}: scored {len(batch)} chunks")
             return batch

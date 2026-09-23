@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/errorboundary.tsx","./src/api.ts","./src/main.tsx","./src/types.ts","./src/vite-env.d.ts","./src/components/chatcolumn.tsx","./src/components/composer.tsx","./src/components/documentpanel.tsx","./src/components/home.tsx","./src/components/markdown.tsx","./src/components/patientoverview.tsx","./src/components/quickactions.tsx","./src/components/sidebar.tsx","./src/utils/citations.ts","./src/utils/encounters.ts"],"version":"5.9.3"}

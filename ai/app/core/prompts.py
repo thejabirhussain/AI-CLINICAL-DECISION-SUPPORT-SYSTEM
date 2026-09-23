@@ -18,8 +18,9 @@ def build_rag_prompt(
     """Build RAG prompt with context chunks, patient data, and optional conversation history."""
     # Format chunks as JSONL
     ctx_lines = []
-    for chunk in chunks:
+    for i, chunk in enumerate(chunks, 1):
         ctx_obj = {
+            "ref": i,
             "url": chunk.get("url", ""),
             "title": chunk.get("title", ""),
             "section_heading": chunk.get("section_heading"),
@@ -29,7 +30,10 @@ def build_rag_prompt(
         }
         ctx_lines.append(json.dumps(ctx_obj))
 
-    ctx_block = "\n".join(ctx_lines)
+    ctx_block = "\n".join(ctx_lines) or (
+        "No relevant knowledge base entries were found for this question. "
+        "Do not cite any references; state that the answer is based on general clinical knowledge."
+    )
 
     history_lines = []
     if history:
@@ -38,6 +42,9 @@ def build_rag_prompt(
         for turn in recent:
             role = turn.get("role", "user")
             content = turn.get("content", "")
+            # Earlier answers are left out: small local models copy them verbatim instead of answering the new question.
+            if role == "assistant":
+                continue
             history_lines.append(f"{role}: {content}")
     history_block = "\n".join(history_lines)
 
@@ -52,7 +59,7 @@ You are an advanced, evidence-based Clinical Decision Support Engine.
 === MEDICAL KNOWLEDGE BASE CONTEXT (GUIDELINES) ===
 {ctx_block}
 
-=== CONVERSATION HISTORY (Most recent at bottom) ===
+=== EARLIER QUESTIONS IN THIS CONVERSATION (Most recent at bottom) ===
 {history_block}
 
 === CONVERSATION SUMMARY ===
@@ -65,7 +72,11 @@ CRITICAL REASONING INSTRUCTIONS:
 1. Act as a highly trained physician consultant. You are answering a colleague.
 2. If PATIENT DATA is provided, you MUST analyze it specifically. Pay close attention to any tags labeled (FLAG: High/Low/Critical).
 3. If MEDICAL KNOWLEDGE BASE CONTEXT is relevant to the question or the patient data, strictly ground your reasoning in it. Do not invent medical guidelines.
-4. Maintain logical consistency with the CONVERSATION HISTORY. If the clinician is asking a 10th follow-up question about the same lab result, remember your previous conclusions.
+   Only cite [Ref N] numbers that appear in the knowledge base context above.
+   Distinguish current MEDICATIONS from ALLERGIES: never suggest stopping a drug the patient is only allergic to.
+4. Quote patient values EXACTLY as listed in the patient data (test name, value, unit and flag); never swap values between tests.
+5. Answer the CLINICIAN QUESTION that was asked now, directly, in your first sentence. Do not restate the whole lab list unless asked.
+6. For medication questions, check EACH current medication against kidney function (eGFR/creatinine), potassium, the other medications and the allergies, and state a concrete recommendation for each drug that is a concern. If the clinician is asking a 10th follow-up question about the same lab result, remember your previous conclusions.
 """
 
     if response_mode in ["medium", "detailed"]:
@@ -80,7 +91,7 @@ You must format your response EXACTLY using the following markdown headers. Do n
 (Highlight any critical values, absolute contraindications, or severe interaction risks. If none, state "No immediate standard risk flags identified.")
 
 ### 📚 Evidence Basis
-(Briefly explain how the medical guidelines/literature support your interpretation. Cite naturally, e.g., "According to [Ref 1]...")
+(Briefly explain how the medical guidelines/literature support your interpretation. Cite knowledge base entries by their "ref" number, e.g., "According to [Ref 1]...". If there are no knowledge base entries, say the reasoning is based on general clinical knowledge.)
 
 ### 📋 Actionable Next Steps
 (Provide 2-4 practical, concrete next steps for the clinician. What should they order, prescribe, or monitor next?)

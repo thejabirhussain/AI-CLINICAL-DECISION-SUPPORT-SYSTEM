@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Optional
 
 from app.generation.llm import get_llm_provider
@@ -11,6 +12,12 @@ def rewrite_query(query: str, history: Optional[list[dict[str, str]]] = None) ->
     If history is empty or irrelevant, returns the original query.
     """
     if not history:
+        return query
+
+    # Only rewrite follow-ups that refer back to earlier turns; self-contained questions are left untouched
+    # ("this patient" refers to the uploaded report, not to the conversation).
+    probe = re.sub(r"\b(this|the|that) patient('s)?\b", " ", query.lower())
+    if not re.search(r"\b(it|its|that|those|these|they|them|their|this|he|she|his|her|him|same|above|previous)\b", probe):
         return query
 
     # Use only the last few turns to keep it focused

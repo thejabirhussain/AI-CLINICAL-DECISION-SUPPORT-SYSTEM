@@ -1,6 +1,7 @@
 """Cross-encoder reranking for improved retrieval."""
 
 import logging
+import math
 from typing import Any, Optional
 
 import torch
@@ -60,7 +61,7 @@ class CrossEncoderReranker:
             reranked = []
             for chunk, score in scored_chunks[:top_n]:
                 chunk["rerank_score"] = float(score)
-                chunk["score"] = float(score)  # Use rerank score
+                chunk["score"] = 1.0 / (1.0 + math.exp(-float(score)))  # logit -> 0-1 relevance
                 reranked.append(chunk)
 
             logger.info(f"Reranked {len(chunks)} chunks to top {top_n}")

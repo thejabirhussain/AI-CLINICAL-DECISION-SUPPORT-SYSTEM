@@ -57,7 +57,7 @@ def main():
         
         metadata = {
             "url": f"local://MedQuAD/{i}",
-            "title": f"MedQuAD QA: {qtype}",
+            "title": question.strip().rstrip("?").strip() + "?" if question.strip() else f"MedQuAD QA: {qtype}",
             "section_heading": qtype,
             "char_start": 0,
             "char_end": len(text),

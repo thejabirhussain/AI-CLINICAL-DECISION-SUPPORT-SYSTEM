@@ -48,13 +48,15 @@ class PatientSession(BaseModel):
         if abnormal_labs:
             context_str += f"!!! ABNORMAL / CRITICAL LABS !!!\n"
             for lab in abnormal_labs:
-                context_str += f"- {lab.get('test_name')}: {lab.get('value')} {lab.get('unit', '')} (FLAG: {lab.get('flag')})\n"
+                ref = f", reference {lab['reference_range']}" if lab.get("reference_range") else ""
+                context_str += f"- {lab.get('test_name')} = {lab.get('value')} {lab.get('unit') or ''} -> {str(lab.get('flag')).upper()}{ref}\n"
             context_str += "\n"
         
         context_str += f"--- ALL EXTRACTED LABS ---\n"
         for lab in self.structured_data.get("labs", []):
              if lab.get("flag") not in ["High", "Low", "Critical"]:
-                context_str += f"- {lab.get('test_name')}: {lab.get('value')} {lab.get('unit', '')} (Normal)\n"
+                status = "Normal" if lab.get("flag") == "Normal" else "no reference range available"
+                context_str += f"- {lab.get('test_name')}: {lab.get('value')} {lab.get('unit', '')} ({status})\n"
             
         return context_str
 

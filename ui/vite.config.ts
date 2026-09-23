@@ -10,6 +10,7 @@ export default defineConfig({
     },
     proxy: {
       '/v1': 'http://localhost:8000',
+      '/patient': 'http://localhost:8000',
       '/admin': 'http://localhost:8000',
       '/health': 'http://localhost:8000'
     }
