@@ -1,0 +1,10 @@
+# Thin layer on top of a previously built API image (ai-cdss-api:latest) that adds the
+# dependencies the current code needs, so the demo doesn't require a full torch rebuild.
+# For a clean build from scratch use Dockerfile.api instead.
+FROM ai-cdss-api:latest
+
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends tesseract-ocr curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir pytesseract Pillow pyarrow
+USER appuser

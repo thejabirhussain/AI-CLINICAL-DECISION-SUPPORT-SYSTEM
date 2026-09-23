@@ -23,6 +23,9 @@ from app.vector.retriever import retrieve_with_cutoff
 
 logger = logging.getLogger(__name__)
 
+# Minimum cross-encoder relevance (sigmoid of the rerank logit) for a chunk to be used as evidence.
+MIN_RERANK_RELEVANCE = 0.05
+
 
 class RAGPipeline:
     """RAG pipeline for question answering."""
@@ -102,6 +105,8 @@ class RAGPipeline:
             # Step 3: Optional reranking
             if self.reranker and len(chunks) > top_n:
                 chunks = self.reranker.rerank(query_for_retrieval, chunks, top_n=top_n)
+                # Drop chunks the cross-encoder judges irrelevant so they neither ground the answer nor show as sources
+                chunks = [c for c in chunks if c.get("score", 0.0) >= MIN_RERANK_RELEVANCE]
             else:
                 chunks = chunks[:top_n]
 
@@ -128,7 +133,7 @@ class RAGPipeline:
             # Step 5: Build prompt (Use the modified query with context here so the LLM sees it)
             prompt = build_rag_prompt(
                 chunks=chunks,
-                user_query=query_for_retrieval,
+                user_query=query,  # answer what was asked; the rewrite is only for retrieval
                 history=history,
                 summary=summary_text,
                 patient_context=context,
@@ -139,7 +144,10 @@ class RAGPipeline:
             # Step 6: Generate answer
             system_prompt = (
                 "You are an experienced, evidence-informed Clinical Decision Support Assistant.\n"
-                "You must provide practical, bedside-relevant guidance. You must cite sources (Guidelines, Journals) naturally within the text and never invent medical facts."
+                "You must provide practical, bedside-relevant guidance and never invent medical facts.\n"
+                "Cite ONLY the knowledge base entries you were given, as [Ref 1], [Ref 2] etc. using their ref number. "
+                "Never name or cite guidelines, organizations, journals, years or publications that are not in the provided knowledge base context, "
+                "and never write a references list. If the knowledge base does not cover something, say it is based on general clinical knowledge."
             )
             answer_text = self.llm_provider.generate(
                 prompt=prompt,
@@ -159,12 +167,26 @@ class RAGPipeline:
                     r"\n+###\s*Sources[\s\S]*$",
                     r"\n+##\s*Sources[\s\S]*$",
                     r"\n+Sources:?[\s\S]*$",
+                    r"\n+#{0,3}\s*\**References\**:?[\s\S]*$",
                 ]
                 for p in patterns:
                     text = re.sub(p, "", text, flags=re.IGNORECASE)
                 return text.strip()
 
             answer_text = _strip_sources_sections(answer_text)
+
+            # Step 7c: Remove [Ref N] citations that don't correspond to a retrieved chunk (small models invent them)
+            def _drop_invalid_refs(text: str, n_refs: int) -> str:
+                def fix(m: re.Match) -> str:
+                    nums = [int(x) for x in re.findall(r"\d+", m.group(1))]
+                    valid = [x for x in nums if 1 <= x <= n_refs]
+                    return f"[Ref {', '.join(map(str, valid))}]" if valid else ""
+                text = re.sub(r"\[Refs?\.?\s*(\d+(?:\s*,\s*\d+)*)\]", fix, text)
+                text = re.sub(r"\[Refs?\.?\s*[A-Za-z]\]", "", text)  # placeholders such as "[Ref N]"
+                text = re.sub(r"(According to|As noted in|Per)\s*,", r"\1 the available evidence,", text)
+                return re.sub(r"[ \t]{2,}", " ", text)
+
+            answer_text = _drop_invalid_refs(answer_text, len(chunks))
 
             # Step 8: Format sources
             sources = []
