@@ -1,0 +1,50 @@
+‘SYNTHETIC PATIENT RECORD — FOR DEMONSTRATION ONLY. NOT A REAL PERSON.
+Riverside General Hospital — Discharge Summary
+Patient: Maria Alvarez (synthetic) © MRN: DEMO-240917
+Age / Sex: 64-year-old Female        Attending: Internal Medicine
+Admitted: 09/14/2026                   Discharged: 09/18/2026
+Chief Complaint
+Progressive fatigue, shortness of breath on exertion and intermittent chest tightness for 3 weeks.
+History of Present Illness
+64-year-old woman with long-standing type 2 diabetes, hypertension and chronic kidney disease who presented with 3
+weeks of worsening fatigue, exertional dyspnea and two episodes of chest tightness at rest lasting under 10 minutes.
+‘She reports ankle swelling and taking ibuprofen several times daily for knee osteoarthritis. ECG showed sinus rhythm
+without acute ST changes. Troponin | was mildly elevated and stable on repeat. Hemoglobin and ferritin were low.
+Potassium was elevated on admission and treated.
+Active Problems / Past Medical History
++ Type 2 diabetes mellitus (12 years), poorly controlled
++ Chronic kidney disease, stage 4 (baseline creatinine 1.8)
++ Essential hypertension
++ Iron deficiency anemia
++ Hyperlipidemia
++ Osteoarthritis of both knees
+Allergies
+‘Sulfa drugs (rash); Penicillin (hives)
+Current Medications
++ Metformin 1000 mg PO twice daily
+* Lisinopril 20 mg PO daily
++ Amlodipine 10 mg PO daily
++ Atorvastatin 40 mg PO daily
++ Ibuprofen 400 mg PO three times daily as needed for knee pain
++ Ferrous sulfate 325 mg PO daily
+Laboratory Results (09/17/2026)
+Test                  Result Units               Reference Flag
+Glucose (fasting) 248 gid.              70-99 H
+Hate       920%        40-56 H
+Hemoglobin    94 gid       120-185 Lb
+Ferritin               9          gim              18-200 L
+wec                 74 10°9L              45-110
+Platelets             262 10°90.              150 - 450
+Sodium      133 mEgl.      195-145 ok
+Potassium           58 meg              35-50 HH
+BUN                  42 mail              7-20          H
+Creatinine            24 mall              06-12 H
+
+GFR                26         mLimin/t.73m2 > 60           L
+Troponin |            0.07 ngiml.              0.00-0.04
+LDL cholesterol 142 mg/dL.              < 100          H
+Vitals at Discharge
+BP 158/92 mmHg, HR 88, SpO2 96% on room air, weight 82 kg, BMI 31
+Discharge Plan
+Follow up with primary care and nephrology in 1 week. Repeat BMP in 8 days. Cardiology referral for outpatient stress
+testing. Medication review requested.

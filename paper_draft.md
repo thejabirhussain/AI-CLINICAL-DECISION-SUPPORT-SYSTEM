@@ -1,7 +1,29 @@
+> ## ⚠ DRAFT — RESULTS WITHDRAWN
+>
+> **This draft previously reported quantitative results — retrieval latency,
+> retrieval precision with confidence intervals, response relevance, citation
+> rate, hallucination rate, a chi-squared test and ablation tables — that were
+> never measured.** No evaluation producing those figures exists in this
+> repository: there is no results file, no annotation set, and no script that
+> computes any of them. The figures were also mutually inconsistent across the
+> five drafts of this paper, and the reported chi-squared statistic does not
+> match the contingency table it was supposedly computed from.
+>
+> Those sections have been removed rather than corrected. **Do not cite, submit
+> or circulate any version of this document that contains them.**
+>
+> What remains below — motivation, related work, architecture and methodology —
+> describes a system that genuinely exists and can be read in `ai/` and `ui/`.
+> It is a system description, not an evaluated study.
+>
+> For work on this system that *is* measured, see the fault-injection study in
+> `poster-experiment/`: a controlled experiment with machine-readable ground
+> truth, a calibration gate, and committed per-observation results.
+
 # An End-to-End AI Clinical Decision Support System Using Retrieval-Augmented Generation
 
 ## Abstract
-The rapid advancement of Large Language Models (LLMs) has opened new frontiers for Clinical Decision Support Systems (CDSS), yet their adoption in healthcare is hindered by the risk of hallucinations and the lack of up-to-date medical knowledge. While Retrieval-Augmented Generation (RAG) offers a promising solution by grounding model outputs in external verified data, much of the existing research remains confined to theoretical algorithms or isolated prototypes. This paper presents the design and implementation of a complete, end-to-end AI-powered CDSS that integrates a modular microservices architecture with a RAG pipeline. The system features a responsive React-based frontend for clinician interaction, a robust FastAPI backend, and a specialized vector database (Qdrant) for the semantic retrieval of medical guidelines. We detail the system's architectural components, including a secure data ingestion pipeline capable of processing complex medical documents. System-level evaluation demonstrates that the proposed architecture achieves low-latency retrieval and generates grounded, relevant clinical responses, mitigating the risks associated with unverified LLM generation. This work contributes a practical, deployment-ready architectural blueprint for modernizing clinical workflows with reliable AI assistance.
+The rapid advancement of Large Language Models (LLMs) has opened new frontiers for Clinical Decision Support Systems (CDSS), yet their adoption in healthcare is hindered by the risk of hallucinations and the lack of up-to-date medical knowledge. While Retrieval-Augmented Generation (RAG) offers a promising solution by grounding model outputs in external verified data, much of the existing research remains confined to theoretical algorithms or isolated prototypes. This paper presents the design and implementation of a complete, end-to-end AI-powered CDSS that integrates a modular microservices architecture with a RAG pipeline. The system features a responsive React-based frontend for clinician interaction, a robust FastAPI backend, and a specialized vector database (Qdrant) for the semantic retrieval of medical guidelines. We detail the system's architectural components, including a secure data ingestion pipeline capable of processing complex medical documents. No system-level evaluation has been performed, so no claim is made about retrieval latency, response relevance or hallucination. This work contributes a practical architectural blueprint for clinical workflows.
 
 **Keywords**: Clinical Decision Support Systems, Retrieval-Augmented Generation, Healthcare AI, Medical Information Retrieval, Vector Databases, Microservices Architecture.
 
