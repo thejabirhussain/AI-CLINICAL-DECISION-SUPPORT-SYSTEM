@@ -1,3 +1,25 @@
+> ## ⚠ DRAFT — RESULTS WITHDRAWN
+>
+> **This draft previously reported quantitative results — retrieval latency,
+> retrieval precision with confidence intervals, response relevance, citation
+> rate, hallucination rate, a chi-squared test and ablation tables — that were
+> never measured.** No evaluation producing those figures exists in this
+> repository: there is no results file, no annotation set, and no script that
+> computes any of them. The figures were also mutually inconsistent across the
+> five drafts of this paper, and the reported chi-squared statistic does not
+> match the contingency table it was supposedly computed from.
+>
+> Those sections have been removed rather than corrected. **Do not cite, submit
+> or circulate any version of this document that contains them.**
+>
+> What remains below — motivation, related work, architecture and methodology —
+> describes a system that genuinely exists and can be read in `ai/` and `ui/`.
+> It is a system description, not an evaluated study.
+>
+> For work on this system that *is* measured, see the fault-injection study in
+> `poster-experiment/`: a controlled experiment with machine-readable ground
+> truth, a calibration gate, and committed per-observation results.
+
 # An End-to-End AI Clinical Decision Support System Using Retrieval-Augmented Generation
 
 **Authors:** [To be completed]  
@@ -236,81 +258,38 @@ This separation ensures patient data isolation while enabling personalized clini
 
 ---
 
-## 5. Experimental Setup and Evaluation
+## Evaluation (not yet performed)
 
-### 5.1 Deployment Configuration
+This section previously contained reported experimental results. Those results
+were not produced by any experiment and have been removed.
 
-An exploratory evaluation was conducted using containerized deployment with the following components:
+**What would be needed to fill this section honestly:**
 
-- Backend API service on Python runtime
-- Vector database with HNSW indexing
-- Web interface served via development server
-- Cloud-based embedding service (1536-dimensional vectors)
-- Cloud-based language model for generation
+1. **A defined corpus with provenance.** The indexed knowledge base is MedQuAD —
+   consumer-health question–answer pairs scraped from NIH websites, with
+   automatically generated questions. It is not a corpus of clinical practice
+   guidelines, and no result should describe it as one.
+2. **Relevance judgements.** Retrieval precision and recall require a human to
+   judge query–chunk pairs against a written rubric. None exist.
+3. **Gold answers or clinician adjudication.** Answer correctness cannot be
+   assessed without them, and the author is not a clinician.
+4. **A separation of citation properties.** A citation may be *resolvable* (it
+   points at a retrieved chunk), *supported* (that chunk entails the sentence),
+   or *correct* (the sentence is true). Only the first is machine-decidable.
+   `app/scripts/eval_suite.py` measures resolvability and abstention and
+   explicitly states that it measures nothing else.
+5. **A fair baseline.** Any RAG-versus-no-RAG comparison needs both
+   configurations evaluated under identical conditions on the same queries.
+6. **Pre-registered metrics and reproducible runs**, with results committed.
 
-### 5.2 Knowledge Base
-
-The evaluation knowledge base contained medical guidelines and reference documents, resulting in several thousand indexed chunks after processing. Content included clinical practice guidelines, medical reference materials, and procedural documentation.
-
-### 5.3 Test Queries
-
-A diverse set of clinical queries was constructed spanning:
-
-- Diagnostic criteria inquiries
-- Treatment approach questions
-- Pharmacological information requests
-- Pathophysiology explanations
-
-### 5.4 Evaluation Approach
-
-The evaluation focused on system-level feasibility rather than quantitative performance metrics:
-
-**Retrieval Assessment**:
-- Qualitative review of retrieval relevance
-- Examination of source diversity
-- Analysis of structural metadata preservation
-
-**Generation Assessment**:
-- Manual evaluation of response appropriateness
-- Verification of source citation presence
-- Review of factual grounding
-
-**System Characteristics**:
-- Observation of response latency patterns
-- Assessment of error handling
-- Review of scalability characteristics
-
-### 5.5 Results
-
-**Retrieval Observations**:
-
-The semantic retrieval system generally identified content relevant to submitted queries. The similarity-based filtering mechanism successfully excluded highly dissimilar content. Metadata preservation enabled precise source attribution including section-level citations.
-
-Queries aligned with knowledge base content produced relevant retrievals, while queries outside the indexed domain triggered appropriate low-confidence indicators.
-
-**Generation Observations**:
-
-Generated responses typically addressed the clinical questions posed and incorporated information from retrieved context. Source citations consistently appeared in responses, enabling verification. 
-
-Query enhancement for conversational context produced improved retrieval for multi-turn interactions compared to using raw follow-up queries.
-
-**System Characteristics**:
-
-The system demonstrated responsive behavior suitable for interactive use. The modular architecture enabled independent component testing and troubleshooting. Provider switching (between embedding and generation services) functioned as designed.
-
-**Qualitative Notes**:
-
-Response quality correlated with knowledge base coverage—well-represented topics produced more comprehensive answers. Some responses exhibited verbosity that could benefit from conciseness optimization. The confidence scoring mechanism generally aligned with subjective response quality assessment.
-
-### 5.6 Discussion
-
-The exploratory evaluation demonstrates the feasibility of the proposed architecture for clinical decision support applications. The system successfully integrates presentation, application, and data layers to provide retrieval-augmented response generation.
-
-The modular design facilitated component-level development and testing, supporting iterative refinement. The multi-provider support enabled exploration of cost-performance trade-offs across different embedding and generation services.
-
-Limitations of this evaluation include the constrained knowledge base size relative to production requirements, use of constructed rather than authentic clinical queries, and qualitative rather than quantitative assessment methodology. These limitations suggest directions for future validation efforts.
-
----
+**Measured work that does exist.** A controlled fault-injection study of the
+document-image ingestion path — OCR, structured extraction, abnormal-value
+flagging — is reported in `poster-experiment/`. It uses a synthetic report with
+machine-readable ground truth for 13 analytes, 832 analyte observations across
+32 image-degradation conditions, and a calibration gate that refuses to report
+any degradation figure unless the undegraded render is extracted perfectly. Its
+findings concern error propagation and the blindness of threshold-based
+flagging; they say nothing about retrieval or answer quality.
 
 ## 6. Limitations and Ethical Considerations
 
@@ -373,7 +352,6 @@ Key contributions include:
 1. A comprehensive architectural blueprint suitable for institutional adaptation
 2. Detailed component design for medical document processing and conversational interaction
 3. Implementation patterns for multi-provider support enabling deployment flexibility
-4. Exploratory evaluation demonstrating system feasibility
 
 The work bridges the gap between algorithmic research on retrieval-augmented generation and practical healthcare system deployment, providing institutions with a reference architecture for exploring language model integration into clinical workflows.
 

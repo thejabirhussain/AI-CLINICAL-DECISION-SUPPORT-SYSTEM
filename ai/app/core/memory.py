@@ -30,7 +30,7 @@ class PatientSession(BaseModel):
         # We want to highlight abnormal labs specifically for the LLM
         abnormal_labs = [
             lab for lab in self.structured_data.get("labs", [])
-            if lab.get("flag") in ["High", "Low", "Critical"]
+            if lab.get("flag") in ["High", "Low", "Critical", "Implausible"]
         ]
         
         context_str = f"--- PATIENT DEMOGRAPHICS ---\n"
@@ -46,7 +46,7 @@ class PatientSession(BaseModel):
         context_str += f"Allergies: {', '.join(self.structured_data.get('allergies', []))}\n\n"
         
         if abnormal_labs:
-            context_str += f"!!! ABNORMAL / CRITICAL LABS !!!\n"
+            context_str += f"!!! ABNORMAL / CRITICAL / IMPLAUSIBLE LABS !!!\n"
             for lab in abnormal_labs:
                 ref = f", reference {lab['reference_range']}" if lab.get("reference_range") else ""
                 context_str += f"- {lab.get('test_name')} = {lab.get('value')} {lab.get('unit') or ''} -> {str(lab.get('flag')).upper()}{ref}\n"
@@ -54,7 +54,7 @@ class PatientSession(BaseModel):
         
         context_str += f"--- ALL EXTRACTED LABS ---\n"
         for lab in self.structured_data.get("labs", []):
-             if lab.get("flag") not in ["High", "Low", "Critical"]:
+             if lab.get("flag") not in ["High", "Low", "Critical", "Implausible"]:
                 status = "Normal" if lab.get("flag") == "Normal" else "no reference range available"
                 context_str += f"- {lab.get('test_name')}: {lab.get('value')} {lab.get('unit', '')} ({status})\n"
             
