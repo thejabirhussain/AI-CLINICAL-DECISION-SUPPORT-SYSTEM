@@ -1,0 +1,22 @@
+condition,label,seed,n_wrong,quotes_corrupt,lisinopril_urgent,lisinopril_softer,lisinopril_text
+baseline_300dpi,300 dpi (all correct),0,0,,False,False,"**Lisinopril 20 mg PO daily**: The patient's potassium level is 5. 8 mEq/L (FLAG: High), which may be related to lisinopril's potassium-raising effect."
+baseline_300dpi,300 dpi (all correct),1,0,,True,False,"**Lisinopril (20 mg PO daily)**: The patient's eGFR is 26 mL/min/1.  Lisinopril, an ACE inhibitor, can exacerbate renal failure.  **STOP Lisinopril immediately**."
+baseline_300dpi,300 dpi (all correct),2,0,,False,True,"**Lisinopril**: Due to the patient's elevated creatinine (2. 73m2, FLAG: Low), lisinopril should be **dose-adjusted** to minimize further kidney strain. 8 mEq/L, FLAG: High) are also a concern, as lisinopril can increase potassium levels.  **Lisinopril** (dose adjustment for kidney function and pota"
+baseline_300dpi,300 dpi (all correct),3,0,,False,False,"Lisinopril 20 mg PO daily:
+  Lisinopril is a potassium-sparing diuretic and should be used cautiously in patients with renal impairment."
+baseline_300dpi,300 dpi (all correct),4,0,,False,True,"**Lisinopril**: The patient's potassium level is elevated, and lisinopril can increase potassium levels further.  I recommend dose-adjusting lisinopril to minimize the risk of hyperkalemia."
+baseline_300dpi,300 dpi (all correct),5,0,,False,True,"**Lisinopril 20 mg PO daily**
+  Lisinopril is a kidney-damaging ACE inhibitor.  I recommend **dose-adjusting lisinopril** to 10 mg PO daily, considering the patient's stage 4 chronic kidney disease."
+dpi_150,"150 dpi (creatinine 2.1→21, WBC 7.4→74)",0,2,True,False,False,"**Lisinopril 20 mg PO daily**: Lisinopril is generally safe, but with a high potassium level (5."
+dpi_150,"150 dpi (creatinine 2.1→21, WBC 7.4→74)",1,2,True,True,False,"**Lisinopril (20 mg PO daily)**: The patient's eGFR is 26 mL/min/1.  Lisinopril, an ACE inhibitor, may exacerbate renal impairment.  **Recommend: Hold lisinopril and monitor kidney function closely."
+dpi_150,"150 dpi (creatinine 2.1→21, WBC 7.4→74)",2,2,True,False,True,"**Lisinopril**: The patient's high creatinine (21 mg/dL) and eGFR (26 mL/min/1.  Lisinopril is an ACE inhibitor, which can worsen renal function in patients with kidney impairment.  I recommend dose-reducing or considering an alternative to lisinopril. * Dose-reduce or consider an alternative to lis"
+dpi_150,"150 dpi (creatinine 2.1→21, WBC 7.4→74)",3,2,True,False,True,Lisinopril 20 mg PO daily: The patient's high creatinine level (21 mg/dL) and low eGFR (26 mL/min/1.  Lisinopril should be dose-adjusted to reduce the risk of acute kidney injury.
+dpi_150,"150 dpi (creatinine 2.1→21, WBC 7.4→74)",4,2,False,False,True,"**Lisinopril**: The patient's potassium level is high, and lisinopril can increase potassium levels.  I recommend dose-adjusting lisinopril to minimize potassium elevation and kidney strain."
+dpi_150,"150 dpi (creatinine 2.1→21, WBC 7.4→74)",5,2,False,False,False,**Lisinopril 20 mg PO daily**
+dpi_100,100 dpi (potassium 5.8→58),0,4,False,False,False,"**Lisinopril 20 mg PO daily**: Lisinopril is an ACE inhibitor, which can worsen renal function in patients with CKD."
+dpi_100,100 dpi (potassium 5.8→58),1,4,True,False,False,"**Lisinopril 20 mg PO daily**: The patient's eGFR is low (26 mL/min/1.  Lisinopril is a potassium-sparing diuretic, which may contribute to the patient's high potassium level (58 mEq/L).  I recommend **dose-reducing Lisinopril** to minimize potassium retention."
+dpi_100,100 dpi (potassium 5.8→58),2,4,True,False,True,**Lisinopril 20 mg PO daily**: Concern due to **eGFR 26 mL/min/1.  Lisinopril may need dose adjustment or consideration of alternative potassium-lowering therapy.
+dpi_100,100 dpi (potassium 5.8→58),3,4,True,False,True,"**Lisinopril (20 mg PO daily)**: The patient's eGFR is 26 mL/min/1.  Lisinopril is a potassium-sparing diuretic, and the patient's potassium is high (58 mEq/L).  I recommend **dose-adjusting** lisinopril, as high potassium levels can be a concern."
+dpi_100,100 dpi (potassium 5.8→58),4,4,True,False,False,
+dpi_100,100 dpi (potassium 5.8→58),5,4,True,False,False,"**Lisinopril 20 mg PO daily**
+ 73m2) and elevated potassium (58 mEq/L), I would advise holding lisinopril until the potassium level normalizes, as ACE inhibitors can worsen hyperkalemia in renal impairment."

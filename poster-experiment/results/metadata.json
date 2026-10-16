@@ -1,0 +1,11 @@
+{
+  "pdf": "repo/cdss/demo/patient_report_maria_alvarez.pdf",
+  "pages": [
+    0,
+    1
+  ],
+  "psm": 6,
+  "n_conditions": 64,
+  "n_analytes": 13,
+  "tesseract": "tesseract 5.5.1"
+}

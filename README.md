@@ -1,6 +1,11 @@
 # Clinical Decision Support System (AI-CDSS)
 
-A production-ready Retrieval-Augmented Generation (RAG) service and React-based dashboard for Clinical Decision Support. The system provides verifiable citations for every answer from trusted medical guidelines and supports patient data analysis.
+A research prototype: a Retrieval-Augmented Generation (RAG) service and React dashboard for clinical decision support. Answers carry citations to the retrieved passages that produced them, and patient documents (PDF or image) can be uploaded for context.
+
+> **Status: research prototype. Not evaluated, not validated, not for clinical use.**
+> No retrieval-quality, answer-correctness or hallucination evaluation has been performed.
+> The paper drafts in this repository previously reported such results; those results were never measured and have been withdrawn.
+> For work on this system that *is* measured, see the fault-injection study described below.
 
 ## 🏗 Architecture
 
@@ -22,9 +27,9 @@ The platform consists of three main components:
 
 - **Clinical Knowledge Base**: Ingests medical guidelines and journals (HTML and PDFs).
 - **Patient Context Aware**: Upload patient reports (PDF) and images to ground AI analysis.
-- **Evidence-Based & Citation System**: Answers queries using retrieved medical sources with specific section/page citations.
+- **Citation system**: answers cite the retrieved passages by reference number, and markers that do not resolve to a retrieved passage are stripped before display. A resolvable citation means the reference points at a retrieved chunk — **not** that the chunk supports the sentence citing it.
 - **Clinical Chat UI**: Markdown-rendered chat with reference viewers.
-- **Guardrails**: Clinical disclaimers and "unknown" fallbacks for safety.
+- **Fallbacks**: an explicit "no verifiable information" path when nothing clears the retrieval similarity cutoff. *(Note: the legal-disclaimer injection in `pipeline.py` is currently commented out.)*
 - **Multi-format Support**: Handles HTML, PDFs, and Medical Images (OCR).
 
 ## 🛠 Prerequisites
@@ -104,10 +109,36 @@ python -m app.scripts.ingest_web --seed "https://www.cdc.gov/flu/" --max-pages 5
 
 ## 🧪 Testing & Evaluation
 
-Run the backend evaluation suite with clinical queries from the `ai/` directory:
+**Unit tests** (from `ai/`):
+```bash
+PYTHONPATH=. python -m pytest app/tests/ -q
+```
+
+**Smoke / instrumentation suite** over 20 clinical information queries:
 ```bash
 python -m app.scripts.eval_suite --output-file eval_results.json
 ```
+This reports retrieval hit rate, abstention rate, citation presence, citation
+*resolvability* and latency. It does **not** measure retrieval precision,
+answer correctness, citation support or hallucination rate, and its output must
+not be described as if it did. See the module docstring.
+
+Note the CI workflow lives at `ai/infra/github-actions/ci.yml` and is **not** in
+`.github/workflows/`, so GitHub does not currently run it.
+
+### Fault-injection study (measured)
+
+A controlled study of the document-image path — OCR → extraction →
+abnormal-value flagging — using a synthetic report with machine-readable
+ground truth for 13 analytes: 832 analyte observations across 32 image
+degradation conditions, behind a calibration gate that refuses to report any
+degradation figure unless the undegraded render extracts perfectly.
+
+Headline results: at 150 dpi, 98.3% of characters are read correctly while 15%
+of laboratory values are wrong; 65% of corrupted values kept the same
+abnormal-value flag as the true value. The plausibility check now in
+`clinical_parser.py` converts 9 of those 28 silent corruptions into visible
+ones — the other 19 remain invisible.
 
 ## 🔒 Security & Compliance
 
