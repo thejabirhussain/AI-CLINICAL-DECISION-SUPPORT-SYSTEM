@@ -1,8 +1,30 @@
+> ## ⚠ DRAFT — RESULTS WITHDRAWN
+>
+> **This draft previously reported quantitative results — retrieval latency,
+> retrieval precision with confidence intervals, response relevance, citation
+> rate, hallucination rate, a chi-squared test and ablation tables — that were
+> never measured.** No evaluation producing those figures exists in this
+> repository: there is no results file, no annotation set, and no script that
+> computes any of them. The figures were also mutually inconsistent across the
+> five drafts of this paper, and the reported chi-squared statistic does not
+> match the contingency table it was supposedly computed from.
+>
+> Those sections have been removed rather than corrected. **Do not cite, submit
+> or circulate any version of this document that contains them.**
+>
+> What remains below — motivation, related work, architecture and methodology —
+> describes a system that genuinely exists and can be read in `ai/` and `ui/`.
+> It is a system description, not an evaluated study.
+>
+> For work on this system that *is* measured, see the fault-injection study in
+> `poster-experiment/`: a controlled experiment with machine-readable ground
+> truth, a calibration gate, and committed per-observation results.
+
 # An End-to-End AI Clinical Decision Support System Using Retrieval-Augmented Generation
 
 ## Abstract
 
-Large Language Models (LLMs) have demonstrated significant potential for enhancing Clinical Decision Support Systems (CDSS) through natural language understanding and generation capabilities. However, their deployment in healthcare settings faces critical challenges, including the generation of factually incorrect information (hallucinations) and limited access to current medical knowledge. Retrieval-Augmented Generation (RAG) addresses these limitations by grounding LLM outputs in external, verifiable knowledge sources. While RAG has shown promise in healthcare applications, existing research predominantly focuses on algorithmic improvements or isolated prototypes, leaving a gap in comprehensive, deployment-ready system architectures. This paper presents the design, implementation, and evaluation of a complete, end-to-end AI-powered CDSS that integrates a modular microservices architecture with a RAG pipeline. The system comprises a React-based frontend for clinician interaction, a FastAPI backend service, and a Qdrant vector database for semantic retrieval of medical guidelines. We detail the architectural components, including a specialized data ingestion pipeline capable of processing complex medical documents, query rewriting mechanisms for conversational context, and adaptive response generation policies. System-level evaluation demonstrates that the proposed architecture achieves sub-second retrieval latency and generates grounded, relevant clinical responses with verifiable source citations. The system mitigates hallucination risks through similarity-based filtering and explicit source attribution. This work contributes a practical, deployment-ready architectural blueprint for modernizing clinical workflows with reliable AI assistance, emphasizing modularity, scalability, and ethical considerations.
+Large Language Models (LLMs) have demonstrated significant potential for enhancing Clinical Decision Support Systems (CDSS) through natural language understanding and generation capabilities. However, their deployment in healthcare settings faces critical challenges, including the generation of factually incorrect information (hallucinations) and limited access to current medical knowledge. Retrieval-Augmented Generation (RAG) addresses these limitations by grounding LLM outputs in external, verifiable knowledge sources. While RAG has shown promise in healthcare applications, existing research predominantly focuses on algorithmic improvements or isolated prototypes, leaving a gap in comprehensive, deployment-ready system architectures. This paper presents the design and implementation of a complete, end-to-end AI-powered CDSS that integrates a modular microservices architecture with a RAG pipeline. The system comprises a React-based frontend for clinician interaction, a FastAPI backend service, and a Qdrant vector database for semantic retrieval of medical guidelines. We detail the architectural components, including a specialized data ingestion pipeline capable of processing complex medical documents, query rewriting mechanisms for conversational context, and adaptive response generation policies. The system is intended to mitigate hallucination risk through similarity-based filtering and explicit source attribution; this has not been measured. This work contributes a practical architectural blueprint for clinical workflows, emphasizing modularity, scalability, and ethical considerations.
 
 **Keywords**: Clinical Decision Support Systems, Retrieval-Augmented Generation, Healthcare AI, Medical Information Retrieval, Vector Databases, Microservices Architecture
 
@@ -26,7 +48,7 @@ The contributions of this work are as follows:
 
 3. **Context-Aware Retrieval**: We demonstrate a pipeline for ingesting and retrieving from authoritative medical guidelines, incorporating query rewriting for conversational context and similarity-based filtering to mitigate hallucinations.
 
-4. **System-Level Evaluation**: We present evaluation results demonstrating the system's performance in terms of retrieval latency, response relevance, and source attribution, providing insights for practical deployment.
+4. **Proposed Evaluation**: We set out what a system-level evaluation would require — retrieval relevance judgements, gold answers, and a separation of citation resolvability from citation support. This evaluation has not been carried out.
 
 The remainder of this paper is organized as follows: Section 2 reviews related work in medical LLMs and RAG systems. Section 3 details the system architecture and component design. Section 4 describes the methodology and implementation details. Section 5 presents the experimental setup and evaluation results. Section 6 discusses limitations and ethical considerations. Section 7 concludes the paper and outlines future research directions.
 
@@ -62,7 +84,7 @@ While existing research demonstrates the theoretical benefits of RAG in healthca
 - Comprehensive handling of conversational context and patient-specific information
 - Explicit ethical considerations and safety mechanisms
 
-This work addresses these gaps by presenting a complete, deployment-ready CDSS architecture with comprehensive evaluation and ethical considerations.
+This work addresses the architectural gap by presenting a complete CDSS architecture with ethical considerations.
 
 ## 3. System Architecture
 
@@ -120,7 +142,7 @@ The system classifies queries into categories (simple, moderate, complex) and ap
 
 **3.4.1 Vector Database**
 
-The system uses Qdrant, an open-source vector database optimized for similarity search. Qdrant employs Hierarchical Navigable Small World (HNSW) indexing for efficient approximate nearest neighbor search, enabling sub-second retrieval even with large knowledge bases.
+The system uses Qdrant, an open-source vector database optimized for similarity search.
 
 The vector database stores document chunks with metadata including:
 - Source URL and title
@@ -204,99 +226,38 @@ When patient documents are uploaded, the system:
 
 This approach ensures patient data remains separate from the general knowledge base while enabling personalized responses.
 
-## 5. Experimental Setup and Evaluation
+## Evaluation (not yet performed)
 
-### 5.1 Experimental Setup
+This section previously contained reported experimental results. Those results
+were not produced by any experiment and have been removed.
 
-**5.1.1 System Configuration**
+**What would be needed to fill this section honestly:**
 
-The evaluation system was deployed using Docker Compose with the following components:
-- Backend API: FastAPI service running on Python 3.11
-- Vector Database: Qdrant v1.7.0 with HNSW indexing
-- Frontend: React application served via Vite
-- Embeddings: OpenAI text-embedding-3-small (1536 dimensions)
-- LLM: GPT-4o-mini for generation
+1. **A defined corpus with provenance.** The indexed knowledge base is MedQuAD —
+   consumer-health question–answer pairs scraped from NIH websites, with
+   automatically generated questions. It is not a corpus of clinical practice
+   guidelines, and no result should describe it as one.
+2. **Relevance judgements.** Retrieval precision and recall require a human to
+   judge query–chunk pairs against a written rubric. None exist.
+3. **Gold answers or clinician adjudication.** Answer correctness cannot be
+   assessed without them, and the author is not a clinician.
+4. **A separation of citation properties.** A citation may be *resolvable* (it
+   points at a retrieved chunk), *supported* (that chunk entails the sentence),
+   or *correct* (the sentence is true). Only the first is machine-decidable.
+   `app/scripts/eval_suite.py` measures resolvability and abstention and
+   explicitly states that it measures nothing else.
+5. **A fair baseline.** Any RAG-versus-no-RAG comparison needs both
+   configurations evaluated under identical conditions on the same queries.
+6. **Pre-registered metrics and reproducible runs**, with results committed.
 
-**5.1.2 Knowledge Base**
-
-The knowledge base was populated with medical guidelines and documents totaling approximately 500 documents, resulting in approximately 15,000 chunks after processing. Documents included clinical guidelines, medical reference materials, and institutional protocols.
-
-**5.1.3 Evaluation Queries**
-
-A set of 50 diverse clinical queries was constructed covering:
-- Diagnostic questions (e.g., "What are the diagnostic criteria for hypertension?")
-- Treatment inquiries (e.g., "What are first-line treatments for type 2 diabetes?")
-- Drug information (e.g., "What are the contraindications for metformin?")
-- General medical knowledge (e.g., "Explain the mechanism of action of ACE inhibitors")
-
-### 5.2 Evaluation Metrics
-
-**5.2.1 Retrieval Metrics**
-
-- **Retrieval Latency**: Time from query submission to retrieval completion (target: <500ms)
-- **Retrieval Precision**: Proportion of retrieved chunks relevant to the query (evaluated manually)
-- **Coverage**: Proportion of queries for which relevant information was retrieved
-
-**5.2.2 Generation Metrics**
-
-- **Response Relevance**: Manual evaluation of whether responses address the query (binary: relevant/not relevant)
-- **Source Attribution**: Presence and accuracy of source citations
-- **Hallucination Detection**: Manual review for unsupported claims or factual errors
-- **Generation Latency**: End-to-end time from query to response (target: <3 seconds)
-
-**5.2.3 System Metrics**
-
-- **Throughput**: Queries processed per second under load
-- **Error Rate**: Proportion of queries resulting in system errors
-
-### 5.3 Results
-
-**5.3.1 Retrieval Performance**
-
-The retrieval system achieved:
-- Average retrieval latency: 342ms (std: 89ms)
-- Retrieval precision: 78% of retrieved chunks were relevant (evaluated on 200 query-chunk pairs)
-- Coverage: 94% of queries retrieved at least one relevant chunk
-
-The similarity cutoff threshold of 0.22 effectively filtered irrelevant results while maintaining high recall. Reranking improved precision for complex queries but added approximately 200ms latency.
-
-**5.3.2 Generation Performance**
-
-Response generation results:
-- Average end-to-end latency: 2.1 seconds (std: 0.6s)
-- Response relevance: 92% of responses were judged relevant to queries
-- Source attribution: 100% of responses included at least one source citation
-- Hallucination rate: 4% of responses contained unsupported claims (detected through manual review)
-
-The query rewriting mechanism improved retrieval accuracy for conversational queries by 15% compared to using raw queries.
-
-**5.3.3 System Performance**
-
-Under moderate load (10 concurrent requests):
-- Throughput: 4.2 queries/second
-- Error rate: 1.2% (primarily timeout errors under high load)
-- System remained stable with response times within acceptable ranges
-
-**5.3.4 Qualitative Analysis**
-
-Manual review of responses revealed:
-- Responses were generally well-structured and cited sources appropriately
-- Patient context integration improved personalization when relevant
-- Confidence scores correlated with response quality (high confidence responses were more accurate)
-- Some responses were overly verbose for simple queries, indicating potential for further optimization
-
-### 5.4 Discussion
-
-The evaluation results demonstrate that the proposed architecture achieves practical performance levels suitable for clinical deployment. Retrieval latency under 500ms enables near-real-time interaction, while the 92% relevance rate indicates effective grounding in the knowledge base.
-
-The 4% hallucination rate, while lower than baseline LLM performance, highlights the importance of continued monitoring and refinement. The similarity cutoff and source attribution mechanisms contribute to this improvement, but further enhancements may be possible through more sophisticated reranking or post-generation verification.
-
-The system's modular architecture facilitated evaluation and optimization of individual components. The ability to switch between embedding and LLM providers enabled cost-performance trade-offs and deployment flexibility.
-
-Limitations of the evaluation include:
-- The knowledge base size (15,000 chunks) is smaller than production deployments might require
-- Evaluation queries were constructed rather than collected from real clinical use
-- Manual evaluation introduces subjectivity, though inter-annotator agreement was not formally measured
+**Measured work that does exist.** A controlled fault-injection study of the
+document-image ingestion path — OCR, structured extraction, abnormal-value
+flagging — is reported in `poster-experiment/`. It uses a synthetic report with
+machine-readable ground truth for 13 analytes, 832 analyte observations across
+32 image-degradation conditions, and a calibration gate that refuses to report
+any degradation figure unless the undegraded render is extracted perfectly. Its
+findings concern error propagation and the blindness of threshold-based
+flagging; they say nothing about retrieval or answer quality.
 
 ## 6. Limitations and Ethical Considerations
 
@@ -316,7 +277,7 @@ LLM context windows limit the amount of retrieved information that can be includ
 
 **6.1.4 Latency Considerations**
 
-While the system achieves sub-3-second response times in most cases, network latency, database load, and LLM API response times can introduce variability. Real-time clinical scenarios may require further optimization or caching strategies.
+Real-time clinical scenarios may require further optimization or caching strategies.
 
 ### 6.2 Ethical Considerations
 
@@ -361,9 +322,9 @@ To ensure responsible deployment, we recommend:
 
 ## 7. Conclusion and Future Work
 
-This paper presented the design, implementation, and evaluation of an end-to-end AI Clinical Decision Support System using Retrieval-Augmented Generation. The system addresses key limitations of LLMs in healthcare through semantic retrieval, source attribution, and safety mechanisms, while providing a practical, deployment-ready architecture.
+This paper presented the design and implementation of an end-to-end AI Clinical Decision Support System using Retrieval-Augmented Generation. No evaluation has been carried out. The architecture is intended to address key limitations of LLMs in healthcare through semantic retrieval, source attribution and safety mechanisms; whether it does so has not been tested.
 
-The modular microservices design enables scalability, maintainability, and integration with existing clinical systems. Evaluation results demonstrate that the system achieves practical performance levels with sub-second retrieval and sub-3-second end-to-end response times, while maintaining high response relevance and low hallucination rates.
+The modular microservices design enables scalability, maintainability, and integration with existing clinical systems.
 
 The work contributes a comprehensive architectural blueprint that bridges the gap between algorithmic RAG research and practical deployment. By detailing component design, integration patterns, and evaluation methodologies, this paper provides a foundation for future development and refinement of AI-powered CDSS.
 

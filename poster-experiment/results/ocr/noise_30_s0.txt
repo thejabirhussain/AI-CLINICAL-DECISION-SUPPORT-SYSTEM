@@ -1,0 +1,65 @@
+SYNTHETIC PATIENT RECORD — FOR DEMONSTRATION ONLY. NOT A REAL PERSON.
+Riverside General Hospital — Discharge Summary
+Patient: Maria Alvarez (synthetic)     MRN: DEMO-240917
+Age / Sex: 64-year-old Female       Attending: Internal Medicine
+Admitted: 09/14/2026                      Discharged: 09/18/2026
+Chief Complaint                                           ;
+Progressive fatigue, shortness of breath on exertion and intermittent chest tightness for 3 weeks.
+History of Present Illness
+64-year-old woman with long-standing type 2 diabetes, hypertension and chronic kidney disease who presented with 3
+weeks of worsening fatigue, exertional dyspnea and two episodes of chest tightness at rest lasting under 10 minutes.
+She reports ankle swelling and taking ibuprofen several times daily for knee osteoarthritis. ECG showed sinus rhythm
+without acute ST changes. Troponin | was mildly elevated and stable on repeat. Hemoglobin and ferritin were low.
+Potassium was elevated on admission and treated.
+Active Problems / Past Medical History             2
+¢ Type 2 diabetes mellitus (12 years), poorly controlled
+¢ Chronic kidney disease, stage 4 (baseline creatinine 1.8)
+¢ Essential hypertension
+¢ lron deficiency anemia
+¢ Hyperlipidemia
+¢ Osteoarthritis of both knees
+Allergies
+Sulfa drugs (rash); Penicillin (hives)
+Current Medications           ce
+¢ Metformin 1000 mg PO twice daily
+¢ Lisinopril 20 mg PO daily
+« Amlodipine 10 mg PO daily
+« Atorvastatin 40 mg PO daily
+e lbuprofen 400 mg PO three times daily as needed for knee pain
+* Ferrous sulfate 325 mg PO daily
+Laboratory Results (09/17/2026)
+Test                  Result Units               Reference Flag
+Glucose (fasting) 248        mg/dL               70 - 99         H
+HbAic                 9.2         %                    4.0-5.6        H
+Hemoglobin         9.4        g/dL                12.0- 15.5 -L
+Ferritin                9           ng/mL                15 - 200        L
+WBC                 7.4        1049/L              4.5-11.0
+Platelets               262         1049/L                150 - 450
+Sodium               133        mEq/L              135 - 145      L
+Potassium             5.8         mEq/L                3.5 - 5.0        H
+BUN                    42          mg/dL                7-20           H
+Creatinine            2.1         mg/dL              0.6 - 1.2       H
+
+Palme Santa Onn aii Sin A ean Ge mene Saat Se Ameer Maris orig en MR ee eva RS    ee ae   TS. telty eee Ane ey SL
+Se Cor te ee ee eee on en ees rrr rr oe BES Gi eee ee =
+Pe ey eee ee eae ee Se et aes Se rei oe rane oace eee INI OES es eat Gy ee Le one ee Oey OE I Se ee
+tee ree ne eae eee re eee ee er meee nS Pe ae ee a ee he ee SO LENO Gy Yoel Eke ee Meare Le ee Re Re Be.
+a ee a OS Oe eee ee
+oo FI Se PE GE Be a ee  re 2
+So Se ere Ones SOs  =R Bee nee een ge pen Wil do SY, Si ROR On Vem cnel een Gan ane cet are dem ce cre ere Be On OS Ge ce ees woes CR Se AOE
+ee 2) Tro olele ind ee EON NF oS RAI oe UNO And Ce a ee ee Ae
+Bente ee eee lard sede We ee orn     Pees oom     tie eee) - OO = 0:04 cr BSS Se hs RS SU a ee ee ae a DSR SELON SS Bas
+ee oe a Bre es SE le
+BO Te rece a geen hr ec rustica el ena era eon ea uy ee ee te cn a eam ea eae re bE eee UN UR Bees
+ee ee ae ee es raes ee ee
+A ee re ee GR ee ee ee ne ne Se eG a ni nea sae tes eer non Se SEE Bs TE SINE eS aR SO Oe SURES hes
+cee ee ae NG Bare eee ae ae a Be oe tae aes ESE oS Sees Gare Sr re eee ee eee ee
+BE OU ast By ASS crs SHEEN SOAS Sr eeu eae at reid) ey ee a Aare ore ee Ye cee Bee SS OE a ee ee NDS AAs nS ass os ae eee eee een:
+BO EO A re ORG Renu haar RAR CS Pe i OS OEE OES aa reo Se Ba ee ee ee ee ee pen Lene renee nn eee RR Pee SOS ne eS
+ee ee ea BE es EE TOE EE es ot a ees Rg reer a oem acy re nee rete at ene Ss ety ae Cr eine Cen oc eat ne en en eae
+Re ee eee Oa Ge ce eR RUe Nea ee ES eS ie ese S| a Mitra Sn al EO Reh eon te are cee a are) a ee eee ee Se ae ee Seo
+Be ee es ree se ns econ er a ee eee ay  Bo SCE NSB Vs oak ag ae
+ee Ae OSS CRORES on hae Sheu Mae earn Be ee ee DE er ee es eee eer a en
+eee oe Se eee BE ee Soe ore ee Coe en oa cia an Pee ene ge 7. ee tts ers ee De ne ee Ce i ues er ee
+oe ee Ce ee eee ae ee ce ee Ae a come eae ee eeu n ea ee UAE aa ee er ren ne
+ee ee pee eee er ee ee ee EGE IS SO as Ee Bee er ate en ne On ae ee ee Pa Oa. west ee
