@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Production-ready Clinical Decision Support System"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = {text = "LicenseRef-Proprietary"}  # All rights reserved; see LICENSE at the repository root
 authors = [
     {name = "AI CDSS Team"}
 ]
