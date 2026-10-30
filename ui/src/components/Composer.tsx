@@ -32,12 +32,25 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
     },
   }));
 
-  // Auto-grow
+  // Auto-grow to fit the text; re-measure when the width changes because the layout can settle after mount.
   useEffect(() => {
     const ta = taRef.current;
     if (!ta) return;
-    ta.style.height = 'auto';
-    ta.style.height = Math.min(ta.scrollHeight, hero ? 240 : 180) + 'px';
+    const measure = () => {
+      ta.style.height = 'auto';
+      // An empty box stays one row: scrollHeight also counts a wrapped placeholder.
+      if (value) ta.style.height = Math.min(ta.scrollHeight, hero ? 240 : 180) + 'px';
+    };
+    measure();
+    let width = ta.offsetWidth;
+    const observer = new ResizeObserver(() => {
+      if (ta.offsetWidth !== width) {
+        width = ta.offsetWidth;
+        measure();
+      }
+    });
+    observer.observe(ta);
+    return () => observer.disconnect();
   }, [value, hero]);
 
   const canSend = value.trim().length > 0 && !busy;

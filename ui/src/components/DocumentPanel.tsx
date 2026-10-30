@@ -156,7 +156,7 @@ export function DocumentPanel({ answers, questionFor, patient, activeTab, onTab,
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-3">
                   <span>{formatStamp(active.createdAt)}</span>
                   {active.confidence && <span className="capitalize">{active.confidence} confidence</span>}
-                  {!!active.sources?.length && <span>{active.sources.length} sources</span>}
+                  {!!active.sources?.length && <span>{active.sources.length} {active.sources.length === 1 ? 'source' : 'sources'}</span>}
                   {active.patientScoped && patient && <span>Grounded on {patient.filename}</span>}
                 </div>
               </header>

@@ -134,7 +134,7 @@ function AssistantMessage({
             {m.confidence} confidence
           </span>
         )}
-        {!!m.sources?.length && <span>{m.sources.length} sources</span>}
+        {!!m.sources?.length && <span>{m.sources.length} {m.sources.length === 1 ? 'source' : 'sources'}</span>}
         <span className="ml-auto" />
         <CopyButton text={m.content} />
       </div>

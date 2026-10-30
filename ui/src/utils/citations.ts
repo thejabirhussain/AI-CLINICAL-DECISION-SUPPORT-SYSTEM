@@ -1,19 +1,27 @@
 // The backend prompt asks the model to cite like "[Ref 1]" — also accept "[1]", "[1, 2]", "[Ref 1, 3]".
 const CITE_RE = /\[(?:Refs?\.?\s*)?(\d+(?:\s*[,–-]\s*\d+)*)\]/gi;
 
+// Models sometimes drop the brackets: "(Ref 1)" or "Ref 1".
+const BARE_CITE_RE = /\(?\bRefs?\.?\s*(\d+(?:\s*,\s*\d+)*)\)?/gi;
+
 /** Rewrites citation markers into markdown links (#cite-N) that the Markdown renderer turns into chips. */
 export function linkCitations(markdown: string, sourceCount: number): string {
   if (!sourceCount) return markdown;
-  return markdown.replace(CITE_RE, (match, nums: string, offset: number, full: string) => {
-    // Skip things that are already markdown links: "[1](...)"
-    if (full[offset + match.length] === '(') return match;
+  const toLinks = (match: string, nums: string) => {
     const ids = nums
       .split(/\s*,\s*/)
       .map(n => parseInt(n, 10))
       .filter(n => n >= 1 && n <= sourceCount);
     if (!ids.length) return match;
     return ids.map(n => `[${n}](#cite-${n})`).join('');
-  });
+  };
+  return markdown
+    .replace(CITE_RE, (match, nums: string, offset: number, full: string) => {
+      // Skip things that are already markdown links: "[1](...)"
+      if (full[offset + match.length] === '(') return match;
+      return toLinks(match, nums);
+    })
+    .replace(BARE_CITE_RE, toLinks);
 }
 
 /** Removes emoji prefixes the backend prompt puts in section headers ("### 🧠 Clinical Interpretation"). */
