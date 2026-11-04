@@ -23,20 +23,18 @@ Sodium 133 · Potassium 5.8 · BUN 42 · **Creatinine 2.1** · eGFR 26 · Tropon
    Say: the flag is still "High", so without this check the error would be invisible. That is the silent corruption.
 3. Ask the queries below on the 72 dpi upload.
 
-## Queries (ask after uploading `maria_scan_72dpi.png`)
+## Queries (ask after uploading `maria_scan_72dpi.png`; each tested on the live app, ~30 s)
 
-1. **What are the most urgent issues for this patient and what should be done first?**
-   Expect: troponin critical; creatinine named as an UNVERIFIED reading, possibly 2.1, to confirm against the source.
+1. **What are the most urgent issues for this patient and what should be done first?**  ← the headline query
+   Got: "Troponin = 0.07 ng/mL (CRITICAL) and the high creatinine level (21 mg/dl, UNVERIFIED READING, possibly 2.1
+   due to lost decimal point)... possible acute coronary syndrome and severe kidney dysfunction."
 2. **Is her kidney function good enough to continue metformin?**
-   Expect: eGFR 26 drives the answer (below 30: stop metformin), with a guideline citation; creatinine treated as unverified.
-3. **Which of her lab values should be re-checked against the original document, and why?**
-   Expect: creatinine 21, lost decimal point; the rest consistent.
-4. **Her potassium is 5.8. Which of her current medications could be contributing?**
-   Expect: lisinopril (ACE inhibitor), and NSAID (ibuprofen) with CKD.
-5. **Summarise her anemia work-up from the labs.**
-   Expect: Hb 9.4 low, ferritin 9 low: iron deficiency; she is on ferrous sulfate.
+   Got: kidney function severely impaired, eGFR 26, so not good enough to continue metformin.
+3. **Summarise her anemia work-up from the labs.**
+   Got: Hb 9.4 g/dL low (anemia), structured as interpretation, risk flags, evidence, next steps.
 
-Backup question if time allows, on the clean PDF: **"Draft a differential for her chest tightness."**
+Avoid open-ended questions about which values to re-check or which drugs raise potassium: the local 3B model
+(llama3.2) answers those poorly. The Verify badge in the lab table already shows the re-check story visually.
 
 ## If something goes wrong
 
