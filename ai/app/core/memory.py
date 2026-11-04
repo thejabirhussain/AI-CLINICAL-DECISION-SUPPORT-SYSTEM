@@ -49,16 +49,24 @@ class PatientSession(BaseModel):
             context_str += f"!!! ABNORMAL / CRITICAL / IMPLAUSIBLE LABS !!!\n"
             for lab in abnormal_labs:
                 ref = f", reference {lab['reference_range']}" if lab.get("reference_range") else ""
-                context_str += f"- {lab.get('test_name')} = {lab.get('value')} {lab.get('unit') or ''} -> {str(lab.get('flag')).upper()}{ref}\n"
+                context_str += f"- {lab.get('test_name')} = {lab.get('value')} {lab.get('unit') or ''} -> {str(lab.get('flag')).upper()}{ref}{_unverified(lab)}\n"
             context_str += "\n"
         
         context_str += f"--- ALL EXTRACTED LABS ---\n"
         for lab in self.structured_data.get("labs", []):
              if lab.get("flag") not in ["High", "Low", "Critical", "Implausible"]:
                 status = "Normal" if lab.get("flag") == "Normal" else "no reference range available"
-                context_str += f"- {lab.get('test_name')}: {lab.get('value')} {lab.get('unit', '')} ({status})\n"
+                context_str += f"- {lab.get('test_name')}: {lab.get('value')} {lab.get('unit', '')} ({status}){_unverified(lab)}\n"
             
         return context_str
+
+
+def _unverified(lab: Dict[str, Any]) -> str:
+    """Numeric verification marks a value that may be an OCR misreading; the LLM must see that, not just the UI."""
+    if not lab.get("needs_verification") or lab.get("flag") == "Implausible":
+        return ""
+    reasons = "; ".join(lab.get("verification_reasons") or [])
+    return f" [UNVERIFIED READING: {reasons}]"
 
 
 class SessionManager:

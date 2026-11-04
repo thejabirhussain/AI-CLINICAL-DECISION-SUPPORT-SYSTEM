@@ -29,6 +29,10 @@ export interface Lab {
   unit?: string | null;
   flag?: 'Normal' | 'High' | 'Low' | 'Critical' | string;
   reference_range?: string;
+  /** Set by the backend's numeric verification: the value may be a misreading; check it against the source. */
+  needs_verification?: boolean;
+  verification_reasons?: string[];
+  source_line?: string;
 }
 
 const ABNORMAL_FLAGS = ['High', 'Low', 'Critical'];

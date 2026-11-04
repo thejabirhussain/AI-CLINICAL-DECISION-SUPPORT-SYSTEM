@@ -1,0 +1,13 @@
+testset,primary,secondary,policy,values,extracted,corrupted,caught,recall_%,silent,silent_caught,false_alarm_%,review_rate_%,undetected_wrong,undetected_per_1000_accepted
+A,labnum2_rescale,rapidocr,none,832,661,34,0,0.0,14,0,0.0,0.0,34,51.4
+A,labnum2_rescale,rapidocr,plausibility (existing),832,661,34,7,20.6,14,1,0.0,1.1,27,41.3
+A,labnum2_rescale,rapidocr,+ precision,832,661,34,16,47.1,14,5,0.0,2.4,18,27.9
+A,labnum2_rescale,rapidocr,+ precision + magnitude,832,661,34,16,47.1,14,5,0.0,2.4,18,27.9
+A,labnum2_rescale,rapidocr,+ structure,832,661,34,16,47.1,14,5,0.0,2.4,18,27.9
+A,labnum2_rescale,rapidocr,+ cross-engine agreement,832,661,34,34,100.0,14,14,4.6,9.5,0,0.0
+B,labnum2_rescale,rapidocr,none,1988,1768,268,0,0.0,101,0,0.0,0.0,268,151.6
+B,labnum2_rescale,rapidocr,plausibility (existing),1988,1768,268,79,29.5,101,23,0.2,4.6,189,112.1
+B,labnum2_rescale,rapidocr,+ precision,1988,1768,268,153,57.1,101,79,1.0,9.5,115,71.9
+B,labnum2_rescale,rapidocr,+ precision + magnitude,1988,1768,268,154,57.5,101,79,1.0,9.6,114,71.3
+B,labnum2_rescale,rapidocr,+ structure,1988,1768,268,154,57.5,101,79,1.0,9.6,114,71.3
+B,labnum2_rescale,rapidocr,+ cross-engine agreement,1988,1768,268,266,99.3,101,101,10.4,23.9,2,1.5

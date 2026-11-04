@@ -1,0 +1,9 @@
+.venv/
+data/
+models/*.traineddata
+models/train/
+__pycache__/
+models/train*/
+models/*.log
+models/configs
+results/cache/

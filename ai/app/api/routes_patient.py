@@ -3,9 +3,9 @@ import io
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from pydantic import BaseModel
 from PIL import Image
-import pytesseract
 
 from app.ingestion.parse_pdf import extract_pdf_text
+from app.ingestion.ocr import ocr_image, ocr_pdf
 from app.api.deps import get_rag_pipeline
 from app.generation.pipeline import RAGPipeline
 
@@ -36,11 +36,17 @@ async def upload_patient_file(file: UploadFile = File(...)):
     # 1. OCR or PDF Extraction
     if file.content_type == "application/pdf":
         raw_text, metadata = extract_pdf_text(content)
+        if not raw_text.strip():
+            # Scanned PDF: no text layer, so OCR the rendered pages
+            try:
+                raw_text, metadata = ocr_pdf(content)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"OCR failed: {str(e)}")
     elif file.content_type.startswith("image/"):
         try:
             image = Image.open(io.BytesIO(content))
-            raw_text = pytesseract.image_to_string(image)
-            metadata = {"source": "ocr", "format": file.content_type}
+            raw_text, metadata = ocr_image(image)
+            metadata["format"] = file.content_type
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"OCR failed: {str(e)}")
     else:
@@ -52,6 +58,7 @@ async def upload_patient_file(file: UploadFile = File(...)):
     # 2. Structured Parsing & Abnormal Detection
     parser = get_clinical_parser()
     structured_data = parser.parse_document(raw_text)
+    structured_data["extraction"] = {k: metadata[k] for k in ("source", "ocr_model", "upscale", "page_count") if k in metadata}
 
     # 3. Create Session
     session_manager = get_session_manager()

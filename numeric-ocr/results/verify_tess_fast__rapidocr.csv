@@ -1,0 +1,13 @@
+testset,primary,secondary,policy,values,extracted,corrupted,caught,recall_%,silent,silent_caught,false_alarm_%,review_rate_%,undetected_wrong,undetected_per_1000_accepted
+A,tess_fast,rapidocr,none,832,619,43,0,0.0,28,0,0.0,0.0,43,69.5
+A,tess_fast,rapidocr,plausibility (existing),832,619,43,14,32.6,28,9,0.0,2.3,29,47.9
+A,tess_fast,rapidocr,+ precision,832,619,43,35,81.4,28,23,0.0,5.7,8,13.7
+A,tess_fast,rapidocr,+ precision + magnitude,832,619,43,35,81.4,28,23,0.0,5.7,8,13.7
+A,tess_fast,rapidocr,+ structure,832,619,43,36,83.7,28,23,0.0,5.8,7,12.0
+A,tess_fast,rapidocr,+ cross-engine agreement,832,619,43,43,100.0,28,28,4.9,11.5,0,0.0
+B,tess_fast,rapidocr,none,1988,1685,193,0,0.0,60,0,0.0,0.0,193,114.5
+B,tess_fast,rapidocr,plausibility (existing),1988,1685,193,99,51.3,60,20,0.8,6.6,94,59.7
+B,tess_fast,rapidocr,+ precision,1988,1685,193,158,81.9,60,36,0.8,10.1,35,23.1
+B,tess_fast,rapidocr,+ precision + magnitude,1988,1685,193,158,81.9,60,36,0.8,10.1,35,23.1
+B,tess_fast,rapidocr,+ structure,1988,1685,193,168,87.0,60,46,0.9,10.7,25,16.6
+B,tess_fast,rapidocr,+ cross-engine agreement,1988,1685,193,193,100.0,60,60,9.4,19.8,0,0.0

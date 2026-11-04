@@ -1,5 +1,6 @@
 """Clinical Document Parsing and Structured Extraction."""
 
+import difflib
 import json
 import logging
 import re
@@ -7,6 +8,7 @@ import unicodedata
 from typing import Any, Dict, List
 
 from app.generation.llm import get_llm_provider
+from app.ingestion.numeric_verification import verify_lab
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +17,13 @@ VITALS_RE = re.compile(
     r"weight|height|bmi)\b",
     re.IGNORECASE,
 )
+
+
+_CONFUSABLE = str.maketrans({"l": "1", "i": "1", "|": "1", "!": "1", "o": "0"})
+
+
+def _fold(name: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", name.lower().translate(_CONFUSABLE))
 
 
 class ClinicalParser:
@@ -147,7 +156,7 @@ RAW CLINICAL TEXT TO PARSE:
                     data[key] = []
             
             # Post-process: Flag abnormal labs
-            data["labs"] = self._detect_abnormal_labs(data.get("labs", []))
+            data["labs"] = self._detect_abnormal_labs(data.get("labs", []), raw_text=text)
             return data
 
         except Exception as e:
@@ -162,8 +171,8 @@ RAW CLINICAL TEXT TO PARSE:
                 "unstructured_narrative": "Failed to parse document structurally. Raw content:\n" + text[:2000]
             }
 
-    def _detect_abnormal_labs(self, labs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Add flag to labs that fall outside generic reference ranges."""
+    def _detect_abnormal_labs(self, labs: List[Dict[str, Any]], raw_text: str = "") -> List[Dict[str, Any]]:
+        """Add flag to labs that fall outside generic reference ranges, and mark values to verify against the source."""
         processed_labs = []
         seen = set()
         for lab in labs:
@@ -192,11 +201,20 @@ RAW CLINICAL TEXT TO PARSE:
                     lab["value"] = match.group()
 
                 # Check against standard ranges if we know the test
+                # Fold OCR look-alikes (i/l/|/1, o/0) so a misread name ("HbAic") still finds its range
+                folded = _fold(test_name)
                 matched_key = None
                 for key in self.reference_ranges:
-                    if key in test_name:
+                    if key in test_name or _fold(key) in folded:
                         matched_key = key
                         break
+                if matched_key is None:
+                    # Fuzzy fallback for longer names misread by OCR ("Ferntin" -> ferritin)
+                    words = re.findall(r"[a-z]{5,}", test_name)
+                    for key in self.reference_ranges:
+                        if len(key) >= 5 and any(difflib.SequenceMatcher(None, key, w).ratio() >= 0.8 for w in words):
+                            matched_key = key
+                            break
                         
                 if matched_key:
                     ref = self.reference_ranges[matched_key]
@@ -209,6 +227,7 @@ RAW CLINICAL TEXT TO PARSE:
                     if lo is not None and not (lo <= num_val <= hi):
                         lab["flag"] = "Implausible"
                         lab["needs_verification"] = True
+                        lab["verification_reasons"] = [f"{num_val:g} is outside the physiologically possible range {lo:g}-{hi:g}"]
                         lab["plausible_range"] = f"{lo}-{hi} {ref['unit']}"
                         lab["reference_range"] = f"{ref['min']}-{ref['max']} {ref['unit']}"
                         processed_labs.append(lab)
@@ -222,6 +241,15 @@ RAW CLINICAL TEXT TO PARSE:
                         # Troponin gets a Critical flag, others get High
                         lab["flag"] = "Critical" if matched_key == "troponin" else "High"
                         lab["reference_range"] = f"{ref['min']}-{ref['max']} {ref['unit']}"
+
+                # Numeric verification: never changes the value or the flag, only asks for a check against the source.
+                if raw_text:
+                    ref = self.reference_ranges.get(matched_key) if matched_key else None
+                    phi = self.plausible_ranges.get(matched_key, (None, None))[1] if matched_key else None
+                    reasons = verify_lab(lab, num_val, matched_key, ref, phi, raw_text)
+                    if reasons:
+                        lab["needs_verification"] = True
+                        lab["verification_reasons"] = reasons
             
             processed_labs.append(lab)
         return processed_labs

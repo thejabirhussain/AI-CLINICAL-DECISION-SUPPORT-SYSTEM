@@ -1,0 +1,340 @@
+analyte,truth,extracted,line,status,truth_flag,extracted_flag,engine,testset,doc,condition,family,dpi,seed,cer
+Bicarbonate,23.0,23.0,Bicarbonate 23 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+ALT,12.0,12.0,ALT 12 U/L 7 - 56,correct,,,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+LDL cholesterol,88.0,88.0,LDL cholesterol 88 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+TSH,1.53,1.53,TSH 1.53 mIU/L 0.40 - 4.00,correct,,,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+Hematocrit,39.5,39.5,Hematocrit 39.5 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+Sodium,130.0,130.0,Sodium 130 mEq/L 135 - 145 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+Albumin,4.6,4.6,Albumin 4.6 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+AST,73.0,73.0,AST 73 U/L 10 - 40 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+eGFR,135.0,135.0,eGFR 135 mL/min/1.73m2 > 60,correct,,,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+Magnesium,1.8,1.8,Magnesium 1.8 mg/dL 1.7 - 2.2,correct,,,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+Calcium,12.6,12.6,Calcium 12.6 mg/dL 8.5 - 10.5 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+INR,1.1,1.1,INR 1.1 0.8 - 1.2,correct,,,vlm:qwen2.5vl:3b,B,report_000,baseline_300dpi,baseline,300,0,0.003169572107765452
+Bicarbonate,23.0,23.0,Bicarbonate 23 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+ALT,12.0,12.0,ALT 12 U/L 7 - 56,correct,,,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+LDL cholesterol,88.0,88.0,LDL cholesterol 88 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+TSH,1.53,1.53,TSH 1.53 mIU/L 0.40 - 4.00,correct,,,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+Hematocrit,39.5,39.5,Hematocrit 39.5 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+Sodium,130.0,130.0,Sodium 130 mEq/L 135 - 145 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+Albumin,4.6,4.6,Albumin 4.6 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+AST,73.0,73.0,AST 73 U/L 10 - 40 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+eGFR,135.0,135.0,eGFR 135 mL/min/1.73m2 > 60,correct,,,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+Magnesium,1.8,1.8,Magnesium 1.8 mg/dL 1.7 - 2.2,correct,,,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+Calcium,12.6,12.6,Calcium 12.6 mg/dL 8.5 - 10.5 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+INR,1.1,1.1,INR 1.1 0.8 - 1.2,correct,,,vlm:qwen2.5vl:3b,B,report_000,dpi_100,resolution,100,0,0.004754358161648178
+Bicarbonate,23.0,23.0,Bicarbonate 23 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+ALT,12.0,12.0,ALT 12 U/L 7 - 56,correct,,,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+LDL cholesterol,88.0,88.0,LDL cholesterol 88 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+TSH,1.53,1.53,TSH 1.53 mIU/L 0.40 - 4.00,correct,,,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+Hematocrit,39.5,39.5,Hematocrit 39.5 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+Sodium,130.0,130.0,Sodium 130 mEq/L 135 - 145 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+Albumin,4.6,4.6,Albumin 4.6 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+AST,73.0,73.0,AST 73 U/L 10 - 40 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+eGFR,135.0,135.0,eGFR 135 mL/min/1.73m2 > 60,correct,,,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+Magnesium,1.8,1.8,Magnesium 1.8 mg/dL 1.7 - 2.2,correct,,,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+Calcium,12.6,12.6,Calcium 12.6 mg/dL 8.5 - 10.5 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+INR,1.1,1.1,INR 1.1 0.8 - 1.2,correct,,,vlm:qwen2.5vl:3b,B,report_000,photo_phone,composite,150,0,0.003169572107765452
+Calcium,7.8,7.8,Calcium 7.8 mg/dL 8.5 - 10.5 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+eGFR,31.0,31.0,eGFR 31 mL/min/1.73m2 > 60 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+Hemoglobin,10.8,10.8,Hemoglobin 10.8 g/dL 12.0 - 15.5 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+Creatinine,0.51,0.51,Creatinine 0.51 mg/dL 0.60 - 1.20 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+Bilirubin (total),0.1,0.1,Bilirubin (total) 0.1 mg/dL 0.1 - 1.2 L,correct,,,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+AST,72.0,72.0,AST 72 U/L 10 - 40 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+Magnesium,1.8,1.8,Magnesium 1.8 mg/dL 1.7 - 2.2 L,correct,,,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+Hematocrit,34.8,34.8,Hematocrit 34.8 % 36.0 - 46.0 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+LDL cholesterol,69.0,69.0,LDL cholesterol 69 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+ALT,109.0,109.0,ALT 109 U/L 7 - 56 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+Albumin,3.5,3.5,Albumin 3.5 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+Platelets,271.0,271.0,Platelets 271 10^9/L 150 - 450,correct,,,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+Potassium,3.0,3.0,Potassium 3.0 mEq/L 3.5 - 5.0 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+Ferritin,394.0,394.0,Ferritin 394 ng/mL 15 - 200 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_001,baseline_300dpi,baseline,300,0,0.006839945280437756
+Calcium,7.8,7.8,Calcium 7.8 mg/dL 8.5 - 10.5 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+eGFR,31.0,31.0,eGFR 31 mL/min/1.73m2 > 60 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+Hemoglobin,10.8,10.8,Hemoglobin 10.8 g/dL 12.0 - 15.5 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+Creatinine,0.51,0.51,Creatinine 0.51 mg/dL 0.60 - 1.20 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+Bilirubin (total),0.1,0.1,Bilirubin (total) 0.1 mg/dL 0.1 - 1.2 L,correct,,,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+AST,72.0,72.0,AST 72 U/L 10 - 40 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+Magnesium,1.8,1.8,Magnesium 1.8 mg/dL 1.7 - 2.2 L,correct,,,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+Hematocrit,34.8,34.8,Hematocrit 34.8 % 36.0 - 46.0 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+LDL cholesterol,69.0,69.0,LDL cholesterol 69 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+ALT,109.0,109.0,ALT 109 U/L 7 - 56 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+Albumin,3.5,3.5,Albumin 3.5 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+Platelets,271.0,271.0,Platelets 271 10^9/L 150 - 450,correct,,,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+Potassium,3.0,3.0,Potassium 3.0 mEq/L 3.5 - 5.0 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+Ferritin,394.0,394.0,Ferritin 394 ng/mL 15 - 200 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_001,dpi_100,resolution,100,0,0.006839945280437756
+Calcium,7.8,7.8,Calcium 7.8 mg/dL 8.5 - 10.5 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+eGFR,31.0,31.0,eGFR 31 mL/min/1.73m2 > 60 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+Hemoglobin,10.8,10.8,Hemoglobin 10.8 g/dL 12.0 - 15.5 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+Creatinine,0.51,0.51,Creatinine 0.51 mg/dL 0.60 - 1.20 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+Bilirubin (total),0.1,0.1,Bilirubin (total) 0.1 mg/dL 0.1 - 1.2 L,correct,,,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+AST,72.0,72.0,AST 72 U/L 10 - 40 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+Magnesium,1.8,1.8,Magnesium 1.8 mg/dL 1.7 - 2.2 L,correct,,,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+Hematocrit,34.8,34.8,Hematocrit 34.8 % 36.0 - 46.0 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+LDL cholesterol,69.0,69.0,LDL cholesterol 69 mg/dL < 99 H,correct,,,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+ALT,109.0,109.0,ALT 109 U/L 7 - 56 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+Albumin,3.5,3.5,Albumin 3.5 g/dL 3.5 - 5.0 L,correct,,,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+Platelets,271.0,271.0,Platelets 271 10^9/L 150 - 450 L,correct,,,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+Potassium,3.0,3.0,Potassium 3.0 mEq/L 3.5 - 5.0 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+Ferritin,394.0,394.0,Ferritin 394 ng/mL 15 - 200 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_001,photo_phone,composite,150,0,0.015047879616963064
+Platelets,303.0,303.0,Platelets 303 10^9/L 150 - 450,correct,,,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+Chloride,97.0,97.0,Chloride 97 mEq/L 98 - 107,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+Potassium,7.0,7.0,Potassium 7.0 mEq/L 3.5 - 5.0,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+Glucose (fasting),54.0,54.0,Glucose (fasting) 54 mg/dL 70 - 99,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+HbA1c,2.8,2.8,HbA1c 2.8 % 4.0 - 5.6,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+Ferritin,418.0,418.0,Ferritin 418 ng/mL 15 - 200,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+Albumin,6.0,6.0,Albumin 6.0 g/dL 3.5 - 5.0,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+Calcium,8.4,8.4,Calcium 8.4 mg/dL 8.5 - 10.5,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+ALT,4.0,4.0,ALT 4 U/L 7 - 56,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+Magnesium,1.8,1.8,Magnesium 1.8 mg/dL 1.7 - 2.2,correct,,,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+BUN,8.0,8.0,BUN 8 mg/dL 7 - 20,correct,,,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+Bilirubin (total),1.9,1.9,Bilirubin (total) 1.9 mg/dL 0.1 - 1.2,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+Hematocrit,36.1,36.1,Hematocrit 36.1 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+TSH,2.49,2.49,TSH 2.49 mIU/L 0.40 - 4.00,correct,,,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+AST,2.0,2.0,AST 2 U/L 10 - 40,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,baseline_300dpi,baseline,300,0,0.0028169014084507044
+Platelets,303.0,303.0,Platelets 303 10^9/L 150 - 450,correct,,,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+Chloride,97.0,97.0,Chloride 97 mEq/L 98 - 107,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+Potassium,7.0,7.0,Potassium 7.0 mEq/L 3.5 - 5.0,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+Glucose (fasting),54.0,54.0,Glucose (fasting) 54 mg/dL 70 - 99,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+HbA1c,2.8,2.8,HbA1c 2.8 % 4.0 - 5.6,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+Ferritin,418.0,418.0,Ferritin 418 ng/mL 15 - 200,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+Albumin,6.0,6.0,Albumin 6.0 g/dL 3.5 - 5.0,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+Calcium,8.4,8.4,Calcium 8.4 mg/dL 8.5 - 10.5,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+ALT,4.0,4.0,ALT 4 U/L 7 - 56,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+Magnesium,1.8,1.8,Magnesium 1.8 mg/dL 1.7 - 2.2,correct,,,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+BUN,8.0,8.0,BUN 8 mg/dL 7 - 20,correct,,,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+Bilirubin (total),1.9,1.9,Bilirubin (total) 1.9 mg/dL 0.1 - 1.2,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+Hematocrit,36.1,36.1,Hematocrit 36.1 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+TSH,2.49,2.49,TSH 2.49 mIU/L 0.40 - 4.00,correct,,,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+AST,2.0,2.0,AST 2 U/L 10 - 40,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,dpi_100,resolution,100,0,0.0028169014084507044
+Platelets,303.0,303.0,Platelets 303 10^9/L 150 - 450,correct,,,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+Chloride,97.0,97.0,Chloride 97 mEq/L 98 - 107,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+Potassium,7.0,7.0,Potassium 7.0 mEq/L 3.5 - 5.0,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+Glucose (fasting),54.0,54.0,Glucose (fasting) 54 mg/dL 70 - 99,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+HbA1c,2.8,2.8,HbA1c 2.8 % 4.0 - 5.6,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+Ferritin,418.0,418.0,Ferritin 418 ng/mL 15 - 200,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+Albumin,6.0,6.0,Albumin 6.0 g/dL 3.5 - 5.0,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+Calcium,8.4,8.4,Calcium 8.4 mg/dL 8.5 - 10.5,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+ALT,4.0,4.0,ALT 4 U/L 7 - 56,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+Magnesium,1.8,1.8,Magnesium 1.8 mg/dL 1.7 - 2.2,correct,,,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+BUN,8.0,8.0,BUN 8 mg/dL 7 - 20,correct,,,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+Bilirubin (total),1.9,1.9,Bilirubin (total) 1.9 mg/dL 0.1 - 1.2,correct,H,H,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+Hematocrit,36.1,36.1,Hematocrit 36.1 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+TSH,2.49,2.49,TSH 2.49 mIU/L 0.40 - 4.00,correct,,,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+AST,2.0,2.0,AST 2 U/L 10 - 40,correct,L,L,vlm:qwen2.5vl:3b,B,report_002,photo_phone,composite,150,0,0.07183098591549296
+Hematocrit,32.4,32.4,Hematocrit 32.4 % 36.0 - 46.0,correct,L,L,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+Albumin,3.7,3.7,Albumin 3.7 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+HbA1c,7.3,7.3,HbA1c 7.3 % 4.0 - 5.6,correct,H,H,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+AST,23.0,23.0,AST 23 U/L 10 - 40,correct,,,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+Potassium,3.7,3.7,Potassium 3.7 mEq/L 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+TSH,0.24,0.24,TSH 0.24 mIU/L 0.40 - 4.00,correct,L,L,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+BUN,28.0,28.0,BUN 28 mg/dL 7 - 20,correct,H,H,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+Ferritin,164.0,164.0,Ferritin 164 ng/mL 15 - 200,correct,,,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+Glucose (fasting),98.0,98.0,Glucose (fasting) 98 mg/dL 70 - 99,correct,,,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+Bicarbonate,23.0,23.0,Bicarbonate 23 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+Magnesium,1.6,1.6,Magnesium 1.6 mg/dL 1.7 - 2.2,correct,L,L,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+LDL cholesterol,5.0,5.0,LDL cholesterol 5 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+Calcium,9.5,9.5,Calcium 9.5 mg/dL 8.5 - 10.5,correct,,,vlm:qwen2.5vl:3b,B,report_003,baseline_300dpi,baseline,300,0,0.0014903129657228018
+Hematocrit,32.4,32.4,Hematocrit 32.4 % 36.0 - 46.0,correct,L,L,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+Albumin,3.7,3.7,Albumin 3.7 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+HbA1c,7.3,7.3,HbAlc 7.3 % 4.0 - 5.6,correct,H,H,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+AST,23.0,23.0,AST 23 U/L 10 - 40,correct,,,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+Potassium,3.7,3.7,Potassium 3.7 mEq/L 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+TSH,0.24,0.24,TSH 0.24 mIU/L 0.40 - 4.00,correct,L,L,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+BUN,28.0,28.0,BUN 28 mg/dL 7 - 20,correct,H,H,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+Ferritin,164.0,164.0,Ferritin 164 ng/mL 15 - 200,correct,,,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+Glucose (fasting),98.0,98.0,Glucose (fasting) 98 mg/dL 70 - 99,correct,,,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+Bicarbonate,23.0,23.0,Bicarbonate 23 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+Magnesium,1.6,1.6,Magnesium 1.6 mg/dL 1.7 - 2.2,correct,L,L,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+LDL cholesterol,5.0,5.0,LDL cholesterol 5 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+Calcium,9.5,9.5,Calcium 9.5 mg/dL 8.5 - 10.5,correct,,,vlm:qwen2.5vl:3b,B,report_003,dpi_100,resolution,100,0,0.0029806259314456036
+Hematocrit,32.4,32.4,Hematocrit 32.4 % 36.0 - 46.0,correct,L,L,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+Albumin,3.7,3.7,Albumin 3.7 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+HbA1c,7.3,7.3,HbAlc 7.3 % 4.0 - 5.6,correct,H,H,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+AST,23.0,23.0,AST 23 U/L 10 - 40,correct,,,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+Potassium,3.7,3.7,Potassium 3.7 mEq/L 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+TSH,0.24,0.24,TSH 0.24 miU/L 0.40 - 4.00,correct,L,L,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+BUN,28.0,28.0,BUN 28 mg/dL 7 - 20,correct,H,H,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+Ferritin,164.0,164.0,Ferritin 164 ng/mL 15 - 200,correct,,,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+Glucose (fasting),98.0,98.0,Glucose (fasting) 98 mg/dL 70 - 99,correct,,,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+Bicarbonate,23.0,23.0,Bicarbonate 23 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+Magnesium,1.6,1.6,Magnesium 1.6 mg/dL 1.7 - 2.2,correct,L,L,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+LDL cholesterol,5.0,5.0,LDL cholesterol 5 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+Calcium,9.5,9.5,Calcium 9.5 mg/dL 8.5 - 10.5,correct,,,vlm:qwen2.5vl:3b,B,report_003,photo_phone,composite,150,0,0.004470938897168405
+Calcium,9.0,9.0,Calcium 9.0 mg/dL 8.5 - 10.5 H,correct,,,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+Bicarbonate,35.0,35.0,Bicarbonate 35 mEq/L 22 - 29 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+Hematocrit,42.5,42.5,Hematocrit 42.5 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+Magnesium,2.0,2.0,Magnesium 2.0 mg/dL 1.7 - 2.2,correct,,,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+Lactate,0.1,0.1,Lactate 0.1 mmol/L 0.5 - 2.2 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+Bilirubin (total),0.1,0.1,Bilirubin (total) 0.1 mg/dL 0.1 - 1.2,correct,,,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+Albumin,4.5,4.5,Albumin 4.5 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+WBC,8.7,8.7,WBC 8.7 10^9/L 4.5 - 11.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+Ferritin,178.0,178.0,Ferritin 178 ng/mL 15 - 200,correct,,,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+ALT,2.0,2.0,ALT 2 U/L 7 - 56 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+Platelets,534.0,534.0,Platelets 534 10^9/L 150 - 450 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+CRP,2.7,2.7,CRP 2.7 mg/L 0.0 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+Chloride,94.0,94.0,Chloride 94 mEq/L 98 - 107 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+TSH,1.03,1.03,TSH 1.03 mIU/L 0.40 - 4.00,correct,,,vlm:qwen2.5vl:3b,B,report_004,baseline_300dpi,baseline,300,0,0.005610098176718092
+Calcium,9.0,9.0,Calcium 9.0 mg/dL 8.5 - 10.5,correct,,,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+Bicarbonate,35.0,35.0,Bicarbonate 35 mEq/L 22 - 29 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+Hematocrit,42.5,42.5,Hematocrit 42.5 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+Magnesium,2.0,2.0,Magnesium 2.0 mg/dL 1.7 - 2.2,correct,,,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+Lactate,0.1,0.1,Lactate 0.1 mmol/L 0.5 - 2.2 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+Bilirubin (total),0.1,0.1,Bilirubin (total) 0.1 mg/dL 0.1 - 1.2,correct,,,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+Albumin,4.5,4.5,Albumin 4.5 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+WBC,8.7,8.7,WBC 8.7 10^9/L 4.5 - 11.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+Ferritin,178.0,178.0,Ferritin 178 ng/mL 15 - 200,correct,,,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+ALT,2.0,2.0,ALT 2 U/L 7 - 56 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+Platelets,534.0,534.0,Platelets 534 10^9/L 150 - 450 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+CRP,2.7,2.7,CRP 2.7 mg/L 0.0 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+Chloride,94.0,94.0,Chloride 94 mEq/L 98 - 107 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+TSH,1.03,1.03,TSH 1.03 miU/L 0.40 - 4.00,correct,,,vlm:qwen2.5vl:3b,B,report_004,dpi_100,resolution,100,0,0.004207573632538569
+Calcium,9.0,9.0,Calcium 9.0 mg/dL 8.5 - 10.5,correct,,,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+Bicarbonate,35.0,35.0,Bicarbonate 35 mEq/L 22 - 29 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+Hematocrit,42.5,42.5,Hematocrit 42.5 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+Magnesium,2.0,2.0,Magnesium 2.0 mg/dL 1.7 - 2.2,correct,,,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+Lactate,0.1,0.1,Lactate 0.1 mmol/L 0.5 - 2.2 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+Bilirubin (total),0.1,0.1,Bilirubin (total) 0.1 mg/dL 0.1 - 1.2,correct,,,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+Albumin,4.5,4.5,Albumin 4.5 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+WBC,8.7,8.7,WBC 8.7 10^9/L 4.5 - 11.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+Ferritin,178.0,178.0,Ferritin 178 ng/mL 15 - 200,correct,,,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+ALT,2.0,2.0,ALT 2 U/L 7 - 56 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+Platelets,534.0,534.0,Platelets 534 10^9/L 150 - 450 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+CRP,2.7,2.7,CRP 2.7 mg/L 0.0 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+Chloride,94.0,94.0,Chloride 94 mEq/L 98 - 107 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+TSH,1.03,1.03,TSH 1.03 miU/L 0.40 - 4.00,correct,,,vlm:qwen2.5vl:3b,B,report_004,photo_phone,composite,150,0,0.14446002805049088
+LDL cholesterol,9.0,9.0,LDL cholesterol 9 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+eGFR,106.0,106.0,eGFR 106 mL/min/1.73m2 > 60,correct,,,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+Chloride,118.0,118.0,Chloride 118 mEq/L 98 - 107 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+Calcium,7.2,7.2,Calcium 7.2 mg/dL 8.5 - 10.5 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+WBC,10.0,10.0,WBC 10.0 10^9/L 4.5 - 11.0,correct,,,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+Bicarbonate,27.0,27.0,Bicarbonate 27 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+ALT,2.0,2.0,ALT 2 U/L 7 - 56 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+Magnesium,2.4,2.4,Magnesium 2.4 mg/dL 1.7 - 2.2 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+CRP,0.0,0.0,CRP 0.0 mg/L 0.0 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+Hematocrit,54.4,54.4,Hematocrit 54.4 % 36.0 - 46.0 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+Potassium,5.3,5.3,Potassium 5.3 mEq/L 3.5 - 5.0 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+Lactate,0.1,0.1,Lactate 0.1 mmol/L 0.5 - 2.2 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+HbA1c,4.2,4.2,HbA1c 4.2 % 4.0 - 5.6,correct,,,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+Albumin,4.0,4.0,Albumin 4.0 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+Creatinine,0.43,0.43,Creatinine 0.43 mg/dL 0.60 - 1.20 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,baseline_300dpi,baseline,300,0,0.001358695652173913
+LDL cholesterol,9.0,9.0,LDL cholesterol 9 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+eGFR,106.0,106.0,eGFR 106 mL/min/1.73m2 > 60,correct,,,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+Chloride,118.0,118.0,Chloride 118 mEq/L 98 - 107 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+Calcium,7.2,7.2,Calcium 7.2 mg/dL 8.5 - 10.5 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+WBC,10.0,10.0,WBC 10.0 10^9/L 4.5 - 11.0,correct,,,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+Bicarbonate,27.0,27.0,Bicarbonate 27 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+ALT,2.0,2.0,ALT 2 U/L 7 - 56 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+Magnesium,2.4,2.4,Magnesium 2.4 mg/dL 1.7 - 2.2 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+CRP,0.0,0.0,CRP 0.0 mg/L 0.0 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+Hematocrit,54.4,54.4,Hematocrit 54.4 % 36.0 - 46.0 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+Potassium,5.3,5.3,Potassium 5.3 mEq/L 3.5 - 5.0 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+Lactate,0.1,0.1,Lactate 0.1 mmol/L 0.5 - 2.2 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+HbA1c,4.2,4.2,HbAlc 4.2 % 4.0 - 5.6,correct,,,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+Albumin,4.0,4.0,Albumin 4.0 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+Creatinine,0.43,0.43,Creatinine 0.43 mg/dL 0.60 - 1.20 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,dpi_100,resolution,100,0,0.002717391304347826
+LDL cholesterol,9.0,9.0,LDL cholesterol 9 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+eGFR,106.0,106.0,eGFR 106 mL/min/1.73m2 > 60,correct,,,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+Chloride,118.0,118.0,Chloride 118 mEq/L 98 - 107 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+Calcium,7.2,7.2,Calcium 7.2 mg/dL 8.5 - 10.5 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+WBC,10.0,10.0,WBC 10.0 10^9/L 4.5 - 11.0,correct,,,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+Bicarbonate,27.0,27.0,Bicarbonate 27 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+ALT,2.0,2.0,ALT 2 U/L 7 - 56 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+Magnesium,2.4,2.4,Magnesium 2.4 mg/dL 1.7 - 2.2,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+CRP,0.0,0.0,CRP 0.0 mg/L 0.0 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+Hematocrit,54.4,54.4,Hematocrit 54.4 % 36.0 - 46.0 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+Potassium,5.3,5.3,Potassium 5.3 mEq/L 3.5 - 5.0 H,correct,H,H,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+Lactate,0.1,0.1,Lactate 0.1 mmol/L 0.5 - 2.2 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+HbA1c,4.2,4.2,HbAlc 4.2 % 4.0 - 5.6,correct,,,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+Albumin,4.0,4.0,Albumin 4.0 g/dL 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+Creatinine,0.43,0.43,Creatinine 0.43 mg/dL 0.60 - 1.20 L,correct,L,L,vlm:qwen2.5vl:3b,B,report_005,photo_phone,composite,150,0,0.005434782608695652
+Bicarbonate,17.0,17.0,Bicarbonate 17 mEq/L 22 - 29,correct,L,L,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Potassium,4.0,4.0,Potassium 4.0 mEq/L 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Bilirubin (total),0.7,0.7,Bilirubin (total) 0.7 mg/dL 0.1 - 1.2,correct,,,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Hemoglobin,11.6,11.6,Hemoglobin 11.6 g/dL 12.0 - 15.5,correct,L,L,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Chloride,102.0,102.0,Chloride 102 mEq/L 98 - 107,correct,,,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Lactate,4.0,4.0,Lactate 4.0 mmol/L 0.5 - 2.2,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+WBC,7.1,7.1,WBC 7.1 10^9/L 4.5 - 11.0,correct,,,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+LDL cholesterol,187.0,187.0,LDL cholesterol 187 mg/dL < 99,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Troponin I,0.03,0.03,Troponin I 0.03 ng/mL 0.00 - 0.04,correct,,,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+CRP,1.9,1.9,CRP 1.9 mg/L 0.0 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Glucose (fasting),141.0,141.0,Glucose (fasting) 141 mg/dL 70 - 99,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Platelets,238.0,238.0,Platelets 238 10^9/L 150 - 450,correct,,,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+eGFR,3.0,3.0,eGFR 3 mL/min/1.73m2 > 60,correct,L,L,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Creatinine,1.99,1.99,Creatinine 1.99 mg/dL 0.60 - 1.20,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Ferritin,76.0,76.0,Ferritin 76 ng/mL 15 - 200,correct,,,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Calcium,12.8,12.8,Calcium 12.8 mg/dL 8.5 - 10.5,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,baseline_300dpi,baseline,300,0,0.0025412960609911056
+Bicarbonate,17.0,17.0,Bicarbonate 17 mEq/L 22 - 29,correct,L,L,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Potassium,4.0,4.0,Potassium 4.0 mEq/L 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Bilirubin (total),0.7,0.7,Bilirubin (total) 0.7 mg/dL 0.1 - 1.2,correct,,,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Hemoglobin,11.6,11.6,Hemoglobin 11.6 g/dL 12.0 - 15.5,correct,L,L,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Chloride,102.0,102.0,Chloride 102 mEq/L 98 - 107,correct,,,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Lactate,4.0,4.0,Lactate 4.0 mmol/L 0.5 - 2.2,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+WBC,7.1,7.1,WBC 7.1 10^9/L 4.5 - 11.0,correct,,,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+LDL cholesterol,187.0,187.0,LDL cholesterol 187 mg/dL < 99,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Troponin I,0.03,0.03,Troponin I 0.03 ng/mL 0.00 - 0.04,correct,,,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+CRP,1.9,1.9,CRP 1.9 mg/L 0.0 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Glucose (fasting),141.0,141.0,Glucose (fasting) 141 mg/dL 70 - 99,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Platelets,238.0,238.0,Platelets 238 10^9/L 150 - 450,correct,,,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+eGFR,3.0,3.0,eGFR 3 mL/min/1.73m2 > 60,correct,L,L,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Creatinine,1.99,1.99,Creatinine 1.99 mg/dL 0.60 - 1.20,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Ferritin,76.0,76.0,Ferritin 76 ng/mL 15 - 200,correct,,,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Calcium,12.8,12.8,Calcium 12.8 mg/dL 8.5 - 10.5,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,dpi_100,resolution,100,0,0.0025412960609911056
+Bicarbonate,17.0,17.0,Bicarbonate 17 mEq/L 22 - 29,correct,L,L,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Potassium,4.0,4.0,Potassium 4.0 mEq/L 3.5 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Bilirubin (total),0.7,0.7,Bilirubin (total) 0.7 mg/dL 0.1 - 1.2,correct,,,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Hemoglobin,11.6,11.6,Hemoglobin 11.6 g/dL 12.0 - 15.5,correct,L,L,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Chloride,102.0,102.0,Chloride 102 mEq/L 98 - 107,correct,,,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Lactate,4.0,4.0,Lactate 4.0 mmol/L 0.5 - 2.2,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+WBC,7.1,7.1,WBC 7.1 10^9/L 4.5 - 11.0,correct,,,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+LDL cholesterol,187.0,187.0,LDL cholesterol 187 mg/dL < 99,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Troponin I,0.03,0.03,Troponin I 0.03 ng/mL 0.00 - 0.04,correct,,,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+CRP,1.9,1.9,CRP 1.9 mg/L 0.0 - 5.0,correct,,,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Glucose (fasting),141.0,141.0,Glucose (fasting) 141 mg/dL 70 - 99,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Platelets,238.0,238.0,Platelets 238 10^9/L 150 - 450,correct,,,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+eGFR,3.0,3.0,eGFR 3 mL/min/1.73m2 > 60,correct,L,L,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Creatinine,1.99,1.99,Creatinine 1.99 mg/dL 0.60 - 1.20,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Ferritin,76.0,76.0,Ferritin 76 ng/mL 15 - 200,correct,,,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+Calcium,12.8,12.8,Calcium 12.8 mg/dL 8.5 - 10.5,correct,H,H,vlm:qwen2.5vl:3b,B,report_006,photo_phone,composite,150,0,0.06480304955527319
+LDL cholesterol,12.0,12.0,LDL cholesterol 12 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+eGFR,151.0,151.0,eGFR 151 mL/min/1.73m2 > 60,correct,,,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+Bicarbonate,29.0,29.0,Bicarbonate 29 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+Bilirubin (total),1.8,1.8,Bilirubin (total) 1.8 mg/dL 0.1 - 1.2,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+Glucose (fasting),77.0,77.0,Glucose (fasting) 77 mg/dL 70 - 99,correct,,,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+AST,17.0,17.0,AST 17 U/L 10 - 40,correct,,,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+Troponin I,0.02,0.02,Troponin I 0.02 ng/mL 0.00 - 0.04,correct,,,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+Platelets,871.0,871.0,Platelets 871 10^9/L 150 - 450,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+TSH,6.14,6.14,TSH 6.14 mIU/L 0.40 - 4.00,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+HbA1c,4.2,4.2,HbAlc 4.2 % 4.0 - 5.6,correct,,,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+Hematocrit,38.8,38.8,Hematocrit 38.8 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+Hemoglobin,12.9,12.9,Hemoglobin 12.9 g/dL 12.0 - 15.5,correct,,,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+Chloride,106.0,106.0,Chloride 106 mEq/L 98 - 107,correct,,,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+ALT,118.0,118.0,ALT 118 U/L 7 - 56,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,baseline_300dpi,baseline,300,0,0.0027816411682892906
+LDL cholesterol,12.0,12.0,LDL cholesterol 12 mg/DL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+eGFR,151.0,151.0,eGFR 151 mL/min/1.73m2 > 60,correct,,,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+Bicarbonate,29.0,29.0,Bicarbonate 29 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+Bilirubin (total),1.8,1.8,Bilirubin (total) 1.8 mg/dL 0.1 - 1.2,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+Glucose (fasting),77.0,77.0,Glucose (fasting) 77 mg/dL 70 - 99,correct,,,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+AST,17.0,17.0,AST 17 U/L 10 - 40,correct,,,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+Troponin I,0.02,0.02,Troponin I 0.02 ng/mL 0.00 - 0.04,correct,,,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+Platelets,871.0,871.0,Platelets 871 10^9/L 150 - 450,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+TSH,6.14,6.14,TSH 6.14 mIU/L 0.40 - 4.00,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+HbA1c,4.2,4.2,HbAlc 4.2 % 4.0 - 5.6,correct,,,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+Hematocrit,38.8,38.8,Hematocrit 38.8 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+Hemoglobin,12.9,12.9,Hemoglobin 12.9 g/dL 12.0 - 15.5,correct,,,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+Chloride,106.0,106.0,Chloride 106 mEq/L 98 - 107,correct,,,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+ALT,118.0,118.0,ALT 118 U/L 7 - 56,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,dpi_100,resolution,100,0,0.004172461752433936
+LDL cholesterol,12.0,12.0,LDL cholesterol 12 mg/dL < 99,correct,,,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+eGFR,151.0,151.0,eGFR 151 mL/min/1.73m2 > 60,correct,,,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+Bicarbonate,29.0,29.0,Bicarbonate 29 mEq/L 22 - 29,correct,,,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+Bilirubin (total),1.8,1.8,Bilirubin (total) 1.8 mg/dL 0.1 - 1.2,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+Glucose (fasting),77.0,77.0,Glucose (fasting) 77 mg/dL 70 - 99,correct,,,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+AST,17.0,17.0,AST 17 U/L 10 - 40,correct,,,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+Troponin I,0.02,0.02,Troponin I 0.02 ng/mL 0.00 - 0.04,correct,,,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+Platelets,871.0,871.0,Platelets 871 10^9/L 150 - 450,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+TSH,6.14,6.14,TSH 6.14 mIU/L 0.40 - 4.00,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+HbA1c,4.2,4.2,HbAlc 4.2 % 4.0 - 5.6,correct,,,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+Hematocrit,38.8,38.8,Hematocrit 38.8 % 36.0 - 46.0,correct,,,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+Hemoglobin,12.9,12.9,Hemoglobin 12.9 g/dL 12.0 - 15.5,correct,,,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+Chloride,106.0,106.0,Chloride 106 mEq/L 98 - 107,correct,,,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906
+ALT,118.0,118.0,ALT 118 U/L 7 - 56,correct,H,H,vlm:qwen2.5vl:3b,B,report_007,photo_phone,composite,150,0,0.0027816411682892906

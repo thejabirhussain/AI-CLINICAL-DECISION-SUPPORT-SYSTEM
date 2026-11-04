@@ -37,6 +37,7 @@ const FLAG_STYLE: Record<string, string> = {
   Low: 'bg-sky-50 text-sky-700 border border-sky-200',
   Normal: 'text-ink/50',
   'Not assessed': 'text-ink/35',
+  Implausible: 'bg-amber-100 text-amber-800 border border-amber-300',
 };
 
 function LabRow({ lab }: { lab: Lab }) {
@@ -47,9 +48,22 @@ function LabRow({ lab }: { lab: Lab }) {
       <td className="py-2 pr-3 text-[14px]">{lab.test_name}</td>
       <td className={`py-2 pr-3 text-[14px] tabular-nums ${abnormal ? 'font-semibold' : ''}`}>
         {lab.value ?? '—'} <span className="font-normal text-ink-3">{lab.unit ?? ''}</span>
+        {lab.needs_verification && lab.verification_reasons?.length ? (
+          <p className="mt-0.5 max-w-[260px] text-[11px] font-normal leading-snug text-amber-700">
+            {lab.verification_reasons[0]}
+          </p>
+        ) : null}
       </td>
       <td className="py-2 pr-3 text-[12px] text-ink-3">{lab.reference_range ?? ''}</td>
-      <td className="py-2 text-right">
+      <td className="py-2 text-right whitespace-nowrap">
+        {lab.needs_verification && flag !== 'Implausible' && (
+          <span
+            className="mr-1 inline-block rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800"
+            title={[...(lab.verification_reasons ?? []), lab.source_line ? `Source: ${lab.source_line}` : ''].filter(Boolean).join('\n')}
+          >
+            Verify
+          </span>
+        )}
         <span className={`inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${FLAG_STYLE[flag] ?? FLAG_STYLE.Normal}`}>
           {flag}
         </span>
@@ -65,6 +79,7 @@ export function PatientOverview({ patient }: { patient: PatientContext }) {
     return rank(a) - rank(b);
   });
   const flagged = labs.filter(isAbnormal).length;
+  const toVerify = labs.filter(l => l.needs_verification).length;
 
   return (
     <div className="space-y-5">
@@ -89,6 +104,12 @@ export function PatientOverview({ patient }: { patient: PatientContext }) {
             <span className="text-ink-3">Flagged labs </span>
             <span className={`font-medium ${flagged ? 'text-red-700' : ''}`}>{flagged}</span>
           </div>
+          {toVerify > 0 && (
+            <div>
+              <span className="text-ink-3">To verify </span>
+              <span className="font-medium text-amber-700">{toVerify}</span>
+            </div>
+          )}
         </div>
         {d.unstructured_narrative ? (
           <p className="whitespace-pre-wrap text-[14px] leading-relaxed">{d.unstructured_narrative}</p>
